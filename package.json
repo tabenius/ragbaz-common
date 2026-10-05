@@ -1,0 +1,29 @@
+{
+  "name": "@ragbaz/common",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared, dependency-light identity and request primitives for RAGBAZ Cloudflare Workers",
+  "engines": { "node": ">=22" },
+  "exports": {
+    "./crypto": "./src/crypto.js",
+    "./handles": "./src/handles.js",
+    "./http": "./src/request-bounds.js",
+    "./webauthn": "./src/webauthn.js",
+    "./turnstile": "./src/turnstile.js",
+    "./email-code": "./src/email-code.js",
+    "./sessions": "./src/sessions.js",
+    "./abuse-gate": "./src/abuse-gate.js",
+    "./identity": "./src/identity.js",
+    "./schema.sql": "./schema.sql",
+    "./prefix-migration": "./scripts/prefix-migration.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm test",
+    "prefix-migration": "node scripts/prefix-migration.mjs"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "13.3.3"
+  }
+}
