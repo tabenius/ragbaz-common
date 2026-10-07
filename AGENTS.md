@@ -68,3 +68,11 @@ frog task claim <slug> --agent <agent> --file src/foo.js
 Never commit secrets. Never widen a task silently. A change that alters a public
 contract must update `README.md` and, when it changes meaning rather than adding,
 say so explicitly in the changelog section of `PROVENANCE.md`.
+
+## User interface preference
+
+The user explicitly requests arrow-key **and hjkl** navigation in their software.
+Keep this convention for new widgets. Escape exits completion text input; typing
+must not trigger navigation shortcuts. Fragment's default actions are L legend,
+P print stylesheet options, T theme browser, + / - zoom. Tab flips the preview
+only on its focused canvas, preserving ordinary focus traversal elsewhere.

@@ -104,3 +104,19 @@ leak an email address or an internal account id.
 
 Do not silently refactor a product to use this package. Read `ADOPTION.md`, then
 do it as a reviewed change in that product's repository with its own task.
+
+## Fragment artifact protocol (0.1 draft)
+
+[packages/fragment](packages/fragment/README.md) adds an independently built Rust
+and JavaScript artifact library: readable YAML/JSON, a shared schema, capability
+constraints, exact themes, templates, keyboard/completion widgets, and an offline
+A4 HTML preview. Its dependencies are isolated from the Worker identity package.
+The sample renderer is in `packages/fragment/examples/`; no product page rendering
+was added to the shared identity `src/`.
+
+```sh
+cd packages/fragment
+npm ci
+npm run build
+# Open dist/fragment-preview.html
+```

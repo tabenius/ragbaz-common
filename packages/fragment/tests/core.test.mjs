@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import {parse,validate,evaluate,bindText,ast,resolveTheme,exportModel} from '../src/core.js';
+const fixture=()=>JSON.parse(readFileSync('examples/draft.json','utf8'));
+test('JSON YAML semantic round trip',()=>{const m=fixture();assert.deepEqual(parse(exportModel(m,'yaml')),m);assert.deepEqual(validate(m),[]);});
+test('conflicting hard constraints are target scoped',()=>{const m=fixture();m.constraints=['color','monochrome'].map(capability=>({capability,level:'require',scope:'all',reason:'x'}));assert.ok(validate(m).some(e=>e.code==='conflict'));m.constraints[0].scope='screen';m.constraints[1].scope='print';assert.deepEqual(validate(m),[]);});
+test('unknown hard requirement blocks, soft absence degrades',()=>{const m=fixture();m.constraints=[{capability:'internet',level:'require',scope:'screen',reason:'Live data'}];assert.equal(evaluate(m,{},'screen').status,'blocked');assert.equal(evaluate(m,{internet:true},'screen').status,'ready');assert.equal(evaluate(m,{},'print').status,'ready');m.constraints[0].level='degrade';assert.equal(evaluate(m,{internet:false},'screen').status,'degraded');});
+test('reject invalid structural and graph values',()=>{const m=fixture();m.meta.disclosure='NDA';assert.ok(validate(m).length);m.meta.disclosure='private';m.graph.edges[0].source='missing';assert.ok(validate(m).some(e=>e.code==='missing-node'));});
+test('template holes stay visible, documents cannot hide them',()=>{const m=fixture();assert.equal(bindText('{{ x }}',{x:null}),'⟦x · unbound⟧');assert.equal(bindText('{{ x }}',{x:'<img>'}),'<img>');m.kind='document';assert.ok(validate(m).length);m.bindings.author='xyzzy';assert.deepEqual(validate(m),[]);});
+test('timezone offset checked at the stated instant',()=>{const m=fixture();m.meta.created='2026-10-07T18:07:58+00:00';assert.ok(validate(m).some(e=>e.code==='timezone-offset'));});
+test('unsafe yaml and numbers refused',()=>{for(const s of ['x: 1\nx: 2','x: &x [1]\ny: *x','x: !custom hello','__proto__: evil','x: .inf','x: 9007199254740992'])assert.throws(()=>parse(s),s);});
+test('theme resolution and AST pointers are deterministic',()=>{assert.equal(resolveTheme('gruvbox-dark-mystery').resolved,'gruvbox-dark-solarized-ragbaz');assert.equal(ast({'a/b~':1}).children[0].path,'/a~1b~0');});

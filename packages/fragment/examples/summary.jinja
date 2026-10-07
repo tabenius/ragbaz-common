@@ -1,0 +1,6 @@
+{{ meta.title }}
+{{ meta.created }} ({{ meta.timezone }}) · {{ meta.disclosure }}
+{% for block in blocks %}
+{{ block.title }}
+{{ block.text }}
+{% endfor %}

@@ -119,3 +119,12 @@ that repository. Until then there are two implementations of these rules, which
 `AGENTS.md` invariant 2 treats as a tracked debt. `ADOPTION.md` describes the
 removal. Do not let that state persist silently: if Mouseion changes an identity
 rule, decide deliberately whether this package follows.
+
+## 2026-10-07 — Fragment 0.1 draft (additive)
+
+`packages/fragment/` is new work from the user's artifact-protocol brief, not an
+extraction from another product. It contains Rust/JS protocol implementations,
+a shared JSON Schema, theme registry, keyboard/completion widgets, and a sample
+A4 studio. The identity public contract and consumers are unchanged. The new
+protocol is explicitly a draft; its boundaries and tests are documented in the
+package. Third-party bundled dependencies retain their notices.

@@ -1,0 +1,10 @@
+import {build} from 'esbuild';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {parse,assertValid,exportModel} from '../src/core.js';
+const m=assertValid(parse(await readFile('examples/draft.json','utf8')));
+await writeFile('examples/draft.yaml',exportModel(m,'yaml'));
+const result=await build({entryPoints:['examples/app.js'],bundle:true,write:false,minify:true,legalComments:'inline',format:'iife',target:'es2022'});
+const shell=await readFile('examples/shell.html','utf8'),css=await readFile('examples/style.css','utf8');
+const notices=(await readFile('THIRD_PARTY_NOTICES.md','utf8')).replaceAll('<','&lt;');
+const html=shell.replace('/*STYLE*/',()=>css).replace('/*MODEL*/',()=>JSON.stringify(m).replaceAll('<','\\u003c')).replace('/*SCRIPT*/',()=>result.outputFiles[0].text.replaceAll('</script','<\\/script')).replace('</body>',()=>'<script type="text/plain" id="third-party-notices">'+notices+'</script></body>');
+await mkdir('dist',{recursive:true});await writeFile('dist/fragment-preview.html',html);console.log(`Built offline HTML: ${Buffer.byteLength(html)} bytes`);
