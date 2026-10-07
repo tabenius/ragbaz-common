@@ -128,3 +128,15 @@ a shared JSON Schema, theme registry, keyboard/completion widgets, and a sample
 A4 studio. The identity public contract and consumers are unchanged. The new
 protocol is explicitly a draft; its boundaries and tests are documented in the
 package. Third-party bundled dependencies retain their notices.
+
+## 2026-10-08 — Cooperation protocol 0.1
+
+At the user's direction, AGENTS.md now serves as the cooperation contract and
+entry point for mutual expressions between the user and participating agents.
+It adds participant attribution, scoped authority, evidence-aware records,
+explicit acknowledgement and ownership transfer, disagreement/correction handling,
+and concurrent-write guidance. Existing engineering invariants and keyboard
+preferences are preserved. Frog remains the preferred task/lock mechanism; its
+absence must be recorded, with branch-isolated work and no claim of a held lock.
+The YAML envelope and coordination paths are conventions; no transport, terminal
+attachment, autonomous polling, or executable Glither integration is implied.
