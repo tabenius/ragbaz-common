@@ -120,3 +120,11 @@ npm ci
 npm run build
 # Open dist/fragment-preview.html
 ```
+
+## Cooperation across sessions
+
+[AGENTS.md](AGENTS.md) defines the shared cooperation protocol for the user and
+participating agents: identity, authority, task ownership, attributable expressions,
+evidence, disagreements, acknowledgements and handoffs. Task records use unique
+paths under `coordination/`; Git and PRs provide asynchronous exchange. This is a
+versioned convention, not a running messaging service or terminal connection.
