@@ -4,7 +4,6 @@
 // fleet settled on Markdoc rather than MDX.
 
 export {
-  TOKENIZER_DEFAULTS,
   defineTags,
   diagnose,
   renderMarkdoc,
@@ -31,3 +30,12 @@ export {
   linkHeaderValue,
   markdownVariantPath,
 } from './link-relations.js';
+
+export {
+  buildMessage,
+  TEMPLATES,
+  TAGS,
+  NODES,
+  toPlainText,
+  renderEmail,
+} from '../mail/index.js';

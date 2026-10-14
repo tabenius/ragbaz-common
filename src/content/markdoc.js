@@ -140,7 +140,14 @@ export function renderMarkdoc(source, options = {}) {
   const diagnostics = diagnose(text, config.tags);
 
   const ast = Markdoc.parse(new Markdoc.Tokenizer(tokenizerOptions).tokenize(text));
-  const tree = Markdoc.transform(Markdoc.resolve(ast, config), config);
+  // `resolve` ships as `module.exports.resolve` in the ESM/CJS split of @markdoc/markdoc:
+  // the bundling condition picked by Wrangler sees the CommonJS class, which keeps
+  // `resolve` as an instance method rather than a static one. Fall back to the
+  // constructor form so the page works under either interop.
+  const resolved = (typeof Markdoc.resolve === 'function')
+    ? Markdoc.resolve(ast, config)
+    : new Markdoc(config).resolve(ast);
+  const tree = Markdoc.transform(resolved, config);
   const html = Markdoc.renderers.html(tree);
 
   return {
