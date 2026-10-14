@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Shared, dependency-light identity and request primitives for RAGBAZ Cloudflare Workers",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "exports": {
     "./crypto": "./src/crypto.js",
     "./handles": "./src/handles.js",
@@ -15,15 +17,19 @@
     "./sessions": "./src/sessions.js",
     "./abuse-gate": "./src/abuse-gate.js",
     "./identity": "./src/identity.js",
+    "./content": "./src/content/index.js",
     "./schema.sql": "./schema.sql",
-    "./prefix-migration": "./scripts/prefix-migration.mjs"
+    "./prefix-migration": "./scripts/prefix-migration.mjs",
+    "./build-llms-txt": "./scripts/build-llms-txt.mjs"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "check": "npm test",
+    "llms-txt": "node scripts/build-llms-txt.mjs",
     "prefix-migration": "node scripts/prefix-migration.mjs"
   },
   "dependencies": {
+    "@markdoc/markdoc": "0.5.10",
     "@simplewebauthn/server": "13.3.3"
   }
 }
