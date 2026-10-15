@@ -29,6 +29,7 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     const markdown = '# Own paper\n\nAuthored elsewhere. <script>window.bad=true</script>';
     const digest = createHash('sha256').update(markdown).digest('hex');
     files.set(`${META_MOUNT}/own.md`, Buffer.from(markdown));
+    files.set(`${META_MOUNT}/refused.md`, Buffer.from('---\nschema: unsupported/1\n---\n# Refused'));
     const requests = [];
     server = createServer((req, res) => {
       const url = new URL(req.url, 'http://localhost'); requests.push(url.pathname);
@@ -99,6 +100,10 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     assert(await ev("!window.bad && !document.querySelector('#paper script') && document.getElementById('notice').textContent.includes('requested digest matched')"));
     await ev("document.getElementById('contract-link').click()"); await new Promise(r => setTimeout(r, 100));
     assert(await ev("document.getElementById('source-provenance').textContent.includes('digest matched')"), 'template contract survives document replacement');
+    await navigate(base + '?document=refused.md');
+    assert(await ev("document.getElementById('paper').textContent.includes('Document refused')"));
+    await ev("document.getElementById('contract-link').click()"); await new Promise(r => setTimeout(r, 100));
+    assert(await ev("!document.getElementById('inspector').hidden && document.getElementById('source-provenance').textContent.includes('digest matched')"), 'offline contract remains inspectable after render refusal');
     await navigate(base + '?document=own.md&sha256=' + '0'.repeat(64));
     assert(await ev("document.getElementById('paper').textContent.includes('Document unavailable/refused') && !document.getElementById('paper').textContent.includes('Own paper')"));
     const before = requests.filter(p => p.endsWith('.md')).length;
@@ -114,6 +119,8 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     const { identifier } = await browser.call('Page.addScriptToEvaluateOnNewDocument', { source: "Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Storage denied','SecurityError')}})" }, sessionId);
     await navigate(base);
     assert.equal(await appearance('dark'), 'rgb(25, 30, 32)', 'denied storage does not break appearance or document reading');
+    assert.equal(await ev("const f=document.getElementById('theme-fonts');f.value='theme';f.dispatchEvent(new Event('change'));f.value"), 'theme', 'font selection remains usable with storage denied');
+    await ev("document.getElementById('theme-fonts').value='system';document.getElementById('theme-fonts').dispatchEvent(new Event('change'))");
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'markdoc-ragbaz-sci-tufte');
     await browser.call('Page.removeScriptToEvaluateOnNewDocument', { identifier }, sessionId);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); await rm(dir, { recursive: true, force: true }); }

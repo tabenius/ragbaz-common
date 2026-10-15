@@ -133,6 +133,12 @@ research notes are not included in the release commit. The Worker repository pin
 the exact renderer commit separately; tests and deployment are not independent
 security-review or publication approval.
 
+Further refusal-path review found that contract inspection dereferenced the
+current document after a render refusal had cleared it. Make that access optional
+and regression-test the embedded contract after refused replacement prose; also
+exercise font selection with storage denied. A refused manuscript must not make
+the host's offline contract unavailable.
+
 ### 2026-10-15 — Aether and curated font alternatives
 
 Add three original symbolic presentation variants, Prima materia, Sun and moon,

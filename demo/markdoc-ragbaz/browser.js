@@ -314,7 +314,7 @@ async function inspect(id, explicitSource) {
   $('source-link').hidden = !link;
   if (link) $('source-link').href = link;
   $('load-source').hidden = true;
-  const snapshot = (current.embedded || source === contractSource) && payload.snapshots?.[id];
+  const snapshot = (current?.embedded || source === contractSource) && payload.snapshots?.[id];
   if (snapshot) {
     try {
       const bytes = new TextEncoder().encode(snapshot.text);
