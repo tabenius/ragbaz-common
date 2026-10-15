@@ -37,6 +37,83 @@ verification, and short-lived temporary sessions.
 Every module is parameterised. Nothing in `src/` imports a product's config,
 reads a hard-coded origin, or assumes a table prefix.
 
+### Reusable Markdoc document surface
+
+`@ragbaz/common/content/markdoc-ragbaz` adds an official-AST, data-only document
+renderer with versioned YAML/JSON metadata, lazy declarative dialect/theme
+registries, visible refusals and safe source previews. Existing content APIs
+are unchanged. Product paper layout and browser adapters live outside `src/`.
+
+```sh
+npm ci
+npm run markdoc-ragbaz -- --input paper.md --output paper.html
+```
+
+The single HTML embeds its runtime, styles and source; open it directly offline
+or serve the same built bytes through local HTTP/Worker assets. No source
+network fetching occurs during ordinary builds. See
+[`docs/MARKDOC-RAGBAZ.md`](docs/MARKDOC-RAGBAZ.md) for exact tag attributes,
+frontmatter, host configuration, optional snapshots, transport limits and APIs.
+This is a document reader, not production witness logic or runtime attestation.
+The reading room defaults to the paper alone: an auto-hiding hamburger bar opens
+the opt-in document tools, contents, integrity/version details and credits. File
+drop is disabled until enabled there; keyboard focus and touch can reveal the bar.
+The hamburger is on the right; a separate ornamental left-edge handle reveals
+contents. Numbered citations show bibliography cards in the margin (laptop+) or
+as tooltips. Expandable truthful author credits and manuscript dates link to
+editorial revisions; publication requires explicit paired review signals.
+First-mention entity notes explain project roles; meaningful links keep their
+labels and classified revision details live in reference cards. Named host-owned
+SVG plates introduce WeftMark and Nostoi without enabling document-supplied SVG.
+Reading shortcuts and equivalent menu actions support real fullscreen (`f`, Esc),
+vertical flow (up/down, `k`/`j`), paper spreads (left/right, `h`/`Shift+L`),
+Home/End/PageUp/PageDown and a toggleable legend (`l`). Typing and browser shortcuts
+are not intercepted; desktop paper mode shows two pages, narrow screens one.
+Its nominal sheets are A4 with narrower text measures, generous paper-colored
+horizontal margins and no artificial vertical frame bands. Print requests A4.
+
+`npm run markdoc-ragbaz-sci-tufte` builds a separate, content-neutral meta-document
+package under `dist-meta/markdoc-ragbaz-sci-tufte/`. An optional `?document=` loads
+permitted Markdown; `&sha256=` pins its exact bytes. The opening surface embeds
+only its rendering contract, not the fleet witness manuscript or its authors.
+It includes starter Markdown, inspected runtime/CSS/SVG assets, licenses and a
+byte manifest. The independent `meta.ragbaz` repository owns the Worker/domain
+deployment; common owns the renderer and builder, not the product route policy.
+
+Document tools include **Appearance: System / Light / Dark**. System follows the
+OS; explicit choices persist when browser storage permits, otherwise apply for
+the session. Dark appearance includes source inspection, citations and trusted
+SVG figures. Printing always uses light paper without changing the preference.
+
+The second installed template, **Heartfulness**, is a contemporary botanical
+keepsake: pale yellow paper grain, bookish italic titles and original climbing
+rose frames. Build it with `npm run markdoc-ragbaz-sci-tufte -- --template heartfulness`.
+Its independent `/heartfulness/` package uses the same bounded document parameter,
+source inspector and reader controls. Document tools add Plain / A little / Full
+bloom and a separate grain toggle. Decoration is host-owned, not authored code;
+the sci template does not acquire its styles or controls. Name and design remain
+experimental; route/deployment ownership stays in meta.ragbaz.
+
+CI runs the full offline suite with Chromium required (not silently skipped), and
+builds the neutral publication package. Reader test files create portable isolated
+temporary directories; set `RAGBAZ_TEST_TMP` to keep artifacts under a chosen root.
+
+**Aether** adds three installed IDs: `aether-prima-materia`, `aether-sun-and-moon`,
+and `aether-blackening`, packaged beneath `/aether/<variant>/`. These newly authored
+symbolic studies share safe document loading, optional original SVG plates and
+family navigation without forwarding document parameters. The host-curated
+Typography option offers Google Fonts alongside offline system fonts; remote
+loading is opt-in and limited to the installed theme pairing, not authored URLs.
+
+
+Sources/assets may declare SHA-256 mismatch policy; relaxed handling is confined
+to inert source inspection. Click-only GitHub path-revision and arXiv version
+checks report separate dated observations without changing pinned references or
+promoting authored supersession claims. See the linked contract for limits.
+GitHub SHA inequality alone is not freshness: bounded ancestry comparison
+distinguishes unchanged ancestor history, newer descendants and divergence.
+This prototype is not production-ready or independently security-reviewed.
+
 ## Using it
 
 ```js
