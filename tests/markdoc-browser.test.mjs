@@ -393,10 +393,10 @@ test('introductions retain meaningful links and host-owned SVG figures without g
 // CDP pipe keeps FileReader on real time (dump-dom virtual time can outrun file
 // I/O). This owns one headless process and closes it through its own protocol.
 function headless(executable, profile) {
-  const child = spawn(executable, ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-background-networking', '--no-first-run', '--host-resolver-rules=EXCLUDE 127.0.0.1, MAP * ~NOTFOUND', `--user-data-dir=${profile}`, '--remote-debugging-pipe'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
+  const child = spawn(executable, ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-background-networking', '--disable-extensions', '--disable-component-update', '--disable-sync', '--no-first-run', '--no-startup-window', '--password-store=basic', '--host-resolver-rules=EXCLUDE 127.0.0.1, MAP * ~NOTFOUND', `--user-data-dir=${profile}`, '--remote-debugging-pipe'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
   let id = 0; let buffer = ''; let stderr = '';
   const pending = new Map();
-  child.stderr.on('data', data => { stderr += data; });
+  child.stderr.on('data', data => { stderr = (stderr + data).slice(-8000); });
   const exited = new Promise(resolve => child.once('exit', resolve));
   child.stdio[4].on('data', data => {
     buffer += data;
@@ -407,15 +407,42 @@ function headless(executable, profile) {
       if (task) { pending.delete(message.id); clearTimeout(task.timer); message.error ? task.reject(new Error(JSON.stringify(message.error))) : task.resolve(message.result); }
     }
   });
-  function call(method, params = {}, sessionId) {
+  function send(method, params = {}, sessionId) {
     return new Promise((resolve, reject) => {
       const next = ++id;
-      const timer = setTimeout(() => { pending.delete(next); reject(new Error(`CDP timeout: ${method} ${stderr}`)); }, 20000);
+      const timer = setTimeout(() => { pending.delete(next); reject(new Error(`CDP timeout: ${method} ${stderr}`)); }, process.env.CI ? 60000 : 20000);
       pending.set(next, { resolve, reject, timer });
       child.stdio[3].write(JSON.stringify({ id: next, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
     });
   }
-  return { call, async close() { await call('Browser.close'); await exited; } };
+  async function call(method, params = {}, sessionId) {
+    const result = await send(method, params, sessionId);
+    if (method === 'Page.navigate' && !result.errorText) {
+      // Await actual bootstrap/render completion, not a fixed fast-host sleep.
+      const deadline = Date.now() + 15000;
+      while (Date.now() < deadline) {
+        try {
+          const state = await send('Runtime.evaluate', { returnByValue: true, expression: "document.readyState==='complete' && !!document.getElementById('paper') && !!document.getElementById('notice')?.textContent && !document.getElementById('notice').textContent.startsWith('Loading')" }, sessionId);
+          if (state.result?.value) return result;
+        } catch (error) { if (Date.now() >= deadline) throw error; }
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      throw new Error('Reader navigation did not become ready: ' + params.url);
+    }
+    return result;
+  }
+  return { call, async close() {
+    // Bound cleanup even when Chrome stops answering CDP. Only our exact child
+    // may be signalled, after inspecting its PID; never sweep peer browsers.
+    void send('Browser.close').catch(() => {});
+    const closed = await Promise.race([exited.then(() => true), new Promise(resolve => { const timer = setTimeout(() => resolve(false), 5000); timer.unref(); })]);
+    if (!closed && child.exitCode === null && child.signalCode === null) {
+      const owned = spawnSync('ps', ['-p', String(child.pid), '-o', 'pid=,args='], { encoding: 'utf8' });
+      if (owned.status === 0 && Number(owned.stdout.trim().split(/\s+/)[0]) === child.pid && owned.stdout.includes(`--user-data-dir=${profile}`)) child.kill('SIGKILL');
+    }
+    for (const task of pending.values()) { clearTimeout(task.timer); task.reject(new Error('Browser closed')); }
+    pending.clear();
+  } };
 }
 
 const fixture = `---

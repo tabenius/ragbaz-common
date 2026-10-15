@@ -139,6 +139,12 @@ and regression-test the embedded contract after refused replacement prose; also
 exercise font selection with storage denied. A refused manuscript must not make
 the host's offline contract unavailable.
 
+Hosted CI subsequently exposed Chrome startup and fixed-sleep navigation races.
+Serialize the offline test files, disable unnecessary browser startup services,
+wait for actual reader/bootstrap completion, and bound cleanup to the inspected
+PID of the browser started by that test. CI has a finite job timeout. These are
+test-harness reliability fixes, not retries that suppress application assertions.
+
 ### 2026-10-15 — Aether and curated font alternatives
 
 Add three original symbolic presentation variants, Prima materia, Sun and moon,

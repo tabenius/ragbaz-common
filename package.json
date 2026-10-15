@@ -24,7 +24,7 @@
     "./build-llms-txt": "./scripts/build-llms-txt.mjs"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "check": "npm test",
     "llms-txt": "node scripts/build-llms-txt.mjs",
     "prefix-migration": "node scripts/prefix-migration.mjs",
