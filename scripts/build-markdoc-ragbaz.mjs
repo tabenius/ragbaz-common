@@ -3,9 +3,9 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
-import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, fetchResource, sha256, verifyResourceBytes } from '../src/content/markdoc-ragbaz.js';
-import { AETHER_VARIANTS } from '../demo/markdoc-ragbaz/aether.js';
-import { themeFontStyles } from '../demo/markdoc-ragbaz/fonts.js';
+import { LIMITS, fetchResource, verifyResourceBytes } from '../src/content/markdoc-ragbaz.js';
+import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
+export { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const bytes = async path => {
@@ -13,8 +13,6 @@ const bytes = async path => {
   if (data.length > LIMITS.bytes) throw new Error(`File exceeds byte limit: ${path}`);
   return data;
 };
-const jsonScript = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-const canonical = value => JSON.stringify(value, (_, v) => v && !Array.isArray(v) && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
 
 // Full texts inspected from npm tarball LICENSE files, not inferred from SPDX
 // labels or esbuild comments. Markdoc vendors these packages inside dist/.
@@ -166,79 +164,35 @@ export async function collectBundleNotices(metafile, { readText = path => readFi
   return notices;
 }
 
-/** No network by default. Local snapshots mapping: { sourceId: "local/path.md" }. */
-export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false } = {}) {
-  if (!input) throw new Error('An input Markdown path is required');
-  const sourceBytes = await bytes(input);
-  const source = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(sourceBytes);
-  const config = JSON.parse(await readFile(configPath || resolve(root, 'demo/markdoc-ragbaz/registry.json'), 'utf8'));
-  if (config.version !== 'ragbaz.surface/1' || config.skeleton !== 'paper/1' || config.implementation !== 'markdoc-ragbaz/1') throw new Error('Unsupported surface tuple (installed: paper/1 + markdoc-ragbaz/1)');
-  if (config.metaDocument && (!['markdoc-ragbaz-sci-tufte', 'heartfulness', ...Object.keys(AETHER_VARIANTS)].includes(config.metaDocument.id) || config.metaDocument.version !== 1)) throw new Error('Unsupported meta-document host configuration');
-  if (config.fontAlternatives && (config.fontAlternatives !== 'google-curated/1' || !config.metaDocument)) throw new Error('Unsupported host font alternatives');
-  const connect = (config.policy?.origins || []).map(origin => {
-    const url = new URL(origin);
-    if (url.protocol !== 'https:' || url.origin !== origin || url.username || url.password) throw new Error('Host policy requires exact HTTPS origins');
-    return url.origin;
-  }).concat(['https://api.github.com', 'https://export.arxiv.org']).join(' ');
-  const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
-  // Remote registries also require explicit build network authorization.
-  const fetcher = fetchSources ? globalThis.fetch : () => { throw new Error('Build network disabled (use --fetch-sources explicitly)'); };
-  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher });
-  // Freeze every required remote declarative resource into the standalone file.
-  // Opening the embedded document must not depend on a network/cache hit.
-  config.dialects = { ...config.dialects, ...result.resolvedRegistry.dialects };
-  config.themes = { ...config.themes, ...result.resolvedRegistry.themes };
-  const snapshots = {};
-  const mapping = mappingPath ? JSON.parse(await readFile(mappingPath, 'utf8')) : {};
-  if (result.manifest.sources.length > LIMITS.resources && (mappingPath || fetchSources)) throw new Error('Source snapshot budget exceeded');
-  let total = 0;
-  for (const entry of result.manifest.sources) {
-    let loaded;
-    if (Object.prototype.hasOwnProperty.call(mapping, entry.id)) {
-      const data = await bytes(resolve(dirname(mappingPath), mapping[entry.id]));
-      loaded = { ...(await verifyResourceBytes(data, entry, { purpose: 'inert-inspector' })), url: entry.url || null };
-    } else if (fetchSources && entry.url) {
-      loaded = await fetchResource(entry.url, { policy: config.policy, pinned: true, digest: entry.sha256, integrity: entry.integrity, purpose: 'inert-inspector' });
-    }
-    if (loaded) {
-      total += new TextEncoder().encode(loaded.text).length;
-      if (total > 4 * LIMITS.bytes) throw new Error('Aggregate snapshot budget exceeded');
-      snapshots[entry.id] = loaded;
-    }
-  }
+/** Build-time only. License/inventory gates stay here, never in a request handler. */
+export async function prepareStandaloneAssets() {
   const bundle = await build({ entryPoints: [resolve(root, 'demo/markdoc-ragbaz/browser.js')], bundle: true, write: false, metafile: true, format: 'iife', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline' });
   const notices = await collectBundleNotices(bundle.metafile);
   const credits = notices.map(n => `${n.name}\n\n${n.text}`).join('\n\n────────────────────────────────────────\n\n');
-  const runtime = bundle.outputFiles[0].text;
-  const digest = await sha256(sourceBytes);
-  const runtimeSHA256 = await sha256(new TextEncoder().encode(runtime));
-  const skeleton = await readFile(resolve(root, 'demo/markdoc-ragbaz/skeleton.html'), 'utf8');
-  let styles = await readFile(resolve(root, 'demo/markdoc-ragbaz/styles.css'), 'utf8');
-  if (config.metaDocument?.id === 'heartfulness') styles += '\n' + await readFile(resolve(root, 'demo/markdoc-ragbaz/heartfulness.css'), 'utf8');
-  if (AETHER_VARIANTS[config.metaDocument?.id]) styles += '\n' + await readFile(resolve(root, 'demo/markdoc-ragbaz/aether.css'), 'utf8');
-  if (config.fontAlternatives === 'google-curated/1') styles += themeFontStyles(config.metaDocument.id);
-  const hashText = text => sha256(new TextEncoder().encode(text));
-  const tuple = { schema: 'ragbaz.render/1', sourceSHA256: digest, skeleton: { id: config.skeleton, sha256: await hashText(skeleton) }, implementation: { id: config.implementation, sha256: runtimeSHA256, markdoc: '0.5.10' }, stylesSHA256: await hashText(styles), assets: result.manifest.assets, settings: result.manifest.settings, defaults: config.defaults || {}, policy: config.policy || {}, registry: { dialects: config.dialects, themes: config.themes }, snapshots: Object.fromEntries(Object.entries(snapshots).map(([id, s]) => [id, s.sha256])) };
-  tuple.noticesSHA256 = await hashText(credits);
-  tuple.surface = { metaDocument: config.metaDocument || null, contractSource: config.contractSource || 'rendering-contract', fontAlternatives: config.fontAlternatives || null };
-  const payload = { source, sha256: digest, runtimeSHA256, renderSHA256: await hashText(canonical(tuple)), tuple, config, snapshots };
-  const values = {
-    TEMPLATE: config.metaDocument?.id || 'markdoc-ragbaz-sci-tufte',
-    FONTSTYLE: config.fontAlternatives ? ' https://fonts.googleapis.com' : '',
-    FONTS: config.fontAlternatives ? 'https://fonts.gstatic.com' : "'none'",
-    TITLE: escapeHTML(result.manifest.document.title || result.manifest.title || result.headings[0]?.text || 'Document'),
-    CONNECT: escapeHTML(connect),
-    STYLES: styles,
-    CREDITS: escapeHTML(credits),
-    TOC: result.headings.map(h => `<a data-level="${h.level}" href="#${h.id}">${escapeHTML(h.text)}</a>`).join(''),
-    PAPER: result.html,
-    PROVENANCE: escapeHTML(`Embedded snapshot · SHA-256 ${digest} · ${config.implementation} / ${config.skeleton}${result.diagnostics.length ? ' · Partial / refused: ' + result.diagnostics.join('; ') : ''}`),
-    PAYLOAD: jsonScript(payload),
-    RUNTIME: runtime.replace(/<\/script/gi, '<\\/script'),
-  };
-  const html = skeleton.replace(/@@([A-Z]+)@@/g, (_, key) => values[key]);
-  if (output) { await mkdir(dirname(resolve(output)), { recursive: true }); await writeFile(output, html); }
-  return { html, result, payload, assets: { runtime, styles, credits } };
+  return { schema: 'ragbaz.standalone-assets/1', runtime: bundle.outputFiles[0].text, credits,
+    skeleton: await readFile(resolve(root, 'demo/markdoc-ragbaz/skeleton.html'), 'utf8'),
+    baseStyles: await readFile(resolve(root, 'demo/markdoc-ragbaz/styles.css'), 'utf8'),
+    heartfulnessStyles: await readFile(resolve(root, 'demo/markdoc-ragbaz/heartfulness.css'), 'utf8'),
+    aetherStyles: await readFile(resolve(root, 'demo/markdoc-ragbaz/aether.css'), 'utf8') };
+}
+
+/** No network by default. Local snapshots mapping: { sourceId: "local/path.md" }. */
+export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false, preparedAssets } = {}) {
+  if (!input) throw new Error('An input Markdown path is required');
+  const sourceBytes = await bytes(input);
+  const config = JSON.parse(await readFile(configPath || resolve(root, 'demo/markdoc-ragbaz/registry.json'), 'utf8'));
+  const mapping = mappingPath ? JSON.parse(await readFile(mappingPath, 'utf8')) : {};
+  const fetcher = fetchSources ? globalThis.fetch : () => { throw new Error('Build network disabled (use --fetch-sources explicitly)'); };
+  const loadSnapshot = mappingPath || fetchSources ? async entry => {
+    if (Object.prototype.hasOwnProperty.call(mapping, entry.id)) {
+      const data = await bytes(resolve(dirname(mappingPath), mapping[entry.id]));
+      return { ...(await verifyResourceBytes(data, entry, { purpose: 'inert-inspector' })), url: entry.url || null };
+    }
+    if (fetchSources && entry.url) return fetchResource(entry.url, { policy: config.policy, pinned: true, digest: entry.sha256, integrity: entry.integrity, purpose: 'inert-inspector' });
+  } : undefined;
+  const built = await buildStandaloneBytes({ sourceBytes, config, assets: preparedAssets || await prepareStandaloneAssets(), fetcher, loadSnapshot });
+  if (output) { await mkdir(dirname(resolve(output)), { recursive: true }); await writeFile(output, built.html); }
+  return built;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

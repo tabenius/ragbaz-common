@@ -55,6 +55,16 @@ network fetching occurs during ordinary builds. See
 [`docs/MARKDOC-RAGBAZ.md`](docs/MARKDOC-RAGBAZ.md) for exact tag attributes,
 frontmatter, host configuration, optional snapshots, transport limits and APIs.
 This is a document reader, not production witness logic or runtime attestation.
+
+Standalone assembly is also available through the runtime-neutral `./standalone`
+export (`buildStandaloneBytes`). The Node script's `prepareStandaloneAssets()`
+performs esbuild bundling and the existing license gates **at build time**, returning
+`ragbaz.standalone-assets/1`. A trusted host can freeze/package those assets and run
+the same assembly in Node, a browser or Workers without filesystem/subprocess/
+esbuild imports. Source is bounded UTF-8 bytes; config/assets/loaders are host-owned,
+never taken from document/request JSON. Network and snapshot loaders remain explicit
+trusted seams. The filesystem CLI is an adapter around this same implementation,
+not a second renderer; all five existing outputs remain byte-identical.
 The reading room defaults to the paper alone: an auto-hiding hamburger bar opens
 the opt-in document tools, contents, integrity/version details and credits. File
 drop is disabled until enabled there; keyboard focus and touch can reveal the bar.

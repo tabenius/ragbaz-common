@@ -122,6 +122,18 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-21 — portable prepared-assets standalone assembly
+
+Move standalone rendering/assembly from the Node filesystem script into
+`demo/markdoc-ragbaz/standalone.js`, with bounded byte input, host configuration,
+prepared assets and explicit trusted loader seams. Keep esbuild, file reads and
+license/source-map inventory gates in `prepareStandaloneAssets()` at build time.
+The CLI delegates to the extracted implementation. No product route, credentials
+or storage policy is introduced. Freeze five pre-extraction HTML hashes and test
+both direct and browser-bundled portable execution against them. This enables
+consumers to omit esbuild's Go executable from their runtime without disabling
+the license gate or forking standalone assembly.
+
 ### 2026-10-21 — manuscript-only printing
 
 Add print-only layout resets for the five existing presentations: single-column,
