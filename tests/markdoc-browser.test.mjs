@@ -392,6 +392,47 @@ test('introductions retain meaningful links and host-owned SVG figures without g
 
 // CDP pipe keeps FileReader on real time (dump-dom virtual time can outrun file
 // I/O). This owns one headless process and closes it through its own protocol.
+test('all five templates print the whole manuscript without controls, source panes or spread clipping', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-print-');
+  const browser = headless(executable, join(dir, 'profile'));
+  try {
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    const ev = async expression => {
+      const result = await browser.call('Runtime.evaluate', { returnByValue: true, awaitPromise: true, expression }, sessionId);
+      assert.equal(result.exceptionDetails, undefined, JSON.stringify(result.exceptionDetails)); return result.result.value;
+    };
+    const source = '# Print specimen\n\n' + Array.from({ length: 100 }, (_, i) => `Paragraph ${i + 1}. A letter has room for a thought to unfold. Keep every word, not just the current screen. A quiet page should remain legible on paper.`).join('\n\n') + '\n\n## Last page\n\nFINAL-MANUSCRIPT-SENTENCE.\n';
+    for (const template of ['markdoc-ragbaz-sci-tufte', 'heartfulness', ...Object.keys(AETHER_VARIANTS)]) {
+      const { directory } = await buildMetaDocument({ output: dir, template });
+      await browser.call('Page.navigate', { url: pathToFileURL(join(directory, 'index.html')).href }, sessionId);
+      await ev(`(async()=>{const input=document.getElementById('file'), transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(source)}],'print.md',{type:'text/markdown'}));input.files=transfer.files;input.dispatchEvent(new Event('change'));for(let i=0;i<100;i++){if(document.querySelector('#paper h1')?.textContent==='Print specimen'&&document.getElementById('notice').textContent.startsWith('Locally selected'))return;await new Promise(r=>setTimeout(r,50));}throw Error('Manuscript did not load');})()`);
+      await ev("document.documentElement.dataset.appearance='dark';document.getElementById('reader-drawer').showModal();document.getElementById('inspector').hidden=false;document.getElementById('source-raw').textContent='PRIVATE-SOURCE-INSPECTION-ONLY';document.getElementById('source-preview').textContent='PRIVATE-SOURCE-INSPECTION-ONLY';document.body.dataset.readingMode='paper';document.getElementById('paper').style.transform='translateX(-4000px)'");
+      await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, sessionId);
+      const state = await ev(`(()=>{const style=id=>getComputedStyle(document.getElementById(id));return {body:getComputedStyle(document.body).backgroundColor, drawer:style('reader-drawer').display,inspector:style('inspector').display,bar:style('reading-bar').display,transform:style('paper').transform,columns:style('paper').columnCount,overflow:getComputedStyle(document.body).overflow,height:document.getElementById('paper').scrollHeight,screen:innerHeight,text:document.getElementById('paper').textContent}})()`);
+      assert.equal(state.body, 'rgb(255, 255, 255)', template);
+      for (const key of ['drawer', 'inspector', 'bar']) assert.equal(state[key], 'none', `${template}: ${key}`);
+      assert.equal(state.transform, 'none', template); assert.equal(state.columns, 'auto', template); assert.equal(state.overflow, 'visible', template);
+      assert(state.height > state.screen * 3, `${template}: long manuscript remains in flow`);
+      assert(state.text.includes('FINAL-MANUSCRIPT-SENTENCE.'));
+      const { data } = await browser.call('Page.printToPDF', { printBackground: false, displayHeaderFooter: false, preferCSSPageSize: true }, sessionId);
+      const pdf = Buffer.from(data, 'base64'), pages = (pdf.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length;
+      assert(pages >= 4 && pages < 30, `${template}: sensible pagination (${pages} pages)`);
+      const path = join(dir, `${template}.pdf`); await writeFile(path, pdf);
+      const text = spawnSync('pdftotext', [path, '-'], { encoding: 'utf8' });
+      if (text.status === 0) {
+        assert(text.stdout.includes('FINAL-MANUSCRIPT-SENTENCE.'), `${template}: final page survives PDF output`);
+        assert(!text.stdout.includes('PRIVATE-SOURCE-INSPECTION-ONLY'), `${template}: source inspection must not leak to paper`);
+        assert(!text.stdout.includes('Document tools'), `${template}: no editor chrome in print`);
+      }
+      await browser.call('Emulation.setEmulatedMedia', { media: '' }, sessionId);
+      assert.equal(await ev('document.documentElement.dataset.appearance'), 'dark', 'print does not change the screen preference');
+    }
+  } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
 function headless(executable, profile) {
   const child = spawn(executable, ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-background-networking', '--disable-extensions', '--disable-component-update', '--disable-sync', '--no-first-run', '--no-startup-window', '--password-store=basic', '--host-resolver-rules=EXCLUDE 127.0.0.1, MAP * ~NOTFOUND', `--user-data-dir=${profile}`, '--remote-debugging-pipe'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
   let id = 0; let buffer = ''; let stderr = '';

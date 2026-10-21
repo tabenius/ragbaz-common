@@ -122,6 +122,15 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-21 — manuscript-only printing
+
+Add print-only layout resets for the five existing presentations: single-column,
+untransformed flow even from a later paper spread, white paper, page margins and
+widow/orphan hints. Suppress open source-inspection panes and raw manuscript,
+reader chrome and botanical overlays; retain manuscript references and useful
+ornament. Do not mutate stored screen preferences or introduce host-specific CSS.
+Heartfulness uses a smaller print title without a second page-margin inset.
+
 ### 2026-10-15 — Git release review
 
 Review the renderer, browser controls, templates and packaging before committing

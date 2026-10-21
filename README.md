@@ -85,6 +85,13 @@ OS; explicit choices persist when browser storage permits, otherwise apply for
 the session. Dark appearance includes source inspection, citations and trusted
 SVG figures. Printing always uses light paper without changing the preference.
 
+Print CSS resets horizontal spreads to continuous, single-column manuscript flow
+with page margins and paragraph widows/orphans. Reading controls, open source
+inspectors, raw Markdown and paper-grain/frame overlays are never printed; the
+manuscript and bibliography remain. Link targets are not automatically appended
+to prose. The browser owns paper size, headers/footers, pagination and Save as PDF;
+use the host's print-piece action to avoid printing its editing workspace.
+
 The second installed template, **Heartfulness**, is a contemporary botanical
 keepsake: pale yellow paper grain, bookish italic titles and original climbing
 rose frames. Build it with `npm run markdoc-ragbaz-sci-tufte -- --template heartfulness`.
