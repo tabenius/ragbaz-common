@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { prepareStandaloneAssets } from '../scripts/build-markdoc-ragbaz.mjs';
 import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
+import { buildMetaDocument } from '../scripts/build-markdoc-ragbaz-sci-tufte.mjs';
 
 const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n<script>window.INJECTED=true</script>\n';
 // Frozen from the unchanged pre-extraction 0fdff6e builder, not from this API.
@@ -41,4 +44,13 @@ test('portable boundary refuses malformed bytes, host tuples and unprepared asse
   await assert.rejects(buildStandaloneBytes({ ...options, assets: {} }), /prepared/);
   await assert.rejects(buildStandaloneBytes({ ...options, config: { ...base, skeleton: 'authored-code' } }), /surface tuple/);
   await assert.rejects(buildStandaloneBytes({ ...options, config: { ...base, policy: { origins: ['http://evil.example'] } } }), /HTTPS origins/);
+});
+test('packaged surfaces accept only explicit trusted host network policy without changing defaults', async t => {
+  const directory = await mkdtemp(join(process.env.RAGBAZ_TEST_TMP || tmpdir(), 'portable-meta-policy-'));
+  t.after(() => rm(directory, {recursive:true}));
+  const policy = {origins:[],timeout:8000};
+  const built = await buildMetaDocument({output:directory,template:'heartfulness',policy});
+  assert.deepEqual(built.built.payload.config.policy,policy);
+  assert.deepEqual(base.policy.origins,['https://raw.githubusercontent.com']);
+  await assert.rejects(buildMetaDocument({output:directory,policy:{origins:['http://evil.example']}}),/HTTPS origins/);
 });

@@ -13,7 +13,7 @@ export const META_MOUNT = '/markdoc-ragbaz-sci-tufte';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 
 /** Build a static, content-neutral package. No network, secrets or deployment. */
-export async function buildMetaDocument({ output = resolve(root, 'dist-meta'), template = 'markdoc-ragbaz-sci-tufte' } = {}) {
+export async function buildMetaDocument({ output = resolve(root, 'dist-meta'), template = 'markdoc-ragbaz-sci-tufte', policy } = {}) {
   if (!['markdoc-ragbaz-sci-tufte', 'heartfulness', ...Object.keys(AETHER_VARIANTS)].includes(template)) throw new Error('Unsupported installed meta-template');
   const heart = template === 'heartfulness';
   const aether = AETHER_VARIANTS[template];
@@ -24,6 +24,7 @@ export async function buildMetaDocument({ output = resolve(root, 'dist-meta'), t
   await mkdir(resolve(directory, 'assets'), { recursive: true });
   const contract = await readFile(resolve(root, 'docs/MARKDOC-RAGBAZ.md'));
   const config = JSON.parse(await readFile(resolve(root, 'demo/markdoc-ragbaz/registry.json'), 'utf8'));
+  if (policy !== undefined) config.policy = structuredClone(policy);
   config.metaDocument = { id: template, version: 1 };
   config.fontAlternatives = 'google-curated/1';
   const introduction = aether ? (await readFile(resolve(root, `demo/markdoc-ragbaz/aether/${aether.slug}.md`), 'utf8')).trim() : heart

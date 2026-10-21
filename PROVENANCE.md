@@ -122,6 +122,13 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-21 — host network policy for packaged reading surfaces
+
+Add an optional trusted `policy` seam to `buildMetaDocument`, preserving its
+existing default. Local-only hosts can select an empty remote-origin list without
+editing generated HTML or forking the renderer/packager. This option is supplied
+by the build host, not by manuscript metadata or request input.
+
 ### 2026-10-21 — portable prepared-assets standalone assembly
 
 Move standalone rendering/assembly from the Node filesystem script into

@@ -65,6 +65,9 @@ esbuild imports. Source is bounded UTF-8 bytes; config/assets/loaders are host-o
 never taken from document/request JSON. Network and snapshot loaders remain explicit
 trusted seams. The filesystem CLI is an adapter around this same implementation,
 not a second renderer; all five existing outputs remain byte-identical.
+`buildMetaDocument({policy})` also accepts a trusted build-host network policy;
+for example `{origins:[]}` prevents authored replacement documents from fetching
+remote registry resources in a local-only editor. Defaults remain unchanged.
 The reading room defaults to the paper alone: an auto-hiding hamburger bar opens
 the opt-in document tools, contents, integrity/version details and credits. File
 drop is disabled until enabled there; keyboard focus and touch can reveal the bar.
