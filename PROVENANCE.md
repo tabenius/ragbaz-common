@@ -122,6 +122,16 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-22 — opt-in data-only CAD study renderer
+
+Original generic primitive validator, Three.js communication viewer and bounded
+build delivery. It implements no product route, document, access policy, sensor,
+hardware control or executable authored HTML. Derived presentation requirements
+include static reference poses, deliberate local inspection, CAD/Phong shading
+and reduced-motion support. It is not a CAD kernel or engineering validation.
+The new entry is additive; existing renderer packages and identity contracts are
+unchanged. No private study geometry or commissioning identities are included.
+
 ### 2026-10-21 — manuscript-only printing
 
 Add print-only layout resets for the five existing presentations: single-column,

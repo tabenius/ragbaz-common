@@ -123,6 +123,24 @@ This prototype is not production-ready or independently security-reviewed.
 
 ## Using it
 
+### Bounded CAD communication studies
+
+`src/cad-study/schema.js` validates `ragbaz.cad-study/v1`: finite box, cylinder
+and extruded-profile primitives, explicit colours, bounded motion groups and
+plain-text interaction descriptions. No authored scripts, imports, URLs, SVG or
+HTML are accepted. `src/cad-study/viewer.js` is an opt-in Three.js browser entry;
+it stays still until deliberate inspection, respects reduced motion, and exposes
+CAD/Phong and camera controls to its host. It is not a CAD kernel, physics engine,
+collision checker or safety simulation. Malformed geometry is refused rather
+than replaced with demonstration content.
+
+`scripts/build-cad-study.mjs` exports `buildCadStudy({output})`, producing a
+bundled trusted runtime, the identical data validator, a Three.js licence and
+SHA-256 inventory. Hosts own authentication, content, UI, storage and all route
+policy. The runtime contains no product manuscript, identity list or network API.
+Existing Markdoc and identity consumers do not import Three.js unless they use
+this entry. Run `node --test tests/cad-study.test.mjs` for contract refusal tests.
+
 ```js
 import { createIdentity } from './vendor/ragbaz-common/src/identity.js';
 
