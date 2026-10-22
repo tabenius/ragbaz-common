@@ -49,6 +49,28 @@ npm ci
 npm run markdoc-ragbaz -- --input paper.md --output paper.html
 ```
 
+For plan-generation checks, add `--strict --report build-report.json`. Strict mode
+fails on renderer diagnostics (for example a missing source or unsupported tag)
+before writing HTML, retaining any existing output. Without it, the existing
+partial rendering with visible refusals remains available. The Node
+`buildStandalone()` adapter accepts the same `strict` and `report` options.
+The deterministic `ragbaz.build-report/1` JSON records clean/diagnostic status,
+headings, used dialects, source/render/runtime hashes and exact UTF-8 HTML size/hash.
+On a strict diagnostic failure the report describes the **rejected candidate**,
+not the retained HTML file; the thrown `BuildValidationError` also carries it as
+`error.report`. Parse/transport failures remain errors and do not produce a new
+report; always check the process exit status rather than trusting an old report.
+Reports contain authored heading/diagnostic text; they are build artifacts, not
+an assurance of correctness, independent review or permission to publish.
+Output/report paths may not alias the source, supplied config/mapping or each
+other (including existing symlinks and hard links).
+
+Document tools → **Document checks** shows diagnostics and the active Markdown's
+SHA-256, independently of the embedded package's render identity. **Inspect
+current Markdown** displays inert source text without fetching linked resources.
+Local files must be valid UTF-8; invalid bytes leave the current document intact.
+Digests preserve UTF-8 BOM and CRLF bytes rather than silently normalizing them.
+
 The single HTML embeds its runtime, styles and source; open it directly offline
 or serve the same built bytes through local HTTP/Worker assets. No source
 network fetching occurs during ordinary builds. See

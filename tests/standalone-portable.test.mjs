@@ -10,17 +10,18 @@ import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 import { buildMetaDocument } from '../scripts/build-markdoc-ragbaz-sci-tufte.mjs';
 
 const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n<script>window.INJECTED=true</script>\n';
-// Frozen from the unchanged pre-extraction 0fdff6e builder, not from this API.
+// Frozen after the deliberate 2026-10-22 document-checks UI/runtime change.
+// Earlier extraction equivalence was checked against 0fdff6e before that change.
 const expected = {
-  'markdoc-ragbaz-sci-tufte': '88ee1eaffcb4c9dc5dff65066471ea9ec7cfe785a3c0bfa1b55b8724efbef4b9',
-  heartfulness: '49c3e9744c3d341195edd855778fabf81d7773cb182b7b250b6102c04f3dc149',
-  'aether-prima-materia': 'e5068108a247c4a460eb8c32e5cd8b28e294aad226e88beec96456b2059b4b0c',
-  'aether-sun-and-moon': '7a17d39e3cdeb8ca337b9d49998062016dda5681f2b52e9df2cef4c1cf003c0f',
-  'aether-blackening': '61f3f1e0d86391564d92a6e6e2ee2bc5cdffa2a656b744df68d1179c951f3328',
+  'markdoc-ragbaz-sci-tufte': 'd81936a146d4812026a4d65e8f737e13fec55640fdadd3ce55db6cae23c5d3d0',
+  heartfulness: 'dd2713ddc8f4d9ac782db463c2fc089ceb292272731f5dbf6052ce7e22760e64',
+  'aether-prima-materia': 'f9f4705c4b9a328d4215b3177cffb4346770df25ad5f29f403438c4a5141985e',
+  'aether-sun-and-moon': 'a46f63aa5943db74bfcfb48838c38583c5e2931f678b9a991b2789a566501f07',
+  'aether-blackening': '243fbd30f3c12534b14ace61479b5cc40577d1905dab0e72c64ae3e542a45d6b',
 };
 const base = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
 
-test('prepared portable renderer is byte-identical to the old Node builder in all five themes', async () => {
+test('prepared renderer matches frozen outputs and browser-bundled execution in all five themes', async () => {
   const assets = await prepareStandaloneAssets();
   const bundle = await build({ entryPoints: [new URL('../demo/markdoc-ragbaz/standalone.js', import.meta.url).pathname], bundle: true, write: false, metafile: true, format: 'esm', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline' });
   assert(!Object.keys(bundle.metafile.inputs).some(path => /node_modules\/(?:@esbuild|esbuild)\//.test(path)));

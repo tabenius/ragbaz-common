@@ -1,4 +1,4 @@
-import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, fetchResource, safeLink, verifyResourceBytes, discoverSourceProvider, checkSourceRevision } from '../../src/content/markdoc-ragbaz.js';
+import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, fetchResource, safeLink, verifyResourceBytes, discoverSourceProvider, checkSourceRevision, sha256 } from '../../src/content/markdoc-ragbaz.js';
 import { bibliographyHTML, decorateCitations, decorateEntities, decorateManuscript, manuscriptState } from './citations.js';
 import { decorateFigures } from './figures.js';
 import { setupReadingNavigation } from './navigation.js';
@@ -185,15 +185,42 @@ const verifiedCache = { async get(digest) {
   return snapshot ? new TextEncoder().encode(snapshot.text) : undefined;
 } };
 
+function updateDocumentChecks() {
+  $('inspect-document').disabled = !current;
+  $('document-check-status').textContent = current
+    ? `${current.clean ? 'No rendering diagnostics' : 'Partial / refused markup'} · ${current.headings.length} headings · ${current.usedDialects.join(', ') || 'No dialect tags used'}`
+    : 'No rendered document. Select a valid Markdown file or restore the embedded document.';
+  $('document-digest').textContent = current ? `Current Markdown SHA-256: ${current.sourceSHA256}` : '';
+  $('document-diagnostics').replaceChildren(...(current?.diagnostics || []).map(message => {
+    const item = document.createElement('li'); item.textContent = message; return item;
+  }));
+}
+$('inspect-document').addEventListener('click', () => {
+  if (!current) return;
+  ++previewGeneration; pendingSource = undefined;
+  closeDrawer(); hideCitation(); closeContents();
+  $('inspector').hidden = false;
+  $('source-title').textContent = 'Current Markdown';
+  $('source-provenance').textContent = `Inert source text · SHA-256 ${current.sourceSHA256} · not authorship or approval`;
+  $('source-link').hidden = true; $('load-source').hidden = true; $('check-updates').hidden = true;
+  $('source-revision').textContent = ''; $('source-updates').textContent = '';
+  $('source-preview').classList.remove('inert-unverified');
+  const code = document.createElement('pre'); code.textContent = current.source;
+  $('source-preview').replaceChildren(code);
+  $('source-raw').textContent = current.source;
+  $('close-inspector').focus({ preventScroll: true });
+});
+
 async function display(source, provenance, embedded = false) {
   const turn = ++generation;
   ++previewGeneration;
   hideCitation(); closeContents();
   $('inspector').hidden = true;
   try {
-    const result = await renderDocument(source, options);
+    const [result, sourceSHA256] = await Promise.all([renderDocument(source, options), sha256(new TextEncoder().encode(source))]);
     if (turn !== generation) return;
-    current = { ...result, source, embedded };
+    current = { ...result, source, embedded, sourceSHA256 };
+    updateDocumentChecks();
     document.body.classList.toggle('meta-empty', Boolean(config.metaDocument && embedded));
     $('paper').innerHTML = result.html;
     if (config.metaDocument?.id === 'heartfulness') decorateHeartfulness($('paper'));
@@ -233,6 +260,7 @@ async function display(source, provenance, embedded = false) {
   } catch (e) {
     if (turn !== generation) return;
     current = undefined;
+    updateDocumentChecks();
     $('paper').textContent = `Document refused: ${e.message}`;
     $('asset-details').replaceChildren();
     $('toc').textContent = '';
@@ -247,8 +275,16 @@ function readFile(file) {
   const reader = new FileReader();
   const turn = ++generation;
   reader.onerror = () => { if (turn === generation) $('notice').textContent = 'FileReader could not read the selected file.'; };
-  reader.onload = () => { if (turn === generation) void display(reader.result, `Locally selected / unpublished: ${file.name}. Relative resources unavailable: select a source separately or use an embedded snapshot.`); };
-  reader.readAsText(file, 'utf-8');
+  reader.onload = () => {
+    if (turn !== generation) return;
+    try {
+      const source = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(reader.result);
+      void display(source, `Locally selected / unpublished: ${file.name}. Relative resources unavailable: select a source separately or use an embedded snapshot.`);
+    } catch {
+      $('notice').textContent = 'File refused: invalid UTF-8. Current document unchanged; save the Markdown as UTF-8 and try again.';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 $('file').addEventListener('change', e => readFile(e.target.files[0]));
@@ -268,7 +304,7 @@ async function loadDocumentURL(url, digest, initial = false) {
     if (turn !== generation) return;
     const message = `Document unavailable/refused: ${error.message}. CORS failures require a permitted server or local file; no proxy is used.`;
     $('notice').textContent = message;
-    if (initial) { $('paper').textContent = message; document.title = 'Document unavailable — markdoc-ragbaz-sci-tufte'; }
+    if (initial) { current = undefined; updateDocumentChecks(); $('paper').textContent = message; document.title = 'Document unavailable — markdoc-ragbaz-sci-tufte'; }
   }
 }
 $('url-form').addEventListener('submit', e => {

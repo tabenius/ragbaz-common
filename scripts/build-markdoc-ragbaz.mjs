@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { readFile, writeFile, mkdir, realpath, stat } from 'node:fs/promises';
+import { resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
-import { LIMITS, fetchResource, verifyResourceBytes } from '../src/content/markdoc-ragbaz.js';
+import { LIMITS, fetchResource, verifyResourceBytes, sha256 } from '../src/content/markdoc-ragbaz.js';
 import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 export { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 
@@ -12,6 +12,13 @@ const bytes = async path => {
   const data = await readFile(path);
   if (data.length > LIMITS.bytes) throw new Error(`File exceeds byte limit: ${path}`);
   return data;
+};
+const canonicalPath = async path => {
+  try { return await realpath(path); }
+  catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    return resolve(await canonicalPath(dirname(path)), basename(path));
+  }
 };
 
 // Full texts inspected from npm tarball LICENSE files, not inferred from SPDX
@@ -177,10 +184,27 @@ export async function prepareStandaloneAssets() {
 }
 
 /** No network by default. Local snapshots mapping: { sourceId: "local/path.md" }. */
-export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false, preparedAssets } = {}) {
+export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false, preparedAssets, strict = false, report: reportPath } = {}) {
   if (!input) throw new Error('An input Markdown path is required');
+  configPath ||= resolve(root, 'demo/markdoc-ragbaz/registry.json');
+  // Refuse accidental replacement of source/config or aliasing report and HTML.
+  // Compare both canonical paths and existing inodes (symlinks and hard links).
+  const paths = await Promise.all([input, configPath, mappingPath, output, reportPath].map(async path => {
+    if (!path) return null;
+    const absolute = resolve(path);
+    const canonical = await canonicalPath(absolute);
+    const info = await stat(absolute).catch(error => { if (error.code !== 'ENOENT') throw error; return null; });
+    return { canonical, info };
+  }));
+  for (const index of [3, 4]) {
+    if (!paths[index]) continue;
+    for (let other = 0; other < index; other++) {
+      const a = paths[index], b = paths[other];
+      if (b && (a.canonical === b.canonical || (a.info && b.info && a.info.dev === b.info.dev && a.info.ino === b.info.ino))) throw Error('Build output paths must not overwrite inputs or each other');
+    }
+  }
   const sourceBytes = await bytes(input);
-  const config = JSON.parse(await readFile(configPath || resolve(root, 'demo/markdoc-ragbaz/registry.json'), 'utf8'));
+  const config = JSON.parse(await readFile(configPath, 'utf8'));
   const mapping = mappingPath ? JSON.parse(await readFile(mappingPath, 'utf8')) : {};
   const fetcher = fetchSources ? globalThis.fetch : () => { throw new Error('Build network disabled (use --fetch-sources explicitly)'); };
   const loadSnapshot = mappingPath || fetchSources ? async entry => {
@@ -191,16 +215,36 @@ export async function buildStandalone({ input, output, config: configPath, snaps
     if (fetchSources && entry.url) return fetchResource(entry.url, { policy: config.policy, pinned: true, digest: entry.sha256, integrity: entry.integrity, purpose: 'inert-inspector' });
   } : undefined;
   const built = await buildStandaloneBytes({ sourceBytes, config, assets: preparedAssets || await prepareStandaloneAssets(), fetcher, loadSnapshot });
+  const htmlBytes = new TextEncoder().encode(built.html);
+  const report = {
+    schema: 'ragbaz.build-report/1',
+    clean: built.result.clean,
+    diagnostics: built.result.diagnostics,
+    sourceSHA256: built.payload.sha256,
+    renderSHA256: built.payload.renderSHA256,
+    runtimeSHA256: built.payload.runtimeSHA256,
+    html: { sha256: await sha256(htmlBytes), bytes: htmlBytes.length },
+    headings: built.result.headings,
+    usedDialects: built.result.usedDialects,
+  };
+  if (reportPath) { await mkdir(dirname(resolve(reportPath)), { recursive: true }); await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n'); }
+  if (strict && !report.clean) {
+    const error = new Error(`Strict build refused: ${report.diagnostics.join('; ')}`);
+    error.name = 'BuildValidationError';
+    error.report = report;
+    throw error;
+  }
   if (output) { await mkdir(dirname(resolve(output)), { recursive: true }); await writeFile(output, built.html); }
-  return built;
+  return { ...built, report };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2); const options = {};
   for (let i = 0; i < args.length; i++) {
-    const key = { '--input': 'input', '--output': 'output', '--config': 'config', '--snapshots': 'snapshots' }[args[i]];
-    if (key) { if (!args[i + 1]) throw new Error(`Missing value for ${args[i]}`); options[key] = args[++i]; }
+    const key = { '--input': 'input', '--output': 'output', '--config': 'config', '--snapshots': 'snapshots', '--report': 'report' }[args[i]];
+    if (key) { if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`Missing value for ${args[i]}`); options[key] = args[++i]; }
     else if (args[i] === '--fetch-sources') options.fetchSources = true;
+    else if (args[i] === '--strict') options.strict = true;
     else throw new Error(`Unknown argument: ${args[i]}`);
   }
   options.input ??= 'reports/Fleet ledger witness architecture.md';
