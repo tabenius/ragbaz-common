@@ -122,6 +122,27 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-22 — active-document checks and lossless local-file loading
+
+Add a quiet, opt-in Document checks drawer section and inert inspection of current
+Markdown. Show active rendering diagnostics and a source content digest distinct
+from the embedded render tuple. Clear inspection state after refused rendering.
+Local file loading now decodes bounded ArrayBuffer bytes as fatal UTF-8, retaining
+BOM and line endings for hashing; invalid UTF-8 preserves the current document.
+No new remote origins, authored execution or automatic fetches are enabled.
+Refresh frozen standalone output hashes for these deliberate UI/runtime changes.
+
+### 2026-10-22 — strict generator checks and deterministic integrity reports
+
+Add opt-in `strict`/`--strict` to the Node standalone build adapter, refusing
+renderer diagnostics before replacing HTML. Preserve lenient visible-refusal
+rendering by default and leave portable renderer bytes unchanged. Optional
+`report`/`--report` emits a versioned deterministic JSON report binding candidate
+HTML bytes to source, render and runtime hashes. Strict diagnostic failures still
+emit the rejected candidate's report; hard parse/transport failures do not.
+Refuse colliding input/output paths, including existing symlink/hard-link aliases.
+These checks are generation diagnostics, not manuscript or security approval.
+
 ### 2026-10-21 — host network policy for packaged reading surfaces
 
 Add an optional trusted `policy` seam to `buildMetaDocument`, preserving its

@@ -97,15 +97,18 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'Your paper title');
     await navigate(base + '?document=own.md&sha256=' + digest);
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'Own paper');
+    assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + digest);
     assert(await ev("!window.bad && !document.querySelector('#paper script') && document.getElementById('notice').textContent.includes('requested digest matched')"));
     await ev("document.getElementById('contract-link').click()"); await new Promise(r => setTimeout(r, 100));
     assert(await ev("document.getElementById('source-provenance').textContent.includes('digest matched')"), 'template contract survives document replacement');
     await navigate(base + '?document=refused.md');
     assert(await ev("document.getElementById('paper').textContent.includes('Document refused')"));
+    assert(await ev("document.getElementById('inspect-document').disabled && document.getElementById('document-digest').textContent === ''"));
     await ev("document.getElementById('contract-link').click()"); await new Promise(r => setTimeout(r, 100));
     assert(await ev("!document.getElementById('inspector').hidden && document.getElementById('source-provenance').textContent.includes('digest matched')"), 'offline contract remains inspectable after render refusal');
     await navigate(base + '?document=own.md&sha256=' + '0'.repeat(64));
     assert(await ev("document.getElementById('paper').textContent.includes('Document unavailable/refused') && !document.getElementById('paper').textContent.includes('Own paper')"));
+    assert(await ev("document.getElementById('inspect-document').disabled && document.getElementById('document-check-status').textContent.includes('No rendered document')"));
     const before = requests.filter(p => p.endsWith('.md')).length;
     await navigate(base + '?document=javascript%3Aalert(1)');
     assert(await ev("document.getElementById('paper').textContent.includes('Document unavailable/refused')"));
@@ -710,6 +713,52 @@ window.networkCalls=0; window.fetch=()=>{window.networkCalls++;return Promise.re
     assert.equal(run.exceptionDetails, undefined, JSON.stringify(run.exceptionDetails));
     const result = await browser.call('Runtime.evaluate', { expression: "document.getElementById('smoke-result')?.textContent", returnByValue: true }, sessionId);
     assert.equal(result.result.value, 'PASS 23');
+  } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
+test('document checks follow active UTF-8 bytes, expose inert source and retain the document on invalid file input', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-document-checks-'); let browser;
+  try {
+    const input = join(dir, 'paper.md'), output = join(dir, 'paper.html');
+    const source = '# Check me\n\n{% source ref="missing" /%}\n\n<script>window.inspectedScript=true</script>';
+    await writeFile(input, source);
+    const built = await buildStandalone({ input, output });
+    browser = headless(executable, join(dir, 'profile'));
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    await browser.call('Page.enable', {}, sessionId);
+    await browser.call('Emulation.setDeviceMetricsOverride', { width: 320, height: 700, deviceScaleFactor: 1, mobile: true }, sessionId);
+    const ev = async expression => {
+      const result = await browser.call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, sessionId);
+      assert.equal(result.exceptionDetails, undefined, JSON.stringify(result.exceptionDetails)); return result.result.value;
+    };
+    await browser.call('Page.navigate', { url: pathToFileURL(output).href }, sessionId);
+    assert(await ev("(async()=>{for(let i=0;i<100&&document.getElementById('inspect-document')?.disabled;i++)await new Promise(r=>setTimeout(r,25));return !document.getElementById('inspect-document')?.disabled})()"));
+    assert.match(await ev("document.getElementById('document-check-status').textContent"), /Partial \/ refused markup/);
+    assert.match(await ev("document.getElementById('document-diagnostics').textContent"), /Unknown source/);
+    assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + built.payload.sha256);
+    await ev("document.getElementById('reader-menu').click();document.getElementById('document-checks').open=true");
+    assert(await ev("document.getElementById('reader-drawer').scrollWidth <= document.getElementById('reader-drawer').clientWidth"), 'digest fits a 320px drawer');
+    await ev("document.getElementById('inspect-document').click()");
+    assert.equal(await ev("document.getElementById('source-preview').textContent"), source);
+    assert(await ev("!window.inspectedScript && !document.querySelector('#source-preview script') && document.getElementById('load-source').hidden && document.getElementById('check-updates').hidden"));
+    assert(await ev("document.activeElement.id === 'close-inspector'"));
+    const local = '\ufeff# Local åäö\r\n\r\nExact bytes.\r\n';
+    await ev(`(()=>{const dt=new DataTransfer();dt.items.add(new File([${JSON.stringify(local)}],'local.md'));const f=document.getElementById('file');f.files=dt.files;f.dispatchEvent(new Event('change'))})()`);
+    assert(await ev("(async()=>{for(let i=0;i<100&&!document.getElementById('paper').textContent.includes('Local åäö');i++)await new Promise(r=>setTimeout(r,25));return document.getElementById('paper').textContent.includes('Local åäö')})()"));
+    const digest = createHash('sha256').update(local).digest('hex');
+    assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + digest, 'BOM and CRLF contribute to the exact digest');
+    assert.match(await ev("document.getElementById('document-check-status').textContent"), /No rendering diagnostics/);
+    assert.equal(await ev("document.getElementById('document-diagnostics').childElementCount"), 0);
+    await ev("(()=>{const dt=new DataTransfer();dt.items.add(new File([new Uint8Array([255,254,65])],'bad.md'));const f=document.getElementById('file');f.files=dt.files;f.dispatchEvent(new Event('change'))})()");
+    assert(await ev("(async()=>{for(let i=0;i<100&&!document.getElementById('notice').textContent.includes('invalid UTF-8');i++)await new Promise(r=>setTimeout(r,25));return document.getElementById('notice').textContent.includes('invalid UTF-8')})()"));
+    assert(await ev("document.getElementById('paper').textContent.includes('Local åäö')"));
+    assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + digest);
+    await ev("document.getElementById('original').click()");
+    assert(await ev("(async()=>{for(let i=0;i<100&&!document.getElementById('paper').textContent.includes('Check me');i++)await new Promise(r=>setTimeout(r,25));return document.getElementById('paper').textContent.includes('Check me')})()"));
+    assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + built.payload.sha256);
   } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
 

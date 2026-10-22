@@ -40,8 +40,7 @@ export async function buildMetaDocument({ output = resolve(root, 'dist-meta'), t
     'README.md': await readFile(resolve(root, `demo/markdoc-ragbaz/${companion}/README.md`)),
   };
   for (const [name, content] of Object.entries(files)) await writeFile(resolve(directory, name), content);
-  const built = await buildStandalone({ input: resolve(directory, 'template.md'), output: resolve(directory, 'index.html'), config: resolve(directory, 'surface.json'), snapshots: resolve(directory, 'snapshots.json') });
-  if (built.result.diagnostics.length) throw new Error(`Template refused: ${built.result.diagnostics.join('; ')}`);
+  const built = await buildStandalone({ input: resolve(directory, 'template.md'), output: resolve(directory, 'index.html'), config: resolve(directory, 'surface.json'), snapshots: resolve(directory, 'snapshots.json'), strict: true });
   files['index.html'] = built.html;
   files['assets/reader.js'] = built.assets.runtime;
   files['assets/reader.css'] = built.assets.styles;
