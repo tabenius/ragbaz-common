@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { buildStandalone, collectBundleNotices } from '../scripts/build-markdoc-ragbaz.mjs';
-import { escapeHTML } from '../src/content/markdoc-ragbaz.js';
+import { escapeHTML, renderDocument } from '../src/content/markdoc-ragbaz.js';
 import worker, { serveBuiltHTML } from '../demo/markdoc-ragbaz/worker.mjs';
 import { buildMetaDocument, META_MOUNT } from '../scripts/build-markdoc-ragbaz-sci-tufte.mjs';
 import { createServer } from 'node:http';
@@ -436,7 +436,7 @@ test('all five templates print the whole manuscript without controls, source pan
   } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
 
-function headless(executable, profile) {
+function headless(executable, profile, { ready = "document.readyState==='complete' && !!document.getElementById('paper') && !!document.getElementById('notice')?.textContent && !document.getElementById('notice').textContent.startsWith('Loading')" } = {}) {
   const child = spawn(executable, ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-background-networking', '--disable-extensions', '--disable-component-update', '--disable-sync', '--no-first-run', '--no-startup-window', '--password-store=basic', '--host-resolver-rules=EXCLUDE 127.0.0.1, MAP * ~NOTFOUND', `--user-data-dir=${profile}`, '--remote-debugging-pipe'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
   let id = 0; let buffer = ''; let stderr = '';
   const pending = new Map();
@@ -466,7 +466,7 @@ function headless(executable, profile) {
       const deadline = Date.now() + 15000;
       while (Date.now() < deadline) {
         try {
-          const state = await send('Runtime.evaluate', { returnByValue: true, expression: "document.readyState==='complete' && !!document.getElementById('paper') && !!document.getElementById('notice')?.textContent && !document.getElementById('notice').textContent.startsWith('Loading')" }, sessionId);
+          const state = await send('Runtime.evaluate', { returnByValue: true, expression: ready }, sessionId);
           if (state.result?.value) return result;
         } catch (error) { if (Date.now() >= deadline) throw error; }
         await new Promise(resolve => setTimeout(resolve, 50));
@@ -759,6 +759,42 @@ test('document checks follow active UTF-8 bytes, expose inert source and retain 
     await ev("document.getElementById('original').click()");
     assert(await ev("(async()=>{for(let i=0;i<100&&!document.getElementById('paper').textContent.includes('Check me');i++)await new Promise(r=>setTimeout(r,25));return document.getElementById('paper').textContent.includes('Check me')})()"));
     assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + built.payload.sha256);
+  } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
+test('opt-in visualization fallbacks stay inert and printable in offline Chromium', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-visualization-'); let browser;
+  try {
+    const cases = [
+      ['mermaid', 'graph TD\nA["<script>window.injected=true</script>"]-->B'],
+      ['plantuml', '@startuml\nAlice -> Bob\n@enduml'],
+      ['cytoscape', JSON.stringify({ nodes: [{ id: 'a', label: '<img src=https://example.test/track>' }], edges: [] })],
+      ['chartjs', JSON.stringify({ type: 'bar', data: { labels: ['A'], datasets: [{ label: 'Count', data: [3] }] } })],
+      ['vega-lite', JSON.stringify({ mark: 'bar', data: { values: [{ category: 'A', count: 3 }] }, encoding: { x: { field: 'category', type: 'nominal' }, y: { field: 'count', type: 'quantitative' } } })],
+      ['plotly', JSON.stringify({ data: [{ name: 'Count', type: 'bar', x: ['A'], y: [3] }] })],
+    ];
+    const html = [];
+    for (const [format, source] of cases) {
+      const rendered = await renderDocument('```' + format + '\n' + source + '\n```\n', { visualizations: { descriptions: { 1: format + ' accessible fallback' } } });
+      assert(rendered.clean); html.push(rendered.html);
+    }
+    const output = join(dir, 'visualizations.html'); await writeFile(output, '<!doctype html><meta charset="utf-8"><title>Offline visualization profiles</title>' + html.join('\n'));
+    browser = headless(executable, join(dir, 'profile'), { ready: "document.readyState==='complete' && document.querySelectorAll('figure').length===6" });
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    await browser.call('Page.enable', {}, sessionId);
+    await browser.call('Page.navigate', { url: pathToFileURL(output).href }, sessionId);
+    const ev = async expression => {
+      const result = await browser.call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, sessionId);
+      assert.equal(result.exceptionDetails, undefined); return result.result.value;
+    };
+    assert(await ev("(async()=>{for(let i=0;i<100&&document.querySelectorAll('figure').length!==6;i++)await new Promise(r=>setTimeout(r,25));return document.querySelectorAll('figure').length===6})()"));
+    assert(await ev("!window.injected && !document.querySelector('script,img,iframe,svg,canvas') && document.querySelectorAll('table').length===4"));
+    await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, sessionId);
+    assert(await ev("[...document.querySelectorAll('figure,table,pre')].every(e=>e.getBoundingClientRect().height>0)"));
+    assert(await ev("document.body.textContent.includes('<script>window.injected=true</script>') && document.body.textContent.includes('<img src=https://example.test/track>')"));
   } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
 

@@ -122,6 +122,16 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-24 — opt-in visualization profiles and library direction
+
+Add bounded, non-executable visualization profiles, exposed separately and through
+opt-in Markdoc fences. Mermaid/PlantUML remain source-only; Cytoscape, Chart.js,
+Vega-Lite and Plotly use restricted inline-data profiles with exact table fallbacks.
+No graphical library execution, external rendering endpoint or publication service
+is introduced. Existing default fence behavior remains literal. Frozen standalone
+hashes change deliberately because the browser runtime includes the new validator.
+Record a staged, non-binding multi-human/agent online/mesh publication architecture.
+
 ### 2026-10-24 — Fragment integration hardening
 
 Integrate the original Fragment draft alongside the preserved Markdoc renderer

@@ -44,6 +44,14 @@ reads a hard-coded origin, or assumes a table prefix.
 
 ### Reusable Markdoc document surface
 
+Opt-in [visualization profiles](docs/VISUALIZATIONS.md) accept Mermaid/PlantUML
+source and restricted Cytoscape/Chart.js/Vega-Lite/Plotly JSON. This first increment
+renders inert source and exact tables, **not library-backed graphics**. The
+separate `@ragbaz/common/content/visualizations` API exposes the same bounded
+parser and escaped HTML projection. No new dependency or remote renderer is enabled.
+See the [publication-library direction](docs/ARTIFACT-LIBRARY-DIRECTION.md) for the
+proposed multi-human/agent and online/mesh architecture; no sharing service exists yet.
+
 `@ragbaz/common/content/markdoc-ragbaz` adds an official-AST, data-only document
 renderer with versioned YAML/JSON metadata, lazy declarative dialect/theme
 registries, visible refusals and safe source previews. Existing content APIs
