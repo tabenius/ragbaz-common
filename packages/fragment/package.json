@@ -1,0 +1,33 @@
+{
+  "name": "@ragbaz/fragment",
+  "version": "0.1.0",
+  "description": "Fragment artifact protocol and keyboard-first widgets",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:parity": "cargo build --quiet && node tests/parity.mjs",
+    "check": "npm test && cargo test && npm run test:parity && npm run build && npm run test:browser"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "cytoscape": "3.34.3",
+    "esbuild": "0.28.2",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  },
+  "private": true,
+  "exports": {
+    ".": "./src/core.js",
+    "./widgets": "./src/widgets.js",
+    "./schema": "./schema.json"
+  }
+}

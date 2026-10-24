@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-template="@@TEMPLATE@@">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'@@FONTSTYLE@@; connect-src @@CONNECT@@ 'self'; img-src 'none'; font-src @@FONTS@@; base-uri 'none'; form-action 'none'">
+<title>@@TITLE@@</title>
+<script>try{const p=localStorage.getItem('ragbaz.sci.appearance');if(['light','dark'].includes(p))document.documentElement.dataset.appearance=p}catch{};</script>
+<style>@@STYLES@@</style>
+</head>
+<body>
+<button id="reveal-tools" class="reveal-tools" aria-label="Show reading controls" title="Show reading controls"></button>
+<header id="reading-bar" class="reading-bar" aria-label="Reading controls">
+<button id="contract-link" class="contract-link" title="Read the rendering contract" aria-label="Read markdoc-ragbaz rendering contract" disabled>markdoc-ragbaz · 1</button>
+<button id="reader-menu" class="icon-button" aria-label="Document tools" title="Document tools" aria-haspopup="dialog" aria-controls="reader-drawer" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+</header>
+<button id="toc-handle" class="toc-handle" aria-label="Show table of contents" title="Contents" aria-controls="toc-panel" aria-expanded="false"><svg viewBox="0 0 30 64" aria-hidden="true"><path class="toc-brace" d="M2 3c7 0 7 5 7 11v9c0 5 2 8 6 9-4 1-6 4-6 9v9c0 6 0 11-7 11"/><path d="M16 19v26M21 14v36M26 19v26"/></svg></button>
+<aside id="toc-panel" class="toc-panel" aria-labelledby="toc-title" hidden><div class="drawer-heading"><h2 id="toc-title">Contents</h2><button id="close-toc" class="icon-button" aria-label="Close contents"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><nav id="toc" aria-label="Contents">@@TOC@@</nav></aside>
+<dialog id="reader-drawer" class="reader-drawer" aria-labelledby="drawer-title">
+<div class="drawer-heading"><h2 id="drawer-title">Document tools</h2><button id="close-drawer" class="icon-button" aria-label="Close document tools" title="Close document tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+<div class="drawer-actions">
+<button id="flow-mode" class="tool-action" data-reader-action="flow" aria-pressed="true"><span>Flow reading</span><kbd>↑ ↓ / j k</kbd></button>
+<button id="paper-mode" class="tool-action" data-reader-action="paper" aria-pressed="false"><span>Paper spreads</span><kbd>← → / h Shift+L</kbd></button>
+<button class="tool-action" data-reader-action="fullscreen" data-fullscreen aria-pressed="false"><span>Fullscreen</span><kbd>f / Esc</kbd></button>
+<button id="legend-toggle" class="tool-action" data-reader-action="legend" aria-pressed="false"><span>Shortcut legend</span><kbd>l</kbd></button>
+<button id="open-file" class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h7l2 3h9l-3 12H3V7Zm0 5h16"/></svg><span>Open Markdown file</span></button>
+<input id="file" type="file" accept=".md,.markdown,text/markdown,text/plain" hidden aria-label="Open Markdown file">
+<button id="original" class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M6 10v11h12V10M10 21v-7h4v7"/></svg><span>Embedded document</span></button>
+<button id="inspect-document" class="tool-action" disabled><span>Inspect current Markdown</span></button>
+</div>
+<label class="appearance-option" for="appearance">Appearance<select id="appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+<details class="drawer-section"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 15 6-6M8 17l-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0m0 10a4 4 0 0 0 6 0l5-5a4 4 0 0 0-6-6l-1 1"/></svg>Load URL</summary>
+<form id="url-form"><label for="url">Allowed HTTPS / same-origin Markdown URL</label><input id="url" type="url" placeholder="SHA-pinned GitHub blob or allowed URL"><button class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Load URL</span></button></form></details>
+<details class="drawer-section"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 4-4 4 4 4M4 8h12m0 12 4-4-4-4m4 4H8"/></svg>Reading options</summary><label class="drop-option"><input id="enable-drop" type="checkbox">Enable drag-and-drop Markdown loading</label><label class="citation-mode-option" for="citation-mode">Citation presentation<select id="citation-mode"><option value="auto">Automatic · margin on laptop</option><option value="margin">Margin · side notes</option><option value="wide">Wide · tooltip cards</option></select></label><p id="transport">Drag-and-drop is off until enabled. No automatic network requests.</p></details>
+<button id="open-contents" class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Contents</span></button>
+<details id="revision-history" class="drawer-section"><summary>Manuscript &amp; revisions</summary><div id="revision-list"></div><p class="reader-caveat">Publication is a joint human–AI review decision, not an automated test or build result.</p></details>
+<details id="document-checks" class="drawer-section"><summary>Document checks</summary><p id="document-check-status" role="status">Checking document…</p><p id="document-digest"></p><ul id="document-diagnostics"></ul><p class="reader-caveat">Checks describe the currently rendered Markdown, not source freshness, factual correctness or publication approval. Its content digest is separate from the embedded package's render identity.</p></details>
+<details class="drawer-section"><summary>Reading modes &amp; keyboard shortcuts</summary><p>Flow reads vertically. Left/right enters paper view: two pages per desktop screen, one on smaller screens. Up/down or j/k returns to flow at the current passage. The first horizontal key changes mode; subsequent presses turn spreads.</p><div id="menu-shortcuts"></div><p class="reader-caveat">Lowercase l is reserved for the legend; Shift+L is next spread. Shortcuts do not intercept typing, menus, source inspection or modified browser commands.</p></details>
+<details class="drawer-section"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg>Integrity &amp; versions</summary><p id="notice" role="status">@@PROVENANCE@@</p><div id="asset-details"></div><p class="reader-caveat">Authored models are not live observations. “Verified” in prose is an author's claim, not renderer attestation. Offline snapshots do not establish freshness or authorship.</p></details>
+<details id="software-credits" class="drawer-section"><summary>Software credits and full license notices</summary><pre>@@CREDITS@@</pre></details>
+</dialog>
+<aside id="shortcut-legend" class="shortcut-legend" aria-labelledby="legend-title" hidden><div class="drawer-heading"><h2 id="legend-title">Reading keys</h2><button id="close-legend" class="icon-button" aria-label="Hide shortcut legend">×</button></div><div id="legend-shortcuts"></div></aside>
+<nav id="spread-controls" class="spread-controls" aria-label="Paper pages" hidden><button id="previous-spread" data-reader-action="previous" aria-label="Previous spread">←</button><span id="spread-position"></span><button id="next-spread" data-reader-action="next" aria-label="Next spread">→</button></nav>
+<p id="navigation-status" class="visually-hidden" role="status" aria-live="polite"></p>
+<aside id="citation-card" class="citation-card" aria-label="Bibliographic reference" hidden><div class="citation-card-heading"><span id="citation-number"></span><button id="close-citation" class="icon-button" aria-label="Close reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><div id="citation-body"></div></aside>
+<div class="reading-layout">
+<main id="paper" tabindex="-1">@@PAPER@@</main>
+<aside id="inspector" aria-label="Source inspection" hidden>
+<button id="close-inspector">Close source</button><h2 id="source-title">Source</h2>
+<p id="source-provenance"></p><a id="source-link" rel="noreferrer noopener" hidden>Open provenance link</a>
+<button id="load-source" hidden>Load allowed pinned source (network)</button>
+<pre id="source-revision"></pre><button id="check-updates" hidden>Check source updates (network)</button><pre id="source-updates" role="status"></pre>
+<div id="source-preview"></div><details><summary>Original Markdown (inert)</summary><pre id="source-raw"></pre></details>
+</aside>
+</div>
+<script id="payload" type="application/json">@@PAYLOAD@@</script>
+<script>@@RUNTIME@@</script>
+</body>
+</html>

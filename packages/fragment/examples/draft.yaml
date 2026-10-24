@@ -1,0 +1,144 @@
+fragment: "0.1"
+id: fragment-protocol-draft
+kind: template
+meta:
+  title: A small language for thoughtful artifacts
+  created: 2026-10-07T18:07:58+02:00
+  timezone: Europe/Stockholm
+  disclosure: private
+page:
+  size: A4
+  orientation: portrait
+  margin_mm: 16
+  font_pt: 10
+theme:
+  requested: gruvbox-dark-solarized-ragbaz
+  resolved: gruvbox-dark-solarized-ragbaz
+  tokens:
+    background: "#282828"
+    foreground: "#ebdbb2"
+    surface: "#32302f"
+    primary: "#458588"
+    secondary: "#d5a879"
+    accent: "#d79921"
+    border: "#665c54"
+    muted: "#bdae93"
+    syntax-keyword: "#83a598"
+    syntax-string: "#b8bb26"
+    syntax-number: "#d3869b"
+    syntax-comment: "#a89984"
+    info: "#83a598"
+    success: "#b8bb26"
+    warning: "#fabd2f"
+    danger: "#fb4934"
+    figure: "#8ec07c"
+    form: "#d5a879"
+  font: system-serif
+  provenance: fragment-registry/0.1; explicit tokens are authoritative
+constraints:
+  - capability: interaction
+    level: degrade
+    scope: all
+    reason: The reverse-side graph and knowledge check are interactive.
+    fallback: Printed concept map and answer explanation.
+  - capability: storage
+    level: degrade
+    scope: screen
+    reason: Remembering your theme is more convenient.
+    fallback: Use in-memory preferences for this session.
+bindings:
+  author: null
+blocks:
+  - id: intro
+    type: paragraph
+    title: 01 / Intent becomes inspectable
+    text: "Fragment keeps a human-readable description, an exact machine model and a
+      printable view together. An unfinished idea remains visibly unfinished.
+      Author: {{ author }}."
+  - id: principles
+    type: figure-group
+    title: 02 / Three views, one meaning
+    text: Each view answers a different question without changing the underlying
+      artifact.
+    figures:
+      - label: Intent
+        value: YAML
+        explanation: Quick inspection, comments and named concepts.
+      - label: Contract
+        value: JSON
+        explanation: Validation, explicit constraints and reproducible tokens.
+      - label: Experience
+        value: A4
+        explanation: Readable print, navigable widgets and a concept map.
+  - id: capabilities
+    type: callout
+    role: info
+    title: 03 / Requirements are not preferences
+    text: A missing required capability blocks the affected target. A degradation
+      keeps the artifact usable and explains the fallback. Unknown capabilities
+      are reported explicitly.
+  - id: snippet
+    type: code
+    title: 04 / Small enough to read
+    language: yaml
+    text: |-
+      fragment: "0.1"
+      kind: template
+      constraints:
+        - capability: interaction
+          level: degrade
+          scope: all
+          reason: Explore the concept map
+          fallback: Printed relationship list
+  - id: quiz
+    type: quiz
+    title: 05 / Check the distinction
+    text: If interaction is unavailable, what should this draft do?
+    options:
+      - Refuse all output
+      - Render its stated static fallback
+    answer: 1
+  - id: next
+    type: form
+    title: 06 / Complete the template
+    text: Bind the author in the inspector; missing fields remain visible.
+graph:
+  nodes:
+    - id: intent
+      label: Human intent
+    - id: model
+      label: Exact model
+    - id: theme
+      label: Theme tokens
+    - id: capability
+      label: Capabilities
+    - id: render
+      label: Print + screen
+    - id: template
+      label: Bindings
+  edges:
+    - source: intent
+      target: model
+      weight: 0.95
+    - source: model
+      target: theme
+      weight: 0.6
+    - source: model
+      target: capability
+      weight: 0.85
+    - source: theme
+      target: render
+      weight: 0.75
+    - source: capability
+      target: render
+      weight: 0.9
+    - source: template
+      target: model
+      weight: 0.8
+  layout: cose
+additional:
+  - id: zoom-intent
+    intent: Assign zoom in and out to + and - keys. Already part of the default
+      keyboard profile.
+    status: accepted
+    patch: []

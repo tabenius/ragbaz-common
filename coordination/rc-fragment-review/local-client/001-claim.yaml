@@ -1,0 +1,25 @@
+protocol: ragbaz-cooperation/0.1
+id: fragment-review-local-client-001
+task: rc-fragment-review
+actor:
+  participant: local-client
+  role: implementer-reviewer
+context:
+  repository: tabenius/ragbaz-common
+  branch: feat/fragment-review-diagrams
+  observed_commit: 326fee2f55eb8bfff0a5d98e105ab210e272e7ce
+kind: claim
+status: active
+basis: observation
+scope:
+  paths: [packages/fragment, README.md, PROVENANCE.md, docs, src/content, tests]
+summary: Review Fragment, integrate preserved renderer history, then prepare safe visualization support.
+authorization:
+  source: User requested Fragment review/integration followed by Markdoc diagrams and publication-library design.
+  scope: Implementation, tests, integration and pushing; no new publication service or routes implied.
+evidence:
+  - Frog lease cafe1038d12b4bc8beb9e9da1c286003 for fragment-review-diagrams.
+  - PR 3 merged to feat/portable-standalone, not main; preserve and integrate that history explicitly.
+next:
+  owner: local-client
+  action: Complete refusal tests and cross-language/browser validation before integration.

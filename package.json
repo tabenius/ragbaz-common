@@ -18,18 +18,26 @@
     "./abuse-gate": "./src/abuse-gate.js",
     "./identity": "./src/identity.js",
     "./content": "./src/content/index.js",
+    "./content/markdoc-ragbaz": "./src/content/markdoc-ragbaz.js",
+    "./standalone": "./demo/markdoc-ragbaz/standalone.js",
     "./schema.sql": "./schema.sql",
     "./prefix-migration": "./scripts/prefix-migration.mjs",
     "./build-llms-txt": "./scripts/build-llms-txt.mjs"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "check": "npm test",
     "llms-txt": "node scripts/build-llms-txt.mjs",
-    "prefix-migration": "node scripts/prefix-migration.mjs"
+    "prefix-migration": "node scripts/prefix-migration.mjs",
+    "markdoc-ragbaz": "node scripts/build-markdoc-ragbaz.mjs",
+    "markdoc-ragbaz-sci-tufte": "node scripts/build-markdoc-ragbaz-sci-tufte.mjs"
   },
   "dependencies": {
     "@markdoc/markdoc": "0.5.10",
-    "@simplewebauthn/server": "13.3.3"
+    "@simplewebauthn/server": "13.3.3",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
   }
 }

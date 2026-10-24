@@ -1,0 +1,48 @@
+/* Heartfulness — a contemporary botanical keepsake, not a period facsimile. */
+:root[data-template=heartfulness]{--paper:#f5edcf;--ink:#413b31;--muted:#716451;--accent:#665a38;--rule:#c8b994;--warning:#8a493e;--heart-stem:#667252;--heart-leaf:#a7ac82;--heart-rose:#986957;--heart-petal:#dbb3a0;--panel:#eee4c5;--code:#eee4c5;--measure:63ch;--text-size:20px}
+html[data-template=heartfulness]{background:var(--paper)}
+[data-template=heartfulness] body{font-family:Baskerville,'Palatino Linotype',Palatino,Georgia,serif;line-height:1.85;background:var(--paper)}
+html[data-template=heartfulness] .reading-layout{position:relative;max-width:960px!important;padding:100px 124px 150px!important;margin:42px auto!important;border:1px solid var(--rule);outline:1px solid var(--rule);outline-offset:-9px}
+[data-template=heartfulness] #paper{position:relative;z-index:1;padding:0;overflow-wrap:anywhere}
+html[data-template=heartfulness] #paper>article>h1{font:italic 400 clamp(3.7rem,7vw,6.2rem)/1.05 Baskerville,'Palatino Linotype',Palatino,Georgia,serif;letter-spacing:-.055em;text-align:center;max-width:100%;margin:.35em 0 .45em;overflow-wrap:anywhere;text-wrap:balance}
+[data-template=heartfulness] #paper>article>h1::before{content:'THE HEARTFULNESS PRESS';display:block;font:10px/1.5 Georgia,serif;letter-spacing:.34em;color:var(--muted);margin-bottom:2.7rem}
+[data-template=heartfulness] #paper>article>h1::after{content:'❧';display:block;font:32px/1 Georgia,serif;letter-spacing:0;color:var(--heart-stem);margin-top:1.3rem}
+[data-template=heartfulness] #paper>article>h1~p:first-of-type{text-align:center;font-size:1.05em;color:var(--muted);margin:1.2em auto 2.5em}
+[data-template=heartfulness] #paper>article>h1+p em{font-weight:normal}
+[data-template=heartfulness] #paper>article>h2{font:italic 400 1.9rem/1.3 Baskerville,'Palatino Linotype',Palatino,Georgia,serif;text-align:center;border:0;padding:0;margin:0 0 1.2rem;text-wrap:balance}
+[data-template=heartfulness] #paper>article>h3{font-variant:small-caps;letter-spacing:.025em}
+[data-template=heartfulness] #paper>article>p{margin:1.3em 0}
+[data-template=heartfulness] #paper>article>h2+p::first-letter{float:left;font-size:3.1em;line-height:.9;padding:.12em .13em 0 0;color:var(--heart-rose)}
+[data-template=heartfulness] #paper blockquote{font-style:italic;border-left:1px solid var(--heart-rose);color:var(--muted)}
+[data-template=heartfulness] #paper hr{border:0;border-top:1px solid var(--rule);width:30%;margin:2.4rem auto}
+[data-template=heartfulness] .heart-frame{position:absolute;inset:0;pointer-events:none;z-index:0}
+[data-template=heartfulness] .heart-corner{position:absolute;width:165px;height:285px;opacity:.8}
+[data-template=heartfulness] .heart-corner svg{display:block;width:100%;height:100%;stroke:none;fill:none}
+[data-template=heartfulness] .heart-corner.nw{left:9px;top:10px}[data-template=heartfulness] .heart-corner.ne{right:9px;top:10px;transform:scaleX(-1)}
+[data-template=heartfulness] .heart-corner.sw{left:9px;bottom:10px;transform:scaleY(-1)}[data-template=heartfulness] .heart-corner.se{right:9px;bottom:10px;transform:scale(-1)}
+[data-template=heartfulness] .heart-flourish{width:min(270px,85%);margin:2.8rem auto .6rem;break-after:avoid;pointer-events:none}
+[data-template=heartfulness] .heart-flourish svg{display:block;width:100%;height:auto;stroke:none;fill:none}
+[data-template=heartfulness] .heart-grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.055;mix-blend-mode:multiply}
+[data-template=heartfulness] .heart-grain>svg{width:100%;height:100%;stroke:none}
+[data-template=heartfulness][data-heart-texture=smooth] .heart-grain{display:none}
+[data-template=heartfulness][data-heart-ornaments=quiet] .heart-frame{display:none}
+[data-template=heartfulness][data-heart-ornaments=quiet] .heart-flourish{width:155px;opacity:.8}
+[data-template=heartfulness][data-heart-ornaments=plain] :is(.heart-frame,.heart-flourish){display:none}
+[data-template=heartfulness][data-heart-ornaments=plain] #paper>article>h1::after{content:none}
+[data-template=heartfulness][data-heart-ornaments=plain] #paper>article>h2{margin-top:2.5rem}
+[data-template=heartfulness] .heart-options{border:0;border-top:1px solid var(--rule);margin:0;padding:16px 0 20px;min-width:0}
+[data-template=heartfulness] .heart-options legend{font:italic 17px Georgia,serif;padding:0 8px 0 0}
+[data-template=heartfulness] .heart-options label:not(.heart-texture-option){display:grid;gap:8px;font-size:13px}
+[data-template=heartfulness] .heart-options select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:9px;min-height:42px;max-width:100%}
+[data-template=heartfulness] .heart-texture-option{display:flex;gap:8px;align-items:center;margin-top:16px;min-height:44px;font-size:13px;cursor:pointer}
+[data-template=heartfulness] .heart-options p{font-size:11px;color:var(--muted);margin-bottom:0}
+[data-template=heartfulness] .reading-bar{padding-inline:20px}
+/* Screen-only palettes leave paper and ornaments light when printing. */
+@media screen{html[data-template=heartfulness][data-appearance=dark]{--paper:#24231e;--ink:#e9dfc6;--muted:#c1b599;--accent:#c8c89f;--rule:#55503e;--heart-stem:#abb78d;--heart-leaf:#78825e;--heart-rose:#d09b86;--heart-petal:#75554c;--panel:#302e25;--code:#302e25}}
+@media screen and (prefers-color-scheme:dark){html[data-template=heartfulness]:not([data-appearance=light]){--paper:#24231e;--ink:#e9dfc6;--muted:#c1b599;--accent:#c8c89f;--rule:#55503e;--heart-stem:#abb78d;--heart-leaf:#78825e;--heart-rose:#d09b86;--heart-petal:#75554c;--panel:#302e25;--code:#302e25}}
+@media(max-width:700px){html[data-template=heartfulness] .reading-layout{margin:54px 12px 20px!important;padding:70px 28px 180px!important;max-width:calc(100% - 24px)!important}[data-template=heartfulness] .heart-corner{width:87px;height:150px;opacity:.55}html[data-template=heartfulness] #paper>article>h1{font-size:clamp(2.9rem,12vw,4.5rem)}[data-template=heartfulness] #paper>article>h1::before{font-size:8px;letter-spacing:.2em;margin-bottom:2.5rem}[data-template=heartfulness] body{font-size:18px}}
+html[data-template=heartfulness] body[data-reading-mode=paper] .reading-layout{margin:0 auto!important;padding:0 var(--sci-page-margin)!important;border:0;outline:0;max-width:none!important}
+[data-template=heartfulness] body[data-reading-mode=paper] .heart-frame{display:none}
+[data-template=heartfulness] body[data-reading-mode=paper] #paper>article>h1{font-size:2.8rem}
+@media print{:root[data-template=heartfulness]{--paper:white}html[data-template=heartfulness] .reading-layout{margin:0!important;padding:0!important;border:0;outline:0}[data-template=heartfulness] .heart-grain,[data-template=heartfulness] .heart-frame{display:none}[data-template=heartfulness] #paper>article>h1{font-size:30pt}[data-template=heartfulness] .heart-flourish{max-width:120px;break-inside:avoid}[data-template=heartfulness] #paper>article>h2+p::first-letter{float:none;font-size:inherit;padding:0;color:inherit}}
+@media(forced-colors:active){[data-template=heartfulness] .heart-grain,[data-template=heartfulness] .heart-frame,[data-template=heartfulness] .heart-flourish{display:none}[data-template=heartfulness] #paper>article>h1::after{content:none}[data-template=heartfulness] #paper>article>h2{margin-top:2.5rem}}
