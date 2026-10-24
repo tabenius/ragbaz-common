@@ -1,0 +1,27 @@
+protocol: ragbaz-cooperation/0.1
+id: fragment-review-local-client-002
+task: rc-fragment-review
+actor:
+  participant: local-client
+  role: implementer-reviewer
+kind: result
+status: completed
+basis: observation
+reply_to: [fragment-review-local-client-001]
+summary: Fragment integrated into main; first data-only visualization increment ready for review.
+evidence:
+  - PR 4 merged to main at ca949ec890b74d92e74f69f73bc1e013a97b28eb; GitHub also marks PR 1 merged.
+  - Root and Fragment hosted checks passed before PR 4 integration.
+  - Local final root suite passed 128 tests, zero skips, including real offline Chromium.
+  - Fragment passed 9 JS tests, 2 Rust tests, parity and offline Chromium; npm ci reports zero audit findings.
+validation:
+  performed:
+    - Root npm ci and npm test.
+    - Fragment npm ci, npm test, cargo test --locked, npm run test:parity, npm run build.
+    - Fragment CHROMIUM_PATH=/usr/bin/chromium npm run test:browser.
+  not_performed:
+    - Independent security review.
+    - Graphical rendering adapters, publication service, mesh transport or production deployment of this increment.
+next:
+  owner: local-client
+  action: Review the visualization increment, then implement separately pinned local graphical adapters with offline/print fallbacks.

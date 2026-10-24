@@ -2,6 +2,7 @@
 import Markdoc from '@markdoc/markdoc';
 import { parseDocument as parseYAML } from 'yaml';
 import { TOKENIZER_DEFAULTS } from './markdoc.js';
+import { VISUALIZATION_FORMATS, parseVisualization } from './visualizations.js';
 
 export const CONTRACT = 'ragbaz.document/1';
 export const LIMITS = Object.freeze({ bytes: 1_000_000, nodes: 20000, depth: 48, resources: 24, timeout: 8000 });
@@ -450,6 +451,8 @@ export async function renderDocument(source, options = {}) {
   const { ast, manifest } = parsed;
   const registry = options.registry || BUILTIN_REGISTRY;
   const diagnostics = [];
+  const visualizations = [];
+  let visualizationIndex = 0;
   const resolvedRegistry = { dialects: {}, themes: {} };
   const registryOptions = { ...options, resolvedRegistry };
   const specs = Object.create(null);
@@ -517,7 +520,21 @@ export async function renderDocument(source, options = {}) {
   // Escape/raw-HTML policy and tokenizer defaults are shared with markdoc.js.
   // Unlike legacy defineTags, attributes are never blindly forwarded.
   const config = { tags, variables: {}, nodes: {
-    fence: { ...Markdoc.nodes.fence, transform(node) { return new Markdoc.Tag('pre', {}, [new Markdoc.Tag('code', {}, [node.attributes.content || ''])]); } },
+    fence: { ...Markdoc.nodes.fence, transform(node) {
+      const source = node.attributes.content || '';
+      const format = node.attributes.language;
+      if (options.visualizations && VISUALIZATION_FORMATS.includes(format)) {
+        const index = ++visualizationIndex;
+        try {
+          const record = parseVisualization(format, source, { alt: options.visualizations.descriptions?.[index] });
+          visualizations.push(record);
+          const tag = (name, children) => new Markdoc.Tag(name, {}, children);
+          const table = record.data ? [tag('table', [tag('thead', [tag('tr', record.fallback.columns.map(c => tag('th', [c])))]), tag('tbody', record.fallback.rows.map(row => tag('tr', row.map(value => tag('td', [String(value)])))))])] : [];
+          return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), tag('p', [`${format} · ${record.rendering}; graphical adapter not installed.`]), ...table, tag('pre', [tag('code', [source])])]);
+        } catch (error) { return refuse(node, error.message); }
+      }
+      return new Markdoc.Tag('pre', {}, [new Markdoc.Tag('code', {}, [source])]);
+    } },
     image: { transform(node) { diagnostics.push('Image inert: explicit asset loading required'); return new Markdoc.Tag('span', { class: 'unavailable' }, [`[Image unavailable: ${node.attributes.alt || 'image'}]`]); } },
   } };
   const validation = Markdoc.validate(ast, config);
@@ -559,5 +576,5 @@ export async function renderDocument(source, options = {}) {
     ? `<p class="asset-provenance">Repository: ${safeLink(a.url) ? `<a href="${escapeHTML(safeLink(a.url))}" rel="noreferrer noopener">${escapeHTML(a.title || a.id)}</a>` : escapeHTML(a.id) + ' (unavailable URL)'}</p>`
     : `<p class="unavailable">Logo asset unavailable without explicit embedding: ${escapeHTML(a.id)} · ${escapeHTML(a.alt)}</p>`).join('');
   const html = assetNotes + render(tree);
-  return { html, manifest, headings, diagnostics: [...new Set(diagnostics)], clean: diagnostics.length === 0, usedDialects: used, theme, tree, resolvedRegistry };
+  return { html, manifest, headings, diagnostics: [...new Set(diagnostics)], clean: diagnostics.length === 0, usedDialects: used, theme, tree, resolvedRegistry, ...(options.visualizations ? { visualizations } : {}) };
 }
