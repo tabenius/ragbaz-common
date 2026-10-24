@@ -1,0 +1,31 @@
+name: Fragment conformance
+on:
+  pull_request:
+    paths: ['packages/fragment/**', '.github/workflows/fragment.yml']
+  push:
+    paths: ['packages/fragment/**', '.github/workflows/fragment.yml']
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/fragment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: cargo test --locked
+      - run: npm test
+      - run: npm run test:parity
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium --only-shell
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fragment-preview
+          path: packages/fragment/dist/fragment-preview.html

@@ -122,6 +122,16 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-24 — Fragment integration hardening
+
+Integrate the original Fragment draft alongside the preserved Markdoc renderer
+history. Capability observations no longer inherit JavaScript properties; unknown
+evaluation targets now fail closed in both JS and Rust (an intentional refusal
+change). Namespace studio graph IDs independently of authored node IDs and retain
+the current model when local imports contain invalid UTF-8. Upgrade Playwright
+and the locked fast-uri dependency after npm audit findings. Fragment remains an
+isolated draft package, not a publication service or an authorization system.
+
 ### 2026-10-22 — active-document checks and lossless local-file loading
 
 Add a quiet, opt-in Document checks drawer section and inert inspection of current
@@ -421,3 +431,23 @@ including full-credit inclusion, missing-license/unreviewed-inventory refusals,
 absolute external snapshot mappings and the headless offline reader. The actual
 WeftMark source-plan validator accepted the revised task file as one task. These
 are measured outcomes in documentation, not assertions stored in source intent.
+## 2026-10-07 — Fragment 0.1 draft (additive)
+
+`packages/fragment/` is new work from the user's artifact-protocol brief, not an
+extraction from another product. It contains Rust/JS protocol implementations,
+a shared JSON Schema, theme registry, keyboard/completion widgets, and a sample
+A4 studio. The identity public contract and consumers are unchanged. The new
+protocol is explicitly a draft; its boundaries and tests are documented in the
+package. Third-party bundled dependencies retain their notices.
+
+## 2026-10-08 — Cooperation protocol 0.1
+
+At the user's direction, AGENTS.md now serves as the cooperation contract and
+entry point for mutual expressions between the user and participating agents.
+It adds participant attribution, scoped authority, evidence-aware records,
+explicit acknowledgement and ownership transfer, disagreement/correction handling,
+and concurrent-write guidance. Existing engineering invariants and keyboard
+preferences are preserved. Frog remains the preferred task/lock mechanism; its
+absence must be recorded, with branch-isolated work and no claim of a held lock.
+The YAML envelope and coordination paths are conventions; no transport, terminal
+attachment, autonomous polling, or executable Glither integration is implied.

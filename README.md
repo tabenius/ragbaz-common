@@ -9,6 +9,11 @@ Read `AGENTS.md` first, then `PROVENANCE.md` for what was extracted from where.
 
 ## Why this exists
 
+Fragment is an isolated draft under [`packages/fragment`](packages/fragment/README.md).
+Its JS/Rust capability evaluators refuse unknown targets; the offline studio
+namespaces graph IDs and refuses invalid UTF-8 imports without replacing the model.
+Build and validate it separately from this package's identity and Markdoc runtime.
+
 Mouseion (and before it Elias.Venn / survivors.se) already solved the hard parts
 of pseudonymous identity: passkey-only authentication, opaque WebAuthn user
 handles, session tokens stored only as SHA-256 hashes, recovery codes, and a
@@ -223,3 +228,27 @@ leak an email address or an internal account id.
 
 Do not silently refactor a product to use this package. Read `ADOPTION.md`, then
 do it as a reviewed change in that product's repository with its own task.
+
+## Fragment artifact protocol (0.1 draft)
+
+[packages/fragment](packages/fragment/README.md) adds an independently built Rust
+and JavaScript artifact library: readable YAML/JSON, a shared schema, capability
+constraints, exact themes, templates, keyboard/completion widgets, and an offline
+A4 HTML preview. Its dependencies are isolated from the Worker identity package.
+The sample renderer is in `packages/fragment/examples/`; no product page rendering
+was added to the shared identity `src/`.
+
+```sh
+cd packages/fragment
+npm ci
+npm run build
+# Open dist/fragment-preview.html
+```
+
+## Cooperation across sessions
+
+[AGENTS.md](AGENTS.md) defines the shared cooperation protocol for the user and
+participating agents: identity, authority, task ownership, attributable expressions,
+evidence, disagreements, acknowledgements and handoffs. Task records use unique
+paths under `coordination/`; Git and PRs provide asynchronous exchange. This is a
+versioned convention, not a running messaging service or terminal connection.

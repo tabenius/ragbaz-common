@@ -1,0 +1,80 @@
+[
+  {
+    "requested": "gruvbox-dark-solarized-ragbaz",
+    "resolved": "gruvbox-dark-solarized-ragbaz",
+    "tokens": {
+      "background": "#282828",
+      "foreground": "#ebdbb2",
+      "surface": "#32302f",
+      "primary": "#458588",
+      "secondary": "#d5a879",
+      "accent": "#d79921",
+      "border": "#665c54",
+      "muted": "#bdae93",
+      "syntax-keyword": "#83a598",
+      "syntax-string": "#b8bb26",
+      "syntax-number": "#d3869b",
+      "syntax-comment": "#a89984",
+      "info": "#83a598",
+      "success": "#b8bb26",
+      "warning": "#fabd2f",
+      "danger": "#fb4934",
+      "figure": "#8ec07c",
+      "form": "#d5a879"
+    },
+    "font": "system-serif",
+    "provenance": "fragment-registry/0.1; explicit tokens are authoritative"
+  },
+  {
+    "requested": "solarized-light-ragbaz",
+    "resolved": "solarized-light-ragbaz",
+    "tokens": {
+      "background": "#fdf6e3",
+      "foreground": "#073642",
+      "surface": "#eee8d5",
+      "primary": "#006e96",
+      "secondary": "#82552a",
+      "accent": "#946100",
+      "border": "#839496",
+      "muted": "#586e75",
+      "syntax-keyword": "#005f87",
+      "syntax-string": "#426900",
+      "syntax-number": "#6c3d87",
+      "syntax-comment": "#586e75",
+      "info": "#006e96",
+      "success": "#426900",
+      "warning": "#946100",
+      "danger": "#b02020",
+      "figure": "#00776b",
+      "form": "#82552a"
+    },
+    "font": "system-serif",
+    "provenance": "fragment-registry/0.1; explicit tokens are authoritative"
+  },
+  {
+    "requested": "monochrome-paper",
+    "resolved": "monochrome-paper",
+    "tokens": {
+      "background": "#ffffff",
+      "foreground": "#171717",
+      "surface": "#f0f0f0",
+      "primary": "#222222",
+      "secondary": "#444444",
+      "accent": "#111111",
+      "border": "#777777",
+      "muted": "#555555",
+      "syntax-keyword": "#111111",
+      "syntax-string": "#333333",
+      "syntax-number": "#444444",
+      "syntax-comment": "#555555",
+      "info": "#222222",
+      "success": "#333333",
+      "warning": "#444444",
+      "danger": "#111111",
+      "figure": "#555555",
+      "form": "#333333"
+    },
+    "font": "system-sans",
+    "provenance": "fragment-registry/0.1; explicit tokens are authoritative"
+  }
+]
