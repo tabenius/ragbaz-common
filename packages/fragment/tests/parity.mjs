@@ -1,4 +1,5 @@
-import {spawnSync} from 'node:child_process';import assert from 'node:assert/strict';import {readFileSync,writeFileSync} from 'node:fs';import {parse,validate,evaluate,exportModel,ast} from '../src/core.js';
+import {spawnSync} from 'node:child_process';import assert from 'node:assert/strict';import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';import {parse,validate,evaluate,exportModel,ast} from '../src/core.js';
+mkdirSync('dist',{recursive:true});
 const m=JSON.parse(readFileSync('examples/draft.json','utf8'));
 const run=(command,input,args=[])=>spawnSync('target/debug/ragbaz-fragment',[command,...args],{input,encoding:'utf8'});
 for(const input of [JSON.stringify(m),exportModel(m,'yaml')]){let r=run('json',input);assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),parse(input));}
