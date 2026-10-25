@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'@@FONTSTYLE@@; connect-src @@CONNECT@@ 'self'; img-src 'none'; font-src @@FONTS@@; base-uri 'none'; form-action 'none'">
 <title>@@TITLE@@</title>
 <script>try{const p=localStorage.getItem('ragbaz.sci.appearance');if(['light','dark'].includes(p))document.documentElement.dataset.appearance=p}catch{};</script>
-<style>@@STYLES@@</style>
+<style id="reader-styles">@@STYLES@@</style>
 </head>
 <body>
 <button id="reveal-tools" class="reveal-tools" aria-label="Show reading controls" title="Show reading controls"></button>
@@ -25,6 +25,7 @@
 <button class="tool-action" data-reader-action="fullscreen" data-fullscreen aria-pressed="false"><span>Fullscreen</span><kbd>f / Esc</kbd></button>
 <button id="legend-toggle" class="tool-action" data-reader-action="legend" aria-pressed="false"><span>Shortcut legend</span><kbd>l</kbd></button>
 <button id="open-file" class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h7l2 3h9l-3 12H3V7Zm0 5h16"/></svg><span>Open Markdown file</span></button>
+<button id="download-reading-copy" class="tool-action">Download static reading copy (.html)</button>
 <input id="file" type="file" accept=".md,.markdown,text/markdown,text/plain" hidden aria-label="Open Markdown file">
 <button id="original" class="tool-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M6 10v11h12V10M10 21v-7h4v7"/></svg><span>Embedded document</span></button>
 </div>

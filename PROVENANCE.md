@@ -122,6 +122,16 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-25 — static reading copies
+
+Add a bounded, allowlisted browser serializer for the installed manuscript DOM,
+theme CSS and host-owned botanical/symbolic plates. Strip scripts, controls,
+event attributes, source caches and inspection payloads; refuse remote stylesheet
+dependencies. Retain original license notices and print CSS, use system fonts,
+and make no authorship/source-equivalence claim. Expose an explicit read-only
+host export adapter and a reader-menu download action. Five-template offline
+reopen and multipage-print tests cover whole documents and source-cache isolation.
+
 ### 2026-10-21 — manuscript-only printing
 
 Add print-only layout resets for the five existing presentations: single-column,

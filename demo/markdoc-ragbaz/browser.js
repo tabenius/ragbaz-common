@@ -7,6 +7,7 @@ import { setupAppearance } from './appearance.js';
 import { decorateHeartfulness, setupHeartfulness } from './heartfulness.js';
 import { setupAether } from './aether.js';
 import { setupThemeFonts } from './fonts.js';
+import { readingCopy } from './reading-copy.js';
 
 setupAppearance();
 
@@ -19,6 +20,19 @@ setupThemeFonts(config);
 const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
 const policy = { ...config.policy, baseURL: location.protocol === 'file:' ? undefined : location.href };
 let current;
+let displayBusy = false;
+Object.defineProperty(window, 'ragbazReadingCopy', { value: options => {
+  if (displayBusy || !current || current.diagnostics.length || config.metaDocument && current.embedded) throw Error('Load and successfully preview your manuscript before exporting a reading copy.');
+  return readingCopy(document, options);
+} });
+$('download-reading-copy').addEventListener('click', () => {
+  try {
+    const copy = window.ragbazReadingCopy();
+    const url = URL.createObjectURL(new Blob([copy.html], { type: 'text/html;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = 'reading-copy.html'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { $('notice').textContent = error.message; }
+});
 let generation = 0;
 let previewGeneration = 0;
 let pendingSource;
@@ -187,6 +201,7 @@ const verifiedCache = { async get(digest) {
 
 async function display(source, provenance, embedded = false) {
   const turn = ++generation;
+  displayBusy = true;
   ++previewGeneration;
   hideCitation(); closeContents();
   $('inspector').hidden = true;
@@ -237,6 +252,8 @@ async function display(source, provenance, embedded = false) {
     $('asset-details').replaceChildren();
     $('toc').textContent = '';
     $('notice').textContent = 'Refused; no fallback document substituted.';
+  } finally {
+    if (turn === generation) displayBusy = false;
   }
 }
 
