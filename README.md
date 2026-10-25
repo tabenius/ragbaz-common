@@ -148,6 +148,20 @@ manuscript and bibliography remain. Link targets are not automatically appended
 to prose. The browser owns paper size, headers/footers, pagination and Save as PDF;
 use the host's print-piece action to avoid printing its editing workspace.
 
+**Download static reading copy (.html)** exports the loaded manuscript with its
+installed presentation and original ornaments. It is a script-free, self-contained
+reading copy, not an editable reader bundle, source archive or attestation. Source
+inspectors, runtime payloads, authoring authority and remote font links are omitted;
+system fonts may wrap differently on another device. Manuscript names and links
+remain. Print CSS is included. Export refuses neutral specimens, failed/partial
+renders, external CSS dependencies and copies over 2 MiB.
+
+Trusted same-origin hosts can call `window.ragbazReadingCopy({title?})` after a
+successful load. It returns `{schema: 'ragbaz.reading-copy/v1', template, html}`
+without downloading, uploading or changing storage. The host owns download and
+publication consent. This DOM adapter is not an arbitrary-HTML sanitizer or proof
+that someone else's exported HTML matches its claimed source/template.
+
 The second installed template, **Heartfulness**, is a contemporary botanical
 keepsake: pale yellow paper grain, bookish italic titles and original climbing
 rose frames. Build it with `npm run markdoc-ragbaz-sci-tufte -- --template heartfulness`.

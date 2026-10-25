@@ -122,6 +122,16 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-26 — reconcile Pieces reading-copy dependency into main
+
+Reconcile the existing `432982f` static reading-copy feature with the newer
+document checks and visualization adapters. Preserve both reader capabilities
+and the configurable browser-test readiness check. Pieces' clean release tests
+caught that its export adapter was missing from common main; no broken pinned
+host was deployed. Frozen standalone hashes deliberately change for the combined
+runtime. This carries forward existing downloadable copies, not a new publication
+or hosted-library service.
+
 ### 2026-10-26 — empty templates link to the matching Pieces entrance
 
 Each installed meta-document's no-document opening surface now ends with a
@@ -230,6 +240,15 @@ or storage policy is introduced. Freeze five pre-extraction HTML hashes and test
 both direct and browser-bundled portable execution against them. This enables
 consumers to omit esbuild's Go executable from their runtime without disabling
 the license gate or forking standalone assembly.
+### 2026-10-25 — static reading copies
+
+Add a bounded, allowlisted browser serializer for the installed manuscript DOM,
+theme CSS and host-owned botanical/symbolic plates. Strip scripts, controls,
+event attributes, source caches and inspection payloads; refuse remote stylesheet
+dependencies. Retain original license notices and print CSS, use system fonts,
+and make no authorship/source-equivalence claim. Expose an explicit read-only
+host export adapter and a reader-menu download action. Five-template offline
+reopen and multipage-print tests cover whole documents and source-cache isolation.
 
 ### 2026-10-21 — manuscript-only printing
 

@@ -438,7 +438,60 @@ test('all five templates print the whole manuscript without controls, source pan
   } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
 
-function headless(executable, profile, { ready = "document.readyState==='complete' && !!document.getElementById('paper') && !!document.getElementById('notice')?.textContent && !document.getElementById('notice').textContent.startsWith('Loading')" } = {}) {
+test('static reading copies retain five presentations offline without runtime, inspector data or active markup', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-reading-copy-');
+  const browser = headless(executable, join(dir, 'profile'));
+  try {
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    const ev = async expression => {
+      const result = await browser.call('Runtime.evaluate', { returnByValue: true, awaitPromise: true, expression }, sessionId);
+      assert.equal(result.exceptionDetails, undefined, JSON.stringify(result.exceptionDetails)); return result.result.value;
+    };
+    const source = '# A portable letter\n\nDear you 🌹\n\n## A little care\n\n' + 'Words to keep, not a screen to depend on.\n\n'.repeat(60) + 'FINAL-READING-COPY-WORDS.';
+    for (const template of ['markdoc-ragbaz-sci-tufte', 'heartfulness', ...Object.keys(AETHER_VARIANTS)]) {
+      const { directory } = await buildMetaDocument({ output: dir, template });
+      await browser.call('Page.navigate', { url: pathToFileURL(join(directory, 'index.html')).href }, sessionId);
+      assert(await ev("(()=>{try{window.ragbazReadingCopy();return false}catch{return true}})()"), 'neutral specimen cannot be passed off as a loaded manuscript');
+      await ev(`(async()=>{const input=document.getElementById('file'), transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(source)}],'portable.md',{type:'text/markdown'}));input.files=transfer.files;input.dispatchEvent(new Event('change'));for(let i=0;i<100;i++){if(document.querySelector('#paper h1')?.textContent==='A portable letter'&&document.getElementById('notice').textContent.startsWith('Locally selected'))return;await new Promise(r=>setTimeout(r,50));}throw Error('Manuscript did not load');})()`);
+      await ev("document.getElementById('source-preview').textContent='PRIVATE-INSPECTOR-CACHE';document.getElementById('source-raw').textContent='PRIVATE-RAW-SOURCE';document.getElementById('inspector').hidden=false;document.body.dataset.readingMode='paper';document.getElementById('paper').style.transform='translateX(-4000px)';const a=document.createElement('a');a.textContent='Inert suspicious link';a.href='javascript:window.bad=true';a.setAttribute('onclick','window.bad=true');document.getElementById('paper').append(a)");
+      const copy = await ev("window.ragbazReadingCopy({title:'Portable <letter>'})");
+      assert.equal(copy.schema, 'ragbaz.reading-copy/v1'); assert.equal(copy.template, template);
+      assert(copy.html.includes('FINAL-READING-COPY-WORDS.'));
+      assert(!/<script\b|onclick=|javascript:|id="payload"|id="source-raw"|PRIVATE-INSPECTOR-CACHE|PRIVATE-RAW-SOURCE|translateX\(-4000px\)/i.test(copy.html));
+      assert(copy.html.includes("default-src 'none'"));
+      if (template === 'heartfulness') assert(copy.html.includes('heart-frame') && copy.html.includes('heart-botanical'));
+      if (template.startsWith('aether-')) assert(copy.html.includes('aether-front'));
+      const path = join(dir, `${template}-copy.html`); await writeFile(path, copy.html);
+      // A static copy has no bootstrap notice; navigate without the runtime-ready helper.
+      const { targetId: staticTarget } = await browser.call('Target.createTarget', { url: 'about:blank' });
+      const { sessionId: staticSession } = await browser.call('Target.attachToTarget', { targetId: staticTarget, flatten: true });
+      await browser.call('Runtime.enable', {}, staticSession);
+      await browser.call('Page.enable', {}, staticSession);
+      await browser.call('Page.navigate', { url: pathToFileURL(path).href }, staticSession);
+      let state;
+      for (let i = 0; i < 100; i++) {
+        const r = await browser.call('Runtime.evaluate', { returnByValue: true, expression: "({ready:document.readyState,template:document.documentElement.dataset.template,text:document.getElementById('paper')?.textContent,runtime:typeof window.ragbazReadingCopy,requests:performance.getEntriesByType('resource').map(r=>r.name),columns:document.getElementById('paper')&&getComputedStyle(document.getElementById('paper')).columnCount})" }, staticSession);
+        state = r.result.value;
+        if (state?.ready === 'complete' && state.text?.includes('FINAL-READING-COPY-WORDS.')) break;
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      assert.equal(state.template, template); assert(state.text.includes('FINAL-READING-COPY-WORDS.')); assert.equal(state.runtime, 'undefined'); assert.equal(state.columns, 'auto'); assert.deepEqual(state.requests, []);
+      await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, staticSession);
+      const { data } = await browser.call('Page.printToPDF', { preferCSSPageSize: true, displayHeaderFooter: false }, staticSession);
+      const pdf = join(dir, `${template}-copy.pdf`); await writeFile(pdf, Buffer.from(data, 'base64'));
+      const text = spawnSync('pdftotext', [pdf, '-'], { encoding: 'utf8' });
+      if (text.status === 0) { assert(text.stdout.includes('FINAL-READING-COPY-WORDS.')); assert(!text.stdout.includes('PRIVATE-INSPECTOR-CACHE')); }
+      await browser.call('Target.closeTarget', { targetId: staticTarget });
+      await ev("document.getElementById('reader-styles').textContent+='@import url(https://outside.invalid/font.css);'");
+      assert(await ev("(()=>{try{window.ragbazReadingCopy();return false}catch{return true}})()"), 'nonlocal styles fail closed');
+    }
+  } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
+function headless(executable, profile, { ready = "document.readyState==='complete' && !!document.getElementById('paper') && (document.body.classList.contains('reading-copy') || !!document.getElementById('notice')?.textContent && !document.getElementById('notice').textContent.startsWith('Loading'))" } = {}) {
   const child = spawn(executable, ['--headless', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--disable-background-networking', '--disable-extensions', '--disable-component-update', '--disable-sync', '--no-first-run', '--no-startup-window', '--password-store=basic', '--host-resolver-rules=EXCLUDE 127.0.0.1, MAP * ~NOTFOUND', `--user-data-dir=${profile}`, '--remote-debugging-pipe'], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
   let id = 0; let buffer = ''; let stderr = '';
   const pending = new Map();
