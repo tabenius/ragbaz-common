@@ -17,7 +17,7 @@ export const BUILTIN_REGISTRY = Object.freeze({
   },
   themes: { paper: { version: '1', tokens: {} } },
 });
-const ELEMENTS = new Set(['article', 'section', 'aside', 'figure', 'figcaption', 'div', 'span', 'p', 'strong', 'em', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'hr', 'br', 's', 'svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text']);
+const ELEMENTS = new Set(['article', 'section', 'aside', 'figure', 'figcaption', 'div', 'span', 'p', 'strong', 'em', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'hr', 'br', 's', 'svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text', 'template']);
 const SVG_ELEMENTS = new Set(['svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text']);
 const CUSTOM_ELEMENTS = new Set(['aside', 'section', 'figure', 'div', 'span', 'blockquote']);
 const BAD_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -446,6 +446,34 @@ async function registryEntry(kind, ref, registry, options, stack = []) {
   return data;
 }
 
+function visualizationOptions(options, manifest, diagnostics) {
+  const descriptions = Object.create(null);
+  const add = (value, label) => {
+    if (value === undefined) return;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be a mapping`);
+    for (const [key, description] of Object.entries(value)) {
+      if (!/^[1-9]\d{0,3}$/.test(key)) throw new Error('description keys must be 1-based indices');
+      if (typeof description !== 'string' || !description.trim() || description.length > 500) throw new Error('descriptions must be bounded nonempty text');
+      descriptions[Number(key)] = description;
+    }
+  };
+  try {
+    add(manifest.document?.visualizations?.descriptions, 'document.visualizations.descriptions');
+    add(manifest.visualizations?.descriptions, 'visualizations.descriptions');
+    add(options.visualizations.descriptions, 'host descriptions');
+  } catch (error) {
+    diagnostics.push(`Visualization descriptions refused: ${error.message}`);
+  }
+  const requested = options.visualizations.interactive;
+  let interactive = [];
+  if (requested === true) interactive = ['chartjs', 'cytoscape'];
+  else if (requested !== undefined && requested !== false) {
+    if (!Array.isArray(requested) || requested.some(format => !['chartjs', 'cytoscape'].includes(format))) diagnostics.push('Interactive visualization formats refused; only chartjs and cytoscape are installed');
+    else interactive = requested;
+  }
+  return { descriptions, interactive: new Set(interactive) };
+}
+
 /** Lazy, host-owned declarative registry. Only used families are resolved. */
 export async function renderDocument(source, options = {}) {
   const parsed = parseDocument(source, options.defaults);
@@ -453,6 +481,7 @@ export async function renderDocument(source, options = {}) {
   const registry = options.registry || BUILTIN_REGISTRY;
   const diagnostics = [];
   const visualizations = [];
+  const visualization = options.visualizations ? visualizationOptions(options, manifest, diagnostics) : null;
   let visualizationIndex = 0;
   const resolvedRegistry = { dialects: {}, themes: {} };
   const registryOptions = { ...options, resolvedRegistry };
@@ -524,16 +553,23 @@ export async function renderDocument(source, options = {}) {
     fence: { ...Markdoc.nodes.fence, transform(node) {
       const source = node.attributes.content || '';
       const format = node.attributes.language;
-      if (options.visualizations && VISUALIZATION_FORMATS.includes(format)) {
+      if (visualization && VISUALIZATION_FORMATS.includes(format)) {
         const index = ++visualizationIndex;
         try {
-          const record = parseVisualization(format, source, { alt: options.visualizations.descriptions?.[index] });
+          const record = parseVisualization(format, source, { alt: visualization.descriptions[index] });
           visualizations.push(record);
           const tag = (name, children) => new Markdoc.Tag(name, {}, children);
           const toTag = node => typeof node === 'string' ? node : new Markdoc.Tag(node.name, { ...node.attributes }, node.children.map(toTag));
           const graphic = visualizationGraphic(record, { id: `viz-${index}` });
           const table = record.data ? [tag('table', [tag('thead', [tag('tr', record.fallback.columns.map(c => tag('th', [c])))]), tag('tbody', record.fallback.rows.map(row => tag('tr', row.map(value => tag('td', [String(value)])))))])] : [];
-          return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), ...(graphic ? [toTag(graphic)] : []), tag('p', [`${format} · ${graphic ? 'static SVG baseline' : 'source-only'}; library adapter not installed.${record.data ? ' Exact values remain in the table.' : ' Source is shown verbatim.'}`]), ...table, tag('pre', [tag('code', [source])])]);
+          const interactive = record.data && visualization.interactive.has(format) ? [
+            new Markdoc.Tag('div', { class: 'visualization-interactive', 'data-visualization': `viz-${index}`, role: 'img', 'aria-label': record.alt }, []),
+            new Markdoc.Tag('template', { 'data-visualization': 'spec', 'data-id': `viz-${index}`, 'data-format': format }, [source]),
+          ] : [];
+          const note = graphic
+            ? `static SVG baseline${interactive.length ? ' and installed interactive adapter' : '; library adapter not installed'}. Exact values remain in the table.`
+            : 'source-only; no graphical renderer installed. Source is shown verbatim.';
+          return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), ...(graphic ? [toTag(graphic)] : []), ...interactive, tag('p', [`${format} · ${note}`]), ...table, tag('pre', [tag('code', [source])])]);
         } catch (error) { return refuse(node, error.message); }
       }
       return new Markdoc.Tag('pre', {}, [new Markdoc.Tag('code', {}, [source])]);
@@ -567,6 +603,16 @@ export async function renderDocument(source, options = {}) {
     }
     if (typeof a.class === 'string' && /^[a-z -]{1,150}$/.test(a.class)) attrs += ` class="${a.class}"`;
     if (typeof a['data-source'] === 'string') attrs += ` data-source="${escapeHTML(a['data-source'])}" tabindex="0" role="button" aria-label="Inspect source ${escapeHTML(a['data-source'])}"`;
+    if (name === 'div' && /^viz-\d+$/.test(a['data-visualization'] || '')) {
+      attrs += ` data-visualization="${a['data-visualization']}" role="img" aria-label="${escapeHTML(a['aria-label'])}"`;
+    }
+    if (name === 'template' && a['data-visualization'] === 'spec') {
+      if (!/^viz-\d+$/.test(a['data-id'] || '') || !['chartjs', 'cytoscape'].includes(a['data-format'])) {
+        diagnostics.push('Unsafe visualization adapter template refused');
+        return '<span class="refusal">Unsupported visualization adapter template</span>';
+      }
+      attrs += ` data-visualization="spec" data-id="${a['data-id']}" data-format="${a['data-format']}"`;
+    }
     if (SVG_ELEMENTS.has(name)) {
       for (const [key, value] of Object.entries(a)) {
         if (key === 'class' || key === 'data-source') continue;

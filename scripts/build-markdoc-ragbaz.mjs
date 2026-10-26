@@ -142,11 +142,17 @@ export async function collectBundleNotices(metafile, { readText = path => readFi
   };
   const packages = [...new Set(Object.keys(metafile.inputs).filter(p => p.includes('node_modules/')).map(packageName))].sort();
   const notices = [];
+  const versions = {
+    '@markdoc/markdoc': '0.5.10', '@kurkle/color': '0.3.4', 'chart.js': '4.6.1',
+    cytoscape: '3.34.4', yaml: '2.9.1',
+  };
+  const licenseFiles = { 'chart.js': 'LICENSE.md', '@kurkle/color': 'LICENSE.md', cytoscape: 'LICENSE' };
   for (const name of packages) {
-    if (!['@markdoc/markdoc', 'yaml'].includes(name)) throw new Error(`Unreviewed bundled license: ${name}`);
+    if (!Object.hasOwn(versions, name)) throw new Error(`Unreviewed bundled license: ${name}`);
     const pkg = JSON.parse(await readText(`node_modules/${name}/package.json`));
-    if (pkg.version !== ({ '@markdoc/markdoc': '0.5.10', yaml: '2.9.1' })[name]) throw new Error(`Unreviewed bundled license version: ${name}`);
-    const text = await readText(`node_modules/${name}/LICENSE`).catch(() => { throw new Error(`Required bundled LICENSE unavailable: ${name}`); });
+    if (pkg.version !== versions[name]) throw new Error(`Unreviewed bundled license version: ${name}`);
+    const licensePath = licenseFiles[name] || 'LICENSE';
+    const text = await readText(`node_modules/${name}/${licensePath}`).catch(() => { throw new Error(`Required bundled LICENSE unavailable: ${name}`); });
     if (!text.includes('Permission') || !text.includes('SOFTWARE')) throw new Error(`Incomplete bundled LICENSE: ${name}`);
     notices.push({ name: `${name} ${pkg.version} (${pkg.license})`, text });
     if (name === '@markdoc/markdoc') {

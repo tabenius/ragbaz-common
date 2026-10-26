@@ -589,6 +589,14 @@ test('license inventory refuses missing notices, unreviewed dependencies and dec
   const actual = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
   const notices = await collectBundleNotices(inventory);
   assert.equal(notices.length, 10);
+  const adapterNotices = await collectBundleNotices({ inputs: {
+    'node_modules/chart.js/dist/chart.js': {},
+    'node_modules/@kurkle/color/dist/color.cjs': {},
+    'node_modules/cytoscape/dist/cytoscape.cjs': {},
+  } });
+  assert.deepEqual(adapterNotices.map(notice => notice.name), [
+    '@kurkle/color 0.3.4 (MIT)', 'chart.js 4.6.1 (MIT)', 'cytoscape 3.34.4 (MIT)', '@ragbaz/common',
+  ]);
   await assert.rejects(() => collectBundleNotices({ inputs: { 'node_modules/new-dependency/index.js': {} } }), /Unreviewed bundled license/);
   await assert.rejects(() => collectBundleNotices(inventory, { readText: path => path === 'node_modules/yaml/LICENSE' ? Promise.reject(new Error('missing')) : actual(path) }), /Required bundled LICENSE unavailable/);
   await assert.rejects(() => collectBundleNotices(inventory, { readText: path => path === 'node_modules/yaml/LICENSE' ? Promise.resolve('ISC') : actual(path) }), /Incomplete bundled LICENSE/);
@@ -797,6 +805,39 @@ test('opt-in visualization fallbacks stay inert and printable in offline Chromiu
     await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, sessionId);
     assert(await ev("[...document.querySelectorAll('figure,figure svg,table,pre')].every(e=>e.getBoundingClientRect().height>0)"));
     assert(await ev("document.body.textContent.includes('<script>window.injected=true</script>') && document.body.textContent.includes('<img src=https://example.test/track>')"));
+  } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
+test('installed Chart.js and Cytoscape adapters mount offline, keep exact fallbacks and print static SVG', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-visualization-adapters-'); let browser;
+  try {
+    const chart = JSON.stringify({ type: 'line', data: { labels: ['A', 'B'], datasets: [{ label: 'Count', data: [3, 5] }] } });
+    const graph = JSON.stringify({ nodes: [{ id: 'a', label: 'Alpha' }, { id: 'b', label: '<img src=https://example.test/track>' }], edges: [{ source: 'a', target: 'b', label: 'relates' }] });
+    const source = `---\ndocument:\n  visualizations:\n    descriptions:\n      1: Counts across two categories\n      2: Two related nodes\n---\n\n# Adapters\n\n\`\`\`chartjs\n${chart}\n\`\`\`\n\n\`\`\`cytoscape\n${graph}\n\`\`\`\n`;
+    const input = join(dir, 'adapters.md'); const output = join(dir, 'adapters.html');
+    await writeFile(input, source);
+    const built = await buildStandalone({ input });
+    await writeFile(output, built.html);
+    browser = headless(executable, join(dir, 'profile'), { ready: "document.readyState==='complete' && document.querySelectorAll('figure[data-adapter=ready]').length===2" });
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    await browser.call('Page.enable', {}, sessionId);
+    await browser.call('Page.navigate', { url: pathToFileURL(output).href }, sessionId);
+    const ev = async expression => {
+      const result = await browser.call('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, sessionId);
+      assert.equal(result.exceptionDetails, undefined); return result.result.value;
+    };
+    assert(await ev("(async()=>{for(let i=0;i<120&&document.querySelectorAll('figure[data-adapter=ready]').length!==2;i++)await new Promise(r=>setTimeout(r,25));return document.querySelectorAll('figure[data-adapter=ready]').length===2})()"));
+    assert(await ev("document.querySelectorAll('figure.visualization canvas').length>=2 && [...document.querySelectorAll('figure.visualization')].every(f=>f.querySelector('canvas')) && [...document.querySelectorAll('figure.visualization canvas')].every(c=>c.width>0&&c.height>0)"));
+    assert(await ev("[...document.querySelectorAll('figure.visualization')].every(f=>f.querySelector('.visualization-interactive[role=img][aria-label]')?.getAttribute('aria-label') && f.querySelector('table') && f.querySelector('pre') && f.querySelector('figcaption'))"));
+    assert(await ev("document.querySelectorAll('figure.visualization svg[role=img]').length===2 && document.querySelectorAll('figure.visualization table').length===2"));
+    assert(await ev("typeof window.Chart==='undefined' && typeof window.cytoscape==='undefined' && performance.getEntriesByType('resource').length===0"));
+    assert(await ev("!document.querySelector('img,iframe,foreignObject') && document.body.textContent.includes('<img src=https://example.test/track>')"));
+    await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, sessionId);
+    assert(await ev("[...document.querySelectorAll('figure.visualization')].every(f=>f.querySelector('svg.visualization-graphic').getBoundingClientRect().height>0 && getComputedStyle(f.querySelector('.visualization-interactive')).display==='none')"));
+    assert(await ev("document.querySelectorAll('figure.visualization table').length===2 && document.body.textContent.includes('Counts across two categories') && document.body.textContent.includes('Two related nodes')"));
   } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
 

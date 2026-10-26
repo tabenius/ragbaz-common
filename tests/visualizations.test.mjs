@@ -77,3 +77,28 @@ test('Markdoc visualization fences are opt-in and descriptions/refusals stay exp
   const refused = await renderDocument(source, { visualizations: {} });
   assert(!refused.clean); assert.match(refused.html, /Visualization refused/); assert.equal(refused.visualizations.length, 0);
 });
+test('document descriptions can enable installed adapters without accepting authored markup', async () => {
+  const source = `---
+document:
+  visualizations:
+    descriptions:
+      1: Counts by category
+---
+
+\`\`\`chartjs
+{"type":"bar","data":{"labels":["</template><script>bad</script>"],"datasets":[{"label":"Count","data":[3]}]}}
+\`\`\`
+`;
+  const result = await renderDocument(source, { visualizations: { interactive: ['chartjs'] } });
+  assert(result.clean);
+  assert(result.html.includes('data-visualization="viz-1" role="img" aria-label="Counts by category"'));
+  assert(result.html.includes('<template data-visualization="spec" data-id="viz-1" data-format="chartjs">'));
+  assert(result.html.includes('installed interactive adapter'));
+  assert(result.html.includes('&lt;/template&gt;&lt;script&gt;bad&lt;/script&gt;'));
+  assert(!result.html.includes('</template><script>'));
+  assert(!result.html.includes('<script>'));
+  const bad = await renderDocument(source, { visualizations: { descriptions: { 0: 'Wrong index' }, interactive: ['mermaid'] } });
+  assert(!bad.clean);
+  assert(bad.diagnostics.some(message => /Visualization descriptions refused/.test(message)));
+  assert(bad.diagnostics.some(message => /Interactive visualization formats refused/.test(message)));
+});

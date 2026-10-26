@@ -7,6 +7,7 @@ import { setupAppearance } from './appearance.js';
 import { decorateHeartfulness, setupHeartfulness } from './heartfulness.js';
 import { setupAether } from './aether.js';
 import { setupThemeFonts } from './fonts.js';
+import { disposeVisualizations, mountVisualizations } from './visualization-adapters.js';
 
 setupAppearance();
 
@@ -22,7 +23,7 @@ let current;
 let generation = 0;
 let previewGeneration = 0;
 let pendingSource;
-const options = { registry, defaults: config.defaults, policy };
+const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations };
 const bar = $('reading-bar');
 const drawer = $('reader-drawer');
 const tocPanel = $('toc-panel');
@@ -222,7 +223,9 @@ async function display(source, provenance, embedded = false) {
     current = { ...result, source, embedded, sourceSHA256 };
     updateDocumentChecks();
     document.body.classList.toggle('meta-empty', Boolean(config.metaDocument && embedded));
+    disposeVisualizations($('paper'));
     $('paper').innerHTML = result.html;
+    mountVisualizations($('paper'));
     if (config.metaDocument?.id === 'heartfulness') decorateHeartfulness($('paper'));
     readingNavigation.reset();
     $('asset-details').replaceChildren(...$('paper').querySelectorAll(':scope > .asset-provenance, :scope > p.unavailable'));
@@ -261,6 +264,7 @@ async function display(source, provenance, embedded = false) {
     if (turn !== generation) return;
     current = undefined;
     updateDocumentChecks();
+    disposeVisualizations($('paper'));
     $('paper').textContent = `Document refused: ${e.message}`;
     $('asset-details').replaceChildren();
     $('toc').textContent = '';

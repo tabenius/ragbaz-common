@@ -79,3 +79,9 @@ figure.visualization svg.visualization-graphic{display:block;width:100%;height:a
 figure.visualization table{width:100%;border-collapse:collapse;font-size:.82em;margin:.75rem 0}
 figure.visualization th,figure.visualization td{border:1px solid var(--rule);padding:.25rem .4rem;text-align:left}
 figure.visualization pre{max-height:24rem;overflow:auto;font-size:.78em}
+.visualization-interactive{display:none;height:22rem;min-height:14rem;background:#fff;border:1px solid var(--rule);padding:.5rem;box-sizing:border-box}
+figure.visualization[data-adapter=mounting] .visualization-interactive,figure.visualization[data-adapter=ready] .visualization-interactive{display:block}
+figure.visualization[data-adapter=mounting]>svg.visualization-graphic,figure.visualization[data-adapter=ready]>svg.visualization-graphic{display:none}
+figure.visualization .visualization-adapter-note{font-size:.78em;color:var(--muted);margin:.4rem 0}
+@media(max-width:900px){.visualization-interactive{height:18rem}}
+@media print{figure.visualization[data-adapter=mounting] .visualization-interactive,figure.visualization[data-adapter=ready] .visualization-interactive{display:none}figure.visualization[data-adapter=mounting]>svg.visualization-graphic,figure.visualization[data-adapter=ready]>svg.visualization-graphic{display:block}}

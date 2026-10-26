@@ -122,6 +122,22 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-26 — installed Chart.js and Cytoscape.js reader adapters
+
+Add host-owned interactive adapters to the standalone reader for the already
+restricted Chart.js and Cytoscape profiles. Chart.js 4.6.1, Cytoscape.js 3.34.4
+and their bundled MIT notices are pinned. The Markdoc core remains library-free:
+it emits the existing static SVG, exact table and source, plus an inert data
+template and empty mount host only when the host enables the adapter. The browser
+re-parses that data, namespaces graph ids, disables animation and external data,
+and leaves the static SVG visible if mounting fails. Print always uses the static
+SVG. Authored labels/tooltips remain text; no authored JavaScript, callbacks,
+remote renderer or new network origin is introduced. Document-level
+`document.visualizations.descriptions` supplies required accessibility
+descriptions for ordinary Markdown. Frozen standalone hashes change deliberately
+because the reader bundle, render tuple and surface config now include this
+adapter increment.
+
 ### 2026-10-26 — static SVG baseline for visualization profiles
 
 Add a deterministic, script-free SVG baseline for the restricted Cytoscape, Chart.js,
