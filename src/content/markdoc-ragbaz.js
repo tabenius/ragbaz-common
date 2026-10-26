@@ -531,7 +531,7 @@ export async function renderDocument(source, options = {}) {
           visualizations.push(record);
           const tag = (name, children) => new Markdoc.Tag(name, {}, children);
           const toTag = node => typeof node === 'string' ? node : new Markdoc.Tag(node.name, { ...node.attributes }, node.children.map(toTag));
-          const graphic = visualizationGraphic(record);
+          const graphic = visualizationGraphic(record, { id: `viz-${index}` });
           const table = record.data ? [tag('table', [tag('thead', [tag('tr', record.fallback.columns.map(c => tag('th', [c])))]), tag('tbody', record.fallback.rows.map(row => tag('tr', row.map(value => tag('td', [String(value)])))))])] : [];
           return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), ...(graphic ? [toTag(graphic)] : []), tag('p', [`${format} · ${graphic ? 'static SVG baseline' : 'source-only'}; library adapter not installed.${record.data ? ' Exact values remain in the table.' : ' Source is shown verbatim.'}`]), ...table, tag('pre', [tag('code', [source])])]);
         } catch (error) { return refuse(node, error.message); }

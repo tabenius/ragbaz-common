@@ -197,11 +197,11 @@ function graphTree(value, id) {
 }
 
 /** Deterministic, script-free graphic tree, or null for source-only formats. */
-export function visualizationGraphic(record) {
+export function visualizationGraphic(record, { id } = {}) {
   const value = parseVisualization(record.format, record.source, { alt: record.alt });
   if (!value.data) return null;
-  const id = stableId(`${value.format}\0${value.alt}\0${value.source}`);
-  return value.format === 'cytoscape' ? graphTree(value, id) : chartTree(value, id);
+  const reference = id || stableId(`${value.format}\0${value.alt}\0${value.source}`);
+  return value.format === 'cytoscape' ? graphTree(value, reference) : chartTree(value, reference);
 }
 
 const SVG_ATTRIBUTES = Object.freeze({
@@ -250,11 +250,11 @@ export function serializeVisualizationGraphic(tree) {
 }
 
 /** Accessible HTML projection; source and data are always text, never markup. */
-export function visualizationHTML(record) {
+export function visualizationHTML(record, { id } = {}) {
   // Revalidate rather than trusting callers to pass an authentic parser result.
   const value = parseVisualization(record.format, record.source, { alt: record.alt });
   const { columns, rows } = value.fallback;
-  const graphic = visualizationGraphic(value);
+  const graphic = visualizationGraphic(value, { id });
   const table = value.data ? `<table><thead><tr>${columns.map(c => `<th scope="col">${escape(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
   const projection = graphic ? serializeVisualizationGraphic(graphic) : '';
   return `<figure class="visualization"><figcaption>${escape(value.alt)}</figcaption>${projection}<p>${escape(value.format)} · ${graphic ? 'static SVG baseline' : 'source-only'}; library adapter not installed.${value.data ? ' Exact values remain in the table.' : ' Source is shown verbatim.'}</p>${table}<details open><summary>Inspect visualization source</summary><pre><code>${escape(value.source)}</code></pre></details></figure>`;

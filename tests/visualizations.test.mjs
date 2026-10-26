@@ -52,6 +52,13 @@ test('forged projection objects cannot inject HTML or suppress revalidation', ()
   assert(!visualizationHTML({ ...value, fallback: { rows: ['<script>'] } }).includes('<img'));
   assert.throws(() => visualizationHTML({ ...value, format: 'unknown' }), /unknown format/);
 });
+test('multiple identical profiles receive distinct SVG title ids', async () => {
+  const fence = '```chartjs\n{"type":"bar","data":{"labels":["A"],"datasets":[{"label":"Count","data":[3]}]}}\n```\n\n';
+  const result = await renderDocument(fence + fence, { visualizations: { descriptions: { 1: 'First', 2: 'Second' } } });
+  const ids = [...result.html.matchAll(/<title id="([^"]+)"/g)].map(match => match[1]);
+  assert.deepEqual(ids, ['viz-1-title', 'viz-2-title']);
+  assert.equal(new Set(ids).size, ids.length);
+});
 test('authored HTML and unregistered tags cannot introduce SVG', async () => {
   const raw = await renderDocument('<svg onload="alert(1)"><script>alert(1)</script></svg>');
   assert(!raw.html.includes('<svg'));

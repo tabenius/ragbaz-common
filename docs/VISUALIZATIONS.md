@@ -18,7 +18,9 @@ They are literal accessibility descriptions, not assertions of statistical valid
 The result adds `visualizations`, containing parsed records, original source,
 format, description, rendering state and fallback rows. Missing descriptions and
 invalid profiles become ordinary visible renderer diagnostics. Other fences remain
-literal code. No instruction embedded in source changes host policy.
+literal code. No instruction embedded in source changes host policy. Markdoc assigns
+a document-unique SVG id per visualization fence; callers projecting several records
+with `visualizationHTML` should pass a unique `id` option.
 
 | Fence language | Accepted first profile | Current output |
 |---|---|---|
