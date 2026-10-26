@@ -1,9 +1,10 @@
-# Markdoc visualization profiles — first increment
+# Markdoc visualization profiles — data-only baseline
 
-Status: data-only ingestion and accessible fallback rendering implemented.
-**No graphical library adapters are installed by this increment.** Normal fences
-and existing readers remain opt-in/unmodified in behavior. The runtime bundle
-changes because it now carries the profile validator.
+Status: data-only ingestion, exact tables, and a deterministic script-free SVG
+baseline are implemented. **No third-party graphical library adapters are installed
+by this increment.** Mermaid and PlantUML remain inert source. Normal fences and
+existing readers remain opt-in/unmodified in behavior. The runtime bundle changes
+because it now carries the profile validator and static renderer.
 
 ```js
 import { renderDocument } from '@ragbaz/common/content/markdoc-ragbaz';
@@ -23,10 +24,16 @@ literal code. No instruction embedded in source changes host policy.
 |---|---|---|
 | `mermaid` | Source, no init/actions/style directives | Description and inert source |
 | `plantuml` | Source, no preprocessor/includes, explicit links or embedded resources | Description and inert source |
-| `cytoscape` | JSON `{nodes:[{id,label}],edges:[{source,target,label?}]}` | Exact nodes/relationships table and source |
-| `chartjs` | JSON bar/line; inline labels and labelled numeric datasets | Exact values table and source |
-| `vega-lite` | JSON bar/line/point; inline values, x/y field/type encodings | Exact values table and source |
-| `plotly` | JSON bar/scatter; named traces with categorical x and numeric y | Exact values table and source |
+| `cytoscape` | JSON `{nodes:[{id,label}],edges:[{source,target,label?}]}` | Static circular SVG, exact nodes/relationships table and source |
+| `chartjs` | JSON bar/line; inline labels and labelled numeric datasets | Static SVG bars/lines, exact values table and source |
+| `vega-lite` | JSON bar/line/point; inline values, x/y field/type encodings | Static SVG marks, exact values table and source |
+| `plotly` | JSON bar/scatter; named traces with categorical x and numeric y | Static SVG bars/lines/points, exact values table and source |
+
+The SVG baseline uses fixed geometry, a fixed colour palette, inline shapes and text,
+and no fonts, images, scripts, external URLs or animation. It is a deterministic
+fallback graphic, not a rendering by Cytoscape.js, Chart.js, Vega-Lite or Plotly.
+Its allowlisted attributes are rechecked during serialization and Markdoc rendering.
+Long labels are truncated in the graphic but remain complete in the exact table.
 
 Mermaid and PlantUML syntax is not compiled or verified in this increment; a clean
 source-only profile is not proof that a future graphical renderer will accept it.
@@ -41,11 +48,12 @@ network-backed data, remote images or runtime imports. HTML projection escapes
 all text and revalidates forged records. Neither fallback projection nor a clean
 build proves statistical methodology, provenance or publication approval.
 
-## Next: real graphical adapters
+## Next: library-backed adapters and authored fallbacks
 
 1. Ship pinned, separately licensed host adapters for Cytoscape.js and Chart.js;
    adapt the validated profiles to library APIs, namespace graph IDs, turn off
-   animation by default, and retain exact tables for print and nonvisual access.
+   animation by default, and retain the static SVG and exact tables for print,
+   offline use and nonvisual access.
 2. Add Mermaid in a disposable worker or sandboxed opaque-origin frame, with
    strict configuration, disabled links, no network, bounded CPU/memory/output,
    timeouts and sanitized static output. Never insert unchecked returned SVG.
@@ -58,11 +66,13 @@ build proves statistical methodology, provenance or publication approval.
    Observable Plot host adapters later; their general APIs are executable JS, not
    safe document inputs.
 5. Record source/spec, renderer, library version, font and output hashes; make
-   graphical unavailability visible without erasing source/tables. Require explicit
-   author-provided static fallbacks for final publication when graphics carry
-   meaning absent from the text. Sandbox failures fail closed, not to eval.
+   library unavailability visible without erasing the static SVG, source or tables.
+   Require explicit author-provided static fallbacks for final publication when
+   graphics carry meaning absent from the text. Sandbox failures fail closed, not
+   to eval.
 
-Tests needed before graphical release: offline browser execution, forbidden
-network probes, malicious SVG/HTML, parser bombs, cancellation, stale-render races,
-keyboard access, reduced motion, all-template print and deterministic build output.
-CLI/package activation and a graphical UI are deliberately not claimed here.
+Tests needed before a library-backed release: real library execution in offline
+Chromium, forbidden network probes, malicious SVG/HTML, parser bombs, cancellation,
+stale-render races, keyboard access, reduced motion, all-template print and
+deterministic build output. CLI/package activation and a graphical editor are
+deliberately not claimed here.

@@ -10,14 +10,14 @@ import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 import { buildMetaDocument } from '../scripts/build-markdoc-ragbaz-sci-tufte.mjs';
 
 const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n<script>window.INJECTED=true</script>\n';
-// Frozen after the deliberate 2026-10-24 opt-in visualization validator addition.
+// Frozen after the deliberate 2026-10-26 static SVG baseline addition.
 // Earlier extraction equivalence was checked against 0fdff6e before that change.
 const expected = {
-  'markdoc-ragbaz-sci-tufte': '0e7f38f1bb6759da222321e0711038b5a9512b922ce7cceee448a0e73e03c1f3',
-  heartfulness: 'ae9b934c555f291f84c591d6092870385ba51885f07ed0c08bd0b0de1081f0b8',
-  'aether-prima-materia': '67ae5bb82a1faa71581f214a68494270b49bb983c251ab628a3326bd7e136c0e',
-  'aether-sun-and-moon': '589d00bba869f31f323d672f2c17f59624c0f920946b2382980b8464eac8fecf',
-  'aether-blackening': '56b8ce4f29f1c7893792227169ff5c65757e48cf5b3b618d6deb7839169015a7',
+  'markdoc-ragbaz-sci-tufte': 'ae0bfbfe22b4478ebb6a6766a7321e79c9b5c2ed7ec6240d3cb10b541b69d2cc',
+  heartfulness: '21e6fd435a3ae3423e93e1aef9ad7ed3af7d54c9112f6e3b628ade98c1504e9a',
+  'aether-prima-materia': '43b667f3b8649f3aa1f1a0bea5cbf794d5fee05d6490ce6ccc9c8c7a3fe7c932',
+  'aether-sun-and-moon': '0c06acdfe6df806e2135d645c99e0bcdcfb9370a2e51d0c230de28f446a19600',
+  'aether-blackening': '0b0315d713743b1b8744dda109e6fa455902357971f374f3924d3ec7c708fbe7',
 };
 const base = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
 

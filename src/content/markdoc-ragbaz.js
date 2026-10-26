@@ -2,7 +2,7 @@
 import Markdoc from '@markdoc/markdoc';
 import { parseDocument as parseYAML } from 'yaml';
 import { TOKENIZER_DEFAULTS } from './markdoc.js';
-import { VISUALIZATION_FORMATS, parseVisualization } from './visualizations.js';
+import { VISUALIZATION_FORMATS, parseVisualization, visualizationGraphic, isSafeSVGAttribute } from './visualizations.js';
 
 export const CONTRACT = 'ragbaz.document/1';
 export const LIMITS = Object.freeze({ bytes: 1_000_000, nodes: 20000, depth: 48, resources: 24, timeout: 8000 });
@@ -17,7 +17,8 @@ export const BUILTIN_REGISTRY = Object.freeze({
   },
   themes: { paper: { version: '1', tokens: {} } },
 });
-const ELEMENTS = new Set(['article', 'section', 'aside', 'figure', 'figcaption', 'div', 'span', 'p', 'strong', 'em', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'hr', 'br', 's']);
+const ELEMENTS = new Set(['article', 'section', 'aside', 'figure', 'figcaption', 'div', 'span', 'p', 'strong', 'em', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'a', 'hr', 'br', 's', 'svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text']);
+const SVG_ELEMENTS = new Set(['svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text']);
 const CUSTOM_ELEMENTS = new Set(['aside', 'section', 'figure', 'div', 'span', 'blockquote']);
 const BAD_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 const PROVIDER_QUERY = Symbol('host-owned provider query');
@@ -529,8 +530,10 @@ export async function renderDocument(source, options = {}) {
           const record = parseVisualization(format, source, { alt: options.visualizations.descriptions?.[index] });
           visualizations.push(record);
           const tag = (name, children) => new Markdoc.Tag(name, {}, children);
+          const toTag = node => typeof node === 'string' ? node : new Markdoc.Tag(node.name, { ...node.attributes }, node.children.map(toTag));
+          const graphic = visualizationGraphic(record);
           const table = record.data ? [tag('table', [tag('thead', [tag('tr', record.fallback.columns.map(c => tag('th', [c])))]), tag('tbody', record.fallback.rows.map(row => tag('tr', row.map(value => tag('td', [String(value)])))))])] : [];
-          return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), tag('p', [`${format} · ${record.rendering}; graphical adapter not installed.`]), ...table, tag('pre', [tag('code', [source])])]);
+          return new Markdoc.Tag('figure', { class: 'visualization' }, [tag('figcaption', [record.alt]), ...(graphic ? [toTag(graphic)] : []), tag('p', [`${format} · ${graphic ? 'static SVG baseline' : 'source-only'}; library adapter not installed.${record.data ? ' Exact values remain in the table.' : ' Source is shown verbatim.'}`]), ...table, tag('pre', [tag('code', [source])])]);
         } catch (error) { return refuse(node, error.message); }
       }
       return new Markdoc.Tag('pre', {}, [new Markdoc.Tag('code', {}, [source])]);
@@ -564,6 +567,14 @@ export async function renderDocument(source, options = {}) {
     }
     if (typeof a.class === 'string' && /^[a-z -]{1,150}$/.test(a.class)) attrs += ` class="${a.class}"`;
     if (typeof a['data-source'] === 'string') attrs += ` data-source="${escapeHTML(a['data-source'])}" tabindex="0" role="button" aria-label="Inspect source ${escapeHTML(a['data-source'])}"`;
+    if (SVG_ELEMENTS.has(name)) {
+      for (const [key, value] of Object.entries(a)) {
+        if (key === 'class' || key === 'data-source') continue;
+        if (!isSafeSVGAttribute(name, key, value)) { diagnostics.push(`Unsafe SVG attribute refused: ${name}.${key}`); continue; }
+        attrs += ` ${key}="${escapeHTML(value)}"`;
+      }
+      return `<${name}${attrs}>${render(value.children)}</${name}>`;
+    }
     if (/^h[1-6]$/.test(name)) {
       const id = `section-${headings.length + 1}`;
       const plain = (v) => Array.isArray(v) ? v.map(plain).join('') : typeof v === 'object' && v ? plain(v.children) : String(v ?? '');
