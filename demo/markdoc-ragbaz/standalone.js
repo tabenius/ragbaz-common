@@ -21,7 +21,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     return url.origin;
   }).concat(['https://api.github.com', 'https://export.arxiv.org']).join(' ');
   const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
-  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher });
+  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations });
   config.dialects = { ...config.dialects, ...result.resolvedRegistry.dialects };
   config.themes = { ...config.themes, ...result.resolvedRegistry.themes };
   const snapshots = {};
@@ -42,7 +42,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
   if (config.fontAlternatives === 'google-curated/1') styles += themeFontStyles(config.metaDocument.id);
   const digest = await sha256(sourceBytes), hashText = text => sha256(new TextEncoder().encode(text));
   const runtimeSHA256 = await hashText(runtime);
-  const tuple = { schema: 'ragbaz.render/1', sourceSHA256: digest, skeleton: { id: config.skeleton, sha256: await hashText(skeleton) }, implementation: { id: config.implementation, sha256: runtimeSHA256, markdoc: '0.5.10' }, stylesSHA256: await hashText(styles), assets: result.manifest.assets, settings: result.manifest.settings, defaults: config.defaults || {}, policy: config.policy || {}, registry: { dialects: config.dialects, themes: config.themes }, snapshots: Object.fromEntries(Object.entries(snapshots).map(([id, s]) => [id, s.sha256])) };
+  const tuple = { schema: 'ragbaz.render/1', sourceSHA256: digest, skeleton: { id: config.skeleton, sha256: await hashText(skeleton) }, implementation: { id: config.implementation, sha256: runtimeSHA256, markdoc: '0.5.10' }, stylesSHA256: await hashText(styles), assets: result.manifest.assets, settings: result.manifest.settings, defaults: config.defaults || {}, policy: config.policy || {}, visualizations: config.visualizations || null, registry: { dialects: config.dialects, themes: config.themes }, snapshots: Object.fromEntries(Object.entries(snapshots).map(([id, s]) => [id, s.sha256])) };
   tuple.noticesSHA256 = await hashText(credits);
   tuple.surface = { metaDocument: config.metaDocument || null, contractSource: config.contractSource || 'rendering-contract', fontAlternatives: config.fontAlternatives || null };
   const payload = { source, sha256: digest, runtimeSHA256, renderSHA256: await hashText(canonical(tuple)), tuple, config, snapshots };

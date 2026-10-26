@@ -45,11 +45,14 @@ reads a hard-coded origin, or assumes a table prefix.
 ### Reusable Markdoc document surface
 
 Opt-in [visualization profiles](docs/VISUALIZATIONS.md) accept Mermaid/PlantUML
-source and restricted Cytoscape/Chart.js/Vega-Lite/Plotly JSON. This increment
-renders inert source, exact tables and a script-free static SVG baseline for the
-four data profiles; it is **not yet library-backed graphics**. The
-separate `@ragbaz/common/content/visualizations` API exposes the same bounded
-parser, SVG projection and escaped HTML. No new dependency or remote renderer is enabled.
+source and restricted Cytoscape/Chart.js/Vega-Lite/Plotly JSON. The standalone
+reader now bundles pinned Chart.js and Cytoscape.js adapters for its data profiles,
+while the Markdoc core remains library-free. Every visualization still emits a
+script-free static SVG, an exact table and its source before a host-owned adapter
+may mount; print keeps the static SVG. Vega-Lite and Plotly remain static, and
+Mermaid/PlantUML remain inert source. The separate
+`@ragbaz/common/content/visualizations` API exposes the bounded parser, SVG
+projection and escaped HTML. No remote renderer or authored JavaScript is enabled.
 See the [publication-library direction](docs/ARTIFACT-LIBRARY-DIRECTION.md) for the
 proposed multi-human/agent and online/mesh architecture; no sharing service exists yet.
 
