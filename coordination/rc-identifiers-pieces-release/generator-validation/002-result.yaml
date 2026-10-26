@@ -1,0 +1,53 @@
+protocol: ragbaz-cooperation/0.1
+id: generator-validation-release-002
+task: rc-identifiers-pieces-release
+actor:
+  participant: openai-generator-validation
+  role: release-implementer
+  session: /srv/ragbaz/worktrees/ragbaz-common-generator-validation
+context:
+  repository: tabenius/ragbaz-common
+  branch: release/scientific-pieces-entrances
+  observed_commit: 5e237363b9a346635625e2f6f108a62331a8a2d1
+kind: result
+status: completed
+basis: observation
+reply_to: [generator-validation-release-001]
+summary: Reconciled and pushed common main; deployed pinned Pieces and meta hosts with live verification.
+body: |
+  Common main contains a99ca6a (identifier links and matching Pieces invitations)
+  and 5e23736 (reconcile existing reading-copy export from 432982f). The clean
+  Pieces browser flow caught the missing export before any host deployment.
+  Preserved both visualization adapters and reading-copy support; no changes
+  to the staged publication-library design or unrelated dirty primary worktrees.
+  Pieces source d432299; version d51d27af-a185-4bc2-a949-c4d8bd019512.
+  Meta source 05f9672; version e8188f4e-825e-4745-b4b7-5baef591c477.
+  Both pins reference 5e237363b9a346635625e2f6f108a62331a8a2d1.
+  Live checks matched 184 public assets and all five template entrances,
+  source replacement, four identifier links, code exclusion and script-free
+  download. No API writes or browser page errors. Zone route patterns and
+  assignments and custom-domain ownership unchanged; no Access operations.
+  Common CI 40388116221 and meta CI 40388167937 passed. Pieces has no
+  corresponding push CI workflow; local suites are the evidence for that host.
+  npm audit reports three existing development-toolchain advisories through
+  Wrangler/Miniflare/undici in both hosts; no dependency upgrade was bundled.
+authorization:
+  source: user request in this session
+  scope: reconcile main, commit and push frequently, deploy this increment
+validation:
+  performed:
+    - common clean npm ci and npm test, 135/135, zero skips
+    - Pieces npm test, 36/36, clean pinned build and Wrangler dry-run bundle
+    - Pieces author/offline, agreement and key-workshop browser suites passed
+    - meta npm test, 10/10, clean pinned build, bundle and real-workerd smoke passed
+    - live 184 hashes and headless Chromium checks passed
+    - Cloudflare route and custom-domain snapshots compared unchanged
+  not_performed: [independent security review, private manuscript publication]
+evidence:
+  - /tmp/opencode/common-scientific-reconciled-tests.log
+  - /tmp/opencode/scientific-release-live-assets.json
+  - /tmp/opencode/scientific-release-live-browser.json
+  - /tmp/opencode/scientific-release-routes-before.json
+next:
+  owner: human-owner
+  action: Continue unrelated agreement-sharing work separately; do not overwrite this pinned release with an unvalidated working tree.
