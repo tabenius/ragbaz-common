@@ -52,6 +52,15 @@ test('forged projection objects cannot inject HTML or suppress revalidation', ()
   assert(!visualizationHTML({ ...value, fallback: { rows: ['<script>'] } }).includes('<img'));
   assert.throws(() => visualizationHTML({ ...value, format: 'unknown' }), /unknown format/);
 });
+test('authored HTML and unregistered tags cannot introduce SVG', async () => {
+  const raw = await renderDocument('<svg onload="alert(1)"><script>alert(1)</script></svg>');
+  assert(!raw.html.includes('<svg'));
+  assert(raw.html.includes('&lt;svg'));
+  assert(!raw.html.includes('<script'));
+  const tag = await renderDocument('{% svg %}{% /svg %}');
+  assert(!tag.clean);
+  assert(!tag.html.includes('<svg'));
+});
 test('Markdoc visualization fences are opt-in and descriptions/refusals stay explicit', async () => {
   const source = '# Chart\n\n```chartjs\n{"type":"bar","data":{"labels":["<script>"],"datasets":[{"label":"Count","data":[3]}]}}\n```\n';
   const ordinary = await renderDocument(source);
