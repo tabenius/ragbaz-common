@@ -122,6 +122,28 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-26 — empty templates link to the matching Pieces entrance
+
+Each installed meta-document's no-document opening surface now ends with a
+Pieces writing invitation carrying the exact template id as a
+`?view=write&theme=<id>` hint. It is ordinary Markdown content, present only in
+the generated template; loading a source document replaces it. Pieces validates
+the id against its finite installed set and ignores the hint for an existing
+editing link or recovered device draft. No source, credential, capability or
+manuscript state is sent in the URL.
+
+### 2026-10-26 — scientific identifier links in prose
+
+The Markdoc renderer now turns explicit `DOI:`, `PMID:`, `PMCID:` and `arXiv:`
+tokens in ordinary prose into escaped external links to `doi.org`, PubMed,
+PubMed Central and arXiv. The set is finite and versioned by this code, not a
+general URL autolinker. Display text is preserved, trailing punctuation stays
+outside the link, and matching skips inline/fenced code, existing links, SVG,
+adapter templates and source-inspection controls. Rendering performs no network
+request and asserts nothing about existence, recency, review or retraction.
+Hosts may opt out with `renderDocument(source, { identifiers: false })`. Frozen
+standalone hashes change deliberately for this additive default output.
+
 ### 2026-10-26 — installed Chart.js and Cytoscape.js reader adapters
 
 Add host-owned interactive adapters to the standalone reader for the already

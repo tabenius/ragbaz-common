@@ -199,6 +199,24 @@ repository ownership, path and pinned revision may be derived from a GitHub URL,
 but are not asserted to be personal authorship, a publication date or authenticity.
 Digest declarations and version references remain distinct from verification.
 
+### Scientific identifier links
+
+Plain prose identifiers in a finite, explicit set become ordinary external links:
+`DOI:…` and `doi:…` to `https://doi.org/…`, `PMID:…` to PubMed,
+`PMCID:PMC…` to PubMed Central, and `arXiv:…` (modern or legacy identifiers,
+with optional `vN`) to arXiv. Display text is preserved; trailing sentence
+punctuation and unbalanced closers stay outside the link. Matching is
+case-insensitive for the prefix and skips inline code, fenced code, existing
+Markdown links, SVG, adapter templates and the host-owned source-inspection
+control. Generated anchors use `rel="noreferrer noopener"` and
+`class="identifier-link"` with `data-identifier` set to the finite kind.
+
+No network request is made during rendering; navigation occurs only if a reader
+follows a link. These are convenience links, not verification that the work
+exists, is current, is peer reviewed, is retracted, or has the claimed authors.
+A document can opt out with `renderDocument(source, { identifiers: false })`;
+the default is enabled.
+
 Optional `document.entities: [{name, aliases, description, source, url, provenance}]`
 defines authored first-mention introductions. Plain text matches skip headings,
 code, existing links and SVG; matching respects word boundaries and adds only one

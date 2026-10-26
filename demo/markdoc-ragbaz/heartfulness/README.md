@@ -8,7 +8,9 @@ or an affiliation with any organization using the name Heartfulness.
 
 Use the menu to open your own Markdown, or `?document=starter.md`; an optional
 `&sha256=<64 hex>` pins exact bytes under the same bounded loading policy as sci.
-The default text is a replaceable design specimen, not an actual letter/archive.
+With no document parameter, the opening specimen links to the matching Pieces
+writing entrance (`?view=write&theme=heartfulness`). The default text is a
+replaceable design specimen, not an actual letter/archive.
 
 Document tools → Dress the page: Plain / A little / Full bloom. Paper grain is
 independently optional. Choices persist when storage permits. System/Light/Dark,

@@ -113,6 +113,75 @@ export function safeLink(value) {
   } catch { return null; }
 }
 
+// A finite set of prose identifiers with public, deterministic resolvers. This
+// is a navigational convenience, not evidence that the work exists or is sound.
+const SCIENTIFIC_IDENTIFIER = /\b(DOI|PMID|PMCID|arXiv)\s*:\s*([^\s<>"'`]+)/gid;
+const DOI_VALUE = /^[A-Za-z0-9][A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{2,299}$/;
+const ARXIV_VALUE = /^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?\/\d{7})(?:v\d+)?$/i;
+
+function trimIdentifier(value) {
+  let out = value;
+  for (;;) {
+    const before = out;
+    out = out.replace(/[.,;:!?]+$/, '');
+    for (const [open, close] of [['(', ')'], ['[', ']'], ['{', '}']]) {
+      while (out.endsWith(close)) {
+        let depth = 0;
+        for (const character of out) depth += character === open ? 1 : character === close ? -1 : 0;
+        if (depth >= 0) break;
+        out = out.slice(0, -1);
+      }
+    }
+    if (out === before) return out;
+  }
+}
+
+function identifierTarget(kind, raw) {
+  const value = trimIdentifier(raw);
+  if (!value) return null;
+  switch (kind.toUpperCase()) {
+    case 'DOI': {
+      if (!DOI_VALUE.test(value)) return null;
+      // Keep readable resolver paths while escaping only characters that would
+      // change URL structure; the value is already restricted to ASCII.
+      const encoded = value.replace(/[%#?]/g, character => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+      const href = safeLink(`https://doi.org/${encoded}`);
+      return href && { kind: 'doi', href };
+    }
+    case 'PMID': {
+      const match = /^\d{1,9}$/.exec(value);
+      return match && { kind: 'pmid', href: `https://pubmed.ncbi.nlm.nih.gov/${match[0]}/` };
+    }
+    case 'PMCID': {
+      const match = /^(PMC\d{1,9})$/i.exec(value);
+      return match && { kind: 'pmcid', href: `https://www.ncbi.nlm.nih.gov/pmc/articles/${match[1].toUpperCase()}/` };
+    }
+    case 'ARXIV':
+      return ARXIV_VALUE.test(value) && { kind: 'arxiv', href: `https://arxiv.org/abs/${value}` };
+    default: return null;
+  }
+}
+
+/** Link explicit scholarly identifiers in prose without touching code, links or
+ * host-owned controls. Output is escaped HTML for the renderer's text nodes. */
+export function linkScientificIdentifiers(text) {
+  const source = String(text ?? '');
+  let out = '', offset = 0;
+  for (const match of source.matchAll(SCIENTIFIC_IDENTIFIER)) {
+    const target = identifierTarget(match[1], match[2]);
+    if (!target) continue;
+    const valueStart = match.indices[2][0];
+    const valueEnd = valueStart + trimIdentifier(match[2]).length;
+    const end = match.indices[0][1];
+    if (valueEnd <= valueStart) continue;
+    out += escapeHTML(source.slice(offset, match.index));
+    out += `<a href="${escapeHTML(target.href)}" rel="noreferrer noopener" class="identifier-link" data-identifier="${target.kind}">${escapeHTML(source.slice(match.index, valueEnd))}</a>`;
+    out += escapeHTML(source.slice(valueEnd, end));
+    offset = end;
+  }
+  return out + escapeHTML(source.slice(offset));
+}
+
 /** Only semantic, typed tokens. No URLs, declarations, selectors or free CSS. */
 export function themeCSS(tokens = {}) {
   checkData(tokens);
@@ -588,10 +657,11 @@ export async function renderDocument(source, options = {}) {
   }
   const tree = Markdoc.transform(ast, config);
   const headings = [];
-  function render(value) {
+  const identifiers = options.identifiers !== false;
+  function render(value, plain = false) {
     if (value == null) return '';
-    if (Array.isArray(value)) return value.map(render).join('');
-    if (typeof value !== 'object') return escapeHTML(value);
+    if (Array.isArray(value)) return value.map(child => render(child, plain)).join('');
+    if (typeof value !== 'object') return plain || !identifiers ? escapeHTML(value) : linkScientificIdentifiers(value);
     const name = value.name;
     if (!ELEMENTS.has(name)) { diagnostics.push(`HTML element refused: ${name}`); return `<span class="refusal">Unsupported element: ${escapeHTML(name)}</span>`; }
     const a = value.attributes || {};
@@ -613,21 +683,22 @@ export async function renderDocument(source, options = {}) {
       }
       attrs += ` data-visualization="spec" data-id="${a['data-id']}" data-format="${a['data-format']}"`;
     }
+    const childPlain = plain || name === 'a' || name === 'code' || name === 'pre' || name === 'template' || SVG_ELEMENTS.has(name) || (name === 'span' && typeof a['data-source'] === 'string');
     if (SVG_ELEMENTS.has(name)) {
       for (const [key, value] of Object.entries(a)) {
         if (key === 'class' || key === 'data-source') continue;
         if (!isSafeSVGAttribute(name, key, value)) { diagnostics.push(`Unsafe SVG attribute refused: ${name}.${key}`); continue; }
         attrs += ` ${key}="${escapeHTML(value)}"`;
       }
-      return `<${name}${attrs}>${render(value.children)}</${name}>`;
+      return `<${name}${attrs}>${render(value.children, childPlain)}</${name}>`;
     }
     if (/^h[1-6]$/.test(name)) {
       const id = `section-${headings.length + 1}`;
-      const plain = (v) => Array.isArray(v) ? v.map(plain).join('') : typeof v === 'object' && v ? plain(v.children) : String(v ?? '');
-      headings.push({ id, level: Number(name[1]), text: plain(value.children) });
+      const plainText = (v) => Array.isArray(v) ? v.map(plainText).join('') : typeof v === 'object' && v ? plainText(v.children) : String(v ?? '');
+      headings.push({ id, level: Number(name[1]), text: plainText(value.children) });
       attrs += ` id="${id}"`;
     }
-    return `<${name}${attrs}>${render(value.children)}</${name}>`;
+    return `<${name}${attrs}>${render(value.children, childPlain)}</${name}>`;
   }
   const assetNotes = manifest.assets.filter(a => a.role === 'logo' || a.role === 'repository').map(a => a.role === 'repository'
     ? `<p class="asset-provenance">Repository: ${safeLink(a.url) ? `<a href="${escapeHTML(safeLink(a.url))}" rel="noreferrer noopener">${escapeHTML(a.title || a.id)}</a>` : escapeHTML(a.id) + ' (unavailable URL)'}</p>`

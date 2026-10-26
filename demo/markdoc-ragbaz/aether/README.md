@@ -4,9 +4,11 @@ Three newly authored symbolic templates: Prima materia, Sun and moon, Blackening
 These are contemporary interpretations, not historical facsimiles, recovered
 correspondence, scientific findings or claims about a real relationship.
 
-Each package opens with a replaceable original specimen. Open your own Markdown
-from Document tools or use `?document=starter.md`; optional `&sha256=<64 hex>`
-pins exact bytes under the same bounded, credential-free loading policy as sci.
+Each package opens with a replaceable original specimen and, with no document
+parameter, links to the matching Pieces writing entrance for that variant. Open
+your own Markdown from Document tools or use `?document=starter.md`; optional
+`&sha256=<64 hex>` pins exact bytes under the same bounded, credential-free
+loading policy as sci.
 The rendering contract is embedded and inspectable offline. System fonts are the
 default; Typography offers curated Google alternatives only after selection.
 No remote images, executable authored SVG or document-selected imports are permitted.

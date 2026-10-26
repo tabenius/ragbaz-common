@@ -31,6 +31,8 @@ test('meta package is content-neutral, offline-complete and byte-manifested', as
     assert.deepEqual(Object.keys(built.payload.snapshots), ['rendering-contract']);
     assert.equal(built.payload.tuple.surface.metaDocument.id, 'markdoc-ragbaz-sci-tufte');
     assert.equal(built.payload.tuple.surface.fontAlternatives, 'google-curated/1');
+    assert(built.payload.source.includes('https://pieces.ragbaz.cc/?view=write&theme=markdoc-ragbaz-sci-tufte'));
+    assert.match(built.payload.source, /No document yet\? \[Write a piece with this shape in Pieces/);
     assert.match(built.html, /style-src 'unsafe-inline' https:\/\/fonts.googleapis.com/);
     assert.match(built.html, /font-src https:\/\/fonts.gstatic.com/);
     assert(!built.html.includes('<link'), 'no remote font request is embedded by default');
@@ -55,6 +57,7 @@ test('Heartfulness is an installed independent presentation with original manife
     assert.match(built.html, /data-template="heartfulness"/);
     assert.match(built.payload.source, /# Heartfulness/);
     assert.match(built.payload.source, /A place to begin/);
+    assert(built.payload.source.includes('https://pieces.ragbaz.cc/?view=write&theme=heartfulness'));
     assert(!built.payload.source.includes('/markdoc-ragbaz-sci-tufte/'));
     assert(!built.payload.source.includes('Tobias Abenius'));
     assert.deepEqual(Object.keys(built.payload.snapshots), ['rendering-contract']);
@@ -81,6 +84,7 @@ test('Aether variants have distinct specimens, tuple identities and manifested o
       assert.equal(manifest.mount, '/aether/' + variant.slug);
       assert.equal(built.payload.tuple.surface.metaDocument.id, template);
       assert.match(built.payload.source, new RegExp('# ' + variant.title));
+      assert(built.payload.source.includes(`https://pieces.ragbaz.cc/?view=write&theme=${template}`));
       assert(!built.payload.source.includes('Tobias Abenius'));
       assert.deepEqual(Object.keys(built.payload.snapshots), ['rendering-contract']);
       identities.add(built.payload.renderSHA256);

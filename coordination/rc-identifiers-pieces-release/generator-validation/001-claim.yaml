@@ -1,0 +1,34 @@
+protocol: ragbaz-cooperation/0.1
+id: generator-validation-release-001
+task: rc-identifiers-pieces-release
+actor:
+  participant: openai-generator-validation
+  role: release-implementer
+  session: /srv/ragbaz/worktrees/ragbaz-common-generator-validation
+context:
+  repository: tabenius/ragbaz-common
+  branch: feat/library-visualization-adapters
+  observed_commit: a2b970fc488731ff244c47027acd07732e17ed04
+kind: claim
+status: active
+basis: observation
+scope:
+  paths: [src/content/markdoc-ragbaz.js, scripts/build-markdoc-ragbaz-sci-tufte.mjs, tests, README.md, PROVENANCE.md, docs/MARKDOC-RAGBAZ.md, demo/markdoc-ragbaz]
+summary: Reconcile scientific identifier links and matching Pieces entrances onto remote main and release pinned hosts.
+body: |
+  User explicitly authorized reconciliation into main, push and deployment.
+  Use isolated release worktrees; preserve the dirty common main checkout and
+  Pieces' newer uncommitted agreement-sharing work. Pieces' committed e8311b2
+  already contains the theme menu and language reconciliation. Remote common
+  main 6a297efe80914d6f34286ce5819e530facdb2620 includes the visualization work.
+  Frog model operations refused; explicit legacy mode created and claimed the
+  task with lock 261 on the renderer and builder. No delegation is used.
+authorization:
+  source: user request in this session
+  scope: reconcile main, push and deploy this increment
+validation:
+  performed: [prior common npm test 134/134, prior Pieces npm test 30/30, prior Pieces browser workflow passed]
+  not_performed: [release checkout validation, production deployment]
+next:
+  owner: openai-generator-validation
+  action: Commit the increment, reconcile remote main, validate clean pinned hosts and deploy without changing routes or access policy.

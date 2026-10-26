@@ -57,6 +57,7 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     };
     await navigate(base);
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'markdoc-ragbaz-sci-tufte');
+    assert(await ev("document.getElementById('paper').textContent.includes('No document yet')"), 'template offers a Pieces writing entrance before a source is loaded');
     assert(await ev("!document.getElementById('heart-ornaments') && !document.querySelector('.heart-frame')"), 'sci does not acquire botanical controls');
     assert(!requests.some(path => path.endsWith('.md')), 'no document request without a parameter');
     assert.equal(await ev("document.getElementById('theme-fonts').value"), 'system');
@@ -95,6 +96,7 @@ test('content-neutral meta-document loads only explicit permitted parameters, re
     assert(await ev("document.getElementById('source-provenance').textContent.includes('digest matched')"));
     await navigate(base + '?document=starter.md');
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'Your paper title');
+    assert(await ev("!document.getElementById('paper').textContent.includes('No document yet')"), 'a loaded document replaces the template writing entrance');
     await navigate(base + '?document=own.md&sha256=' + digest);
     assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'Own paper');
     assert.equal(await ev("document.getElementById('document-digest').textContent"), 'Current Markdown SHA-256: ' + digest);

@@ -60,6 +60,8 @@ proposed multi-human/agent and online/mesh architecture; no sharing service exis
 renderer with versioned YAML/JSON metadata, lazy declarative dialect/theme
 registries, visible refusals and safe source previews. Existing content APIs
 are unchanged. Product paper layout and browser adapters live outside `src/`.
+The installed meta-document builder gives each no-document template an ordinary
+link to its matching Pieces writing entrance; loading a source replaces it.
 
 ```sh
 npm ci
@@ -115,7 +117,9 @@ contents. Numbered citations show bibliography cards in the margin (laptop+) or
 as tooltips. Expandable truthful author credits and manuscript dates link to
 editorial revisions; publication requires explicit paired review signals.
 First-mention entity notes explain project roles; meaningful links keep their
-labels and classified revision details live in reference cards. Named host-owned
+labels and classified revision details live in reference cards. Explicit
+`DOI:`, `PMID:`, `PMCID:` and `arXiv:` identifiers in prose become ordinary
+resolver links without fetching or asserting that the work exists. Named host-owned
 SVG plates introduce WeftMark and Nostoi without enabling document-supplied SVG.
 Reading shortcuts and equivalent menu actions support real fullscreen (`f`, Esc),
 vertical flow (up/down, `k`/`j`), paper spreads (left/right, `h`/`Shift+L`),

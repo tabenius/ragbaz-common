@@ -98,6 +98,47 @@ test('raw HTML, annotations, executable URLs and images cannot execute or cause 
   await assert.rejects(() => renderDocument('Hidden {% .reader-tools %}'), /annotations refused/);
 });
 
+test('scientific identifiers in prose become safe resolver links, never inside code, links or source controls', async () => {
+  const source = preamble({ schema: 'ragbaz.document/1', document: { title: 'Identifiers' }, sources: [{ id: 's', title: 'DOI:10.1000/source-control', url: 'https://example.org/paper' }] }) + `# DOI:10.1000/title
+
+DOI:10.1000/sentence. doi:10.5555/ABC-123, PMID: 12345678, PMCID:PMC1234567 and arXiv:2401.12345v2.
+Legacy arXiv:hep-th/9901001v2, balanced DOI:10.1000/a(b) and DOI:msb.2011.foo.bar.
+[DOI:10.1000/in-link](https://example.org) and \`DOI:10.1000/inline\`.
+
+\`\`\`
+DOI:10.1000/fence
+\`\`\`
+
+{% source ref="s" /%}
+`;
+  const r = await renderDocument(source);
+  assert.equal(r.clean, true, r.diagnostics.join(';'));
+  assert.match(r.html, /<a href="https:\/\/doi\.org\/10\.1000\/title" rel="noreferrer noopener" class="identifier-link" data-identifier="doi">DOI:10\.1000\/title<\/a>/);
+  assert.match(r.html, /href="https:\/\/doi\.org\/10\.1000\/sentence"/);
+  assert.doesNotMatch(r.html, /href="https:\/\/doi\.org\/10\.1000\/sentence\."/);
+  assert.match(r.html, /href="https:\/\/doi\.org\/10\.5555\/ABC-123"/);
+  assert.match(r.html, /href="https:\/\/pubmed\.ncbi\.nlm\.nih\.gov\/12345678\/"/);
+  assert.match(r.html, /href="https:\/\/www\.ncbi\.nlm\.nih\.gov\/pmc\/articles\/PMC1234567\/"/);
+  assert.match(r.html, /href="https:\/\/arxiv\.org\/abs\/2401\.12345v2"/);
+  assert.match(r.html, /href="https:\/\/arxiv\.org\/abs\/hep-th\/9901001v2"/);
+  assert.match(r.html, /href="https:\/\/doi\.org\/10\.1000\/a\(b\)"/);
+  assert.match(r.html, /href="https:\/\/doi\.org\/msb\.2011\.foo\.bar"/);
+  assert.doesNotMatch(r.html, /doi\.org\/10\.1000\/in-link/);
+  assert.doesNotMatch(r.html, /doi\.org\/10\.1000\/inline/);
+  assert.doesNotMatch(r.html, /doi\.org\/10\.1000\/fence/);
+  assert.doesNotMatch(r.html, /doi\.org\/10\.1000\/source-control/);
+  assert.equal(r.headings[0].text, 'DOI:10.1000/title');
+
+  const hostile = await renderDocument('DOI:10.1000/x"><script>alert(1)</script> DOI:javascript:alert(1)');
+  assert.doesNotMatch(hostile.html, /<script/);
+  assert.match(hostile.html, /href="https:\/\/doi\.org\/10\.1000\/x"/);
+  assert.match(hostile.html, /href="https:\/\/doi\.org\/javascript:alert\(1\)"/);
+
+  const disabled = await renderDocument('DOI:10.1000/no-link', { identifiers: false });
+  assert.doesNotMatch(disabled.html, /href=/);
+  assert.match(disabled.html, /DOI:10\.1000\/no-link/);
+});
+
 test('themes permit typed semantic tokens only', async () => {
   assert.equal(themeCSS({ paper: '#fafafa', 'text-size': 20, measure: 72 }), '--paper:#fafafa;--text-size:20px;--measure:72ch');
   for (const tokens of [{ paper: 'url(https://evil)' }, { paper: '#000000;display:none' }, { selector: 'body' }, { measure: 9999 }, { ink: '@import x' }, { font: 'remote' }]) assert.throws(() => themeCSS(tokens));

@@ -10,6 +10,7 @@ import { AETHER_VARIANTS, AETHER_PLATES } from '../demo/markdoc-ragbaz/aether.js
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const META_MOUNT = '/markdoc-ragbaz-sci-tufte';
+const PIECES_WRITING_ORIGIN = 'https://pieces.ragbaz.cc/';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 
 /** Build a static, content-neutral package. No network, secrets or deployment. */
@@ -30,7 +31,9 @@ export async function buildMetaDocument({ output = resolve(root, 'dist-meta'), t
   const introduction = aether ? (await readFile(resolve(root, `demo/markdoc-ragbaz/aether/${aether.slug}.md`), 'utf8')).trim() : heart
     ? '*A small press for tender things.*\n\nAn ornamental reading room, waiting for your words.\n\nA little romance; a little weathering. Cream paper, climbing stems, and room to breathe.\n\n## A place to begin\n\nBring a letter, an essay, a memory, a recipe. Open your Markdown from the menu, or try `?document=starter.md`. The words remain yours; the flowers are optional.\n\n## The garden gate\n\nChoose **Plain**, **A little**, or **Full bloom** in Document tools. Keep the paper grain, or smooth it away. This is a first proof, not a period reconstruction.\n\n*Mix, knead, bake, taste. Repeat.*'
     : 'A publication surface, ready for your document.\n\nOpen a Markdown file from the menu, or supply a permitted Markdown URL with\n`?document=…`. A source can also be pinned with `&sha256=…`.';
-  const templateSource = `---\nschema: ragbaz.document/1\ndocument:\n  title: ${title}\ndialects: [paper@1, plan@1, models@1]\nsettings:\n  theme: paper@1\nsources:\n  - id: rendering-contract\n    title: markdoc-ragbaz rendering contract\n    url: '${mount}/markdoc-ragbaz.md'\n    sha256: '${hash(contract)}'\n---\n\n# ${title}\n\n${introduction}\n`;
+  const piecesEntrance = `${PIECES_WRITING_ORIGIN}?view=write&theme=${encodeURIComponent(template)}`;
+  const piecesInvitation = `No document yet? [Write a piece with this shape in Pieces ↗](${piecesEntrance})`;
+  const templateSource = `---\nschema: ragbaz.document/1\ndocument:\n  title: ${title}\ndialects: [paper@1, plan@1, models@1]\nsettings:\n  theme: paper@1\nsources:\n  - id: rendering-contract\n    title: markdoc-ragbaz rendering contract\n    url: '${mount}/markdoc-ragbaz.md'\n    sha256: '${hash(contract)}'\n---\n\n# ${title}\n\n${introduction}\n\n${piecesInvitation}\n`;
   const files = {
     'template.md': templateSource,
     'surface.json': JSON.stringify(config, null, 2) + '\n',

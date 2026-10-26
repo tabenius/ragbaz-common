@@ -8,7 +8,9 @@ author, review decision, evidence source or publication authority.
 Default mount: `/markdoc-ragbaz-sci-tufte/` (the slashless path should redirect
 while preserving query parameters).
 
-- No parameter: a neutral opening surface; no witness manuscript is embedded.
+- No parameter: a neutral opening surface that links to the matching Pieces
+  writing entrance (`?view=write&theme=markdoc-ragbaz-sci-tufte`); no witness
+  manuscript is embedded.
 - `?document=starter.md`: load the bundled starter through the hosting origin.
 - `?document=<URL-encoded Markdown URL>`: load an explicit permitted URL.
 - Add `&sha256=<64 hex digits>` to require those exact document bytes.
