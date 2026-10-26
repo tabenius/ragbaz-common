@@ -1,0 +1,35 @@
+protocol: ragbaz-cooperation/0.1
+id: visualization-svg-local-client-001
+task: rc-visualization-svg
+actor:
+  participant: local-client
+  role: implementer
+session: local-client
+context:
+  repository: tabenius/ragbaz-common
+  branch: feat/markdoc-static-visualization-svg
+  observed_commit: 67b344b2259cbc6a15e6f7e7ebcd30f207015449
+kind: result
+status: completed
+basis: observation
+summary: Add a deterministic script-free SVG baseline for the restricted Markdoc visualization profiles.
+body: |
+  The four JSON data profiles now render an inline SVG fallback in addition to
+  the exact table and inert source. Mermaid and PlantUML remain source-only.
+  The graphic uses fixed geometry and colours, no fonts, images, scripts, external
+  URLs or animation, and all SVG attributes pass allowlist checks. This is a
+  fallback baseline, not execution of Cytoscape.js, Chart.js, Vega-Lite or Plotly.
+evidence:
+  - Root npm ci and npm test passed 129 tests, zero failures or skips, including offline Chromium and print visibility.
+  - Frozen standalone hashes were recalculated only for the deliberate renderer and stylesheet change.
+  - Tests cover deterministic SVG, allowlist refusals, hostile labels, source-only formats and exact table preservation.
+validation:
+  performed:
+    - npm ci
+    - npm test (129/129, zero skips)
+  not_performed:
+    - Third-party library-backed adapters for Cytoscape.js, Chart.js, Vega-Lite, Plotly, Mermaid or PlantUML.
+    - Independent security review or production deployment of this increment.
+next:
+  owner: human-owner
+  action: Review and merge the static SVG baseline; decide whether to fund a separate optional library-adapter package.

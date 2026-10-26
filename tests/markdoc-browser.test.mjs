@@ -791,9 +791,11 @@ test('opt-in visualization fallbacks stay inert and printable in offline Chromiu
       assert.equal(result.exceptionDetails, undefined); return result.result.value;
     };
     assert(await ev("(async()=>{for(let i=0;i<100&&document.querySelectorAll('figure').length!==6;i++)await new Promise(r=>setTimeout(r,25));return document.querySelectorAll('figure').length===6})()"));
-    assert(await ev("!window.injected && !document.querySelector('script,img,iframe,svg,canvas') && document.querySelectorAll('table').length===4"));
+    assert(await ev("!window.injected && !document.querySelector('script,img,iframe,canvas,foreignObject,use,image') && document.querySelectorAll('table').length===4 && document.querySelectorAll('svg[role=img]').length===4"));
+    assert(await ev("[...document.querySelectorAll('figure svg *')].every(e=>[...e.attributes].every(a=>!a.name.startsWith('on')))"));
+    assert(await ev("[...document.querySelectorAll('figure svg')].every(s => s.getAttribute('aria-labelledby') && s.querySelector('title')?.textContent && s.querySelector('desc')?.textContent)"));
     await browser.call('Emulation.setEmulatedMedia', { media: 'print' }, sessionId);
-    assert(await ev("[...document.querySelectorAll('figure,table,pre')].every(e=>e.getBoundingClientRect().height>0)"));
+    assert(await ev("[...document.querySelectorAll('figure,figure svg,table,pre')].every(e=>e.getBoundingClientRect().height>0)"));
     assert(await ev("document.body.textContent.includes('<script>window.injected=true</script>') && document.body.textContent.includes('<img src=https://example.test/track>')"));
   } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });

@@ -122,6 +122,17 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-10-26 — static SVG baseline for visualization profiles
+
+Add a deterministic, script-free SVG baseline for the restricted Cytoscape, Chart.js,
+Vega-Lite and Plotly profiles. Graphics use fixed geometry, colours, text and inline
+shapes, with no fonts, images, scripts, external URLs, animation or third-party
+library execution. Markdoc output includes both the graphic and the exact table;
+`visualizationHTML` exposes the same projection. Mermaid and PlantUML remain inert
+source. Frozen standalone hashes change deliberately because the browser runtime
+includes the static renderer. This is not a claim of Chart.js, Cytoscape.js,
+Vega-Lite or Plotly compatibility; those adapters remain separate work.
+
 ### 2026-10-24 — opt-in visualization profiles and library direction
 
 Add bounded, non-executable visualization profiles, exposed separately and through
