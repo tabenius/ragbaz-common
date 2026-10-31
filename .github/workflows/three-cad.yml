@@ -1,0 +1,29 @@
+name: Three CAD foundation
+on:
+  pull_request:
+    paths:
+      - 'src/content/geometry3d.js'
+      - 'src/content/geometry-obj.js'
+      - 'src/content/three-adapter.js'
+      - 'src/content/visualizations.js'
+      - 'tests/geometry*.test.mjs'
+      - 'package*.json'
+      - '.github/workflows/three-cad.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/geometry3d.test.mjs tests/geometry-visualization.test.mjs
+      - run: node --check src/content/geometry3d.js
+      - run: node --check src/content/three-adapter.js
+      - run: node --check src/content/geometry-obj.js
+      - run: node --check src/content/visualizations.js
