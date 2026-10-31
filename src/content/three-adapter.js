@@ -3,6 +3,7 @@ import { validateGeometryDocument } from './geometry3d.js';
 export function mountThreeScene(element, input, THREE, OrbitControls) {
   const model = validateGeometryDocument(input);
   if (!element || !THREE || !OrbitControls) throw new TypeError('Host must supply element, THREE and OrbitControls');
+  if (typeof requestAnimationFrame !== 'function' || typeof cancelAnimationFrame !== 'function') throw new TypeError('Interactive viewer requires animation frame APIs');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#17252d');
   const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000000);
@@ -42,8 +43,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     camera.updateProjectionMatrix();
   }
   let frame = 0, disposed = false;
-  const schedule = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
-  if (!schedule) throw new TypeError('Interactive viewer requires requestAnimationFrame');
+  const schedule = requestAnimationFrame;
   function resize() {
     const width = Math.max(1, element.clientWidth || 640);
     const height = Math.max(1, element.clientHeight || 360);
