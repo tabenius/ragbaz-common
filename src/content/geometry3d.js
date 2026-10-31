@@ -9,10 +9,12 @@ export function validateGeometryDocument(input) {
   if (input.version !== 'ragbaz.geometry/1') fail('Unsupported geometry version');
   if (!['three-scene', 'cad-model'].includes(input.profile)) fail('Unsupported profile');
   if (!UNITS.has(input.units)) fail('Unsupported units');
+  if (Object.keys(input).some(k => !['version','profile','units','objects'].includes(k))) fail('Unsupported document field');
   if (!Array.isArray(input.objects) || input.objects.length > 128) fail('Invalid object count');
   const ids = new Set();
   const objects = input.objects.map((o, i) => {
     if (!o || typeof o !== 'object' || Array.isArray(o)) fail('Invalid object');
+    if (Object.keys(o).some(k => !['id','type','size','position','rotation','color'].includes(k))) fail('Unsupported object field');
     if (typeof o.id !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(o.id) || ids.has(o.id)) fail('Invalid or duplicate object id');
     ids.add(o.id);
     if (!TYPES.has(o.type)) fail('Unsupported primitive');
