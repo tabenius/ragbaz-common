@@ -26,8 +26,7 @@ Do not load this adapter in a Worker. Use `geometrySvg` for no-script fallback.
 The `cad-model` profile preserves dimensions and units but does not yet
 provide STEP/BREP, topology, Boolean solids, parametric constraints or import/export.
 The static SVG is a dimensioned inventory, not a geometric projection. Hosts
-must explicitly opt into the interactive adapter. Integration with the existing
-Markdoc visualization registry remains a separate task.
+must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. Interactive Three.js mounting is still a host opt-in and is not wired into the standalone reader.
 
 Security: bounded objects and numeric dimensions, unique identifiers,
 restricted primitive types and colors. No URLs, textures, shader source,
