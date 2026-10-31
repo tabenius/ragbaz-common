@@ -32,3 +32,5 @@ Security: bounded objects and numeric dimensions, unique identifiers,
 restricted primitive types and colors. No URLs, textures, shader source,
 scripts or external assets are accepted. Hosts should enforce additional
 GPU/memory budgets and a strict CSP.
+
+Mesh-based Wavefront OBJ export is available through `@ragbaz/common/content/geometry-obj` as `exportSceneOBJ(document, THREE)`. The host must provide Three.js. OBJ is a triangulated interchange format, not a precision CAD model; units are written as a comment, and importing applications must respect them. STEP, STL, glTF, BREP and parametric feature history remain unimplemented.
