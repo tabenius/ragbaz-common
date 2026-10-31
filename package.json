@@ -25,7 +25,8 @@
     "./prefix-migration": "./scripts/prefix-migration.mjs",
     "./build-llms-txt": "./scripts/build-llms-txt.mjs",
     "./content/geometry3d": "./src/content/geometry3d.js",
-    "./content/three-adapter": "./src/content/three-adapter.js"
+    "./content/three-adapter": "./src/content/three-adapter.js",
+    "./content/geometry-obj": "./src/content/geometry-obj.js"
   },
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
