@@ -15,3 +15,20 @@ test('rejects executable and malformed geometry', () => {
  }
  assert.throws(() => validateGeometryDocument({...valid, objects: Array(129).fill(valid.objects[0])}));
 });
+
+test('refuses unknown fields, remote references and prototype keys', () => {
+ for (const extra of [{url:'https://example.invalid/model.step'},{shader:'void main() {}'},{__proto__:null, callback:'run'}]) {
+  assert.throws(() => validateGeometryDocument({...valid,...extra}));
+ }
+ for (const extra of [{url:'https://example.invalid/mesh'},{shader:'unsafe'},{material:{script:'run'}}]) {
+  assert.throws(() => validateGeometryDocument({...valid,objects:[{...valid.objects[0],...extra}]}));
+ }
+});
+test('accepts empty geometry and preserves safe defaults', () => {
+ const empty = validateGeometryDocument({...valid,objects:[]});
+ assert.equal(empty.objects.length,0);
+ const ring = validateGeometryDocument(valid).objects[0];
+ assert.deepEqual(ring.position,[0,0,0]);
+ assert.deepEqual(ring.rotation,[0,0,0]);
+ assert.equal(ring.color,'#5e9bb5');
+});
