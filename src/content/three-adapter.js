@@ -14,7 +14,8 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(5, 8, 10);
   scene.add(light);
-  scene.add(new THREE.AxesHelper(3));
+  const axes = new THREE.AxesHelper(3);
+  scene.add(axes);
   const meshes = [];
   for (const o of model.objects) {
     const [a,b,c] = o.size;
@@ -41,6 +42,8 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     camera.updateProjectionMatrix();
   }
   let frame = 0, disposed = false;
+  const schedule = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
+  if (!schedule) throw new TypeError('Interactive viewer requires requestAnimationFrame');
   function resize() {
     const width = Math.max(1, element.clientWidth || 640);
     const height = Math.max(1, element.clientHeight || 360);
@@ -51,14 +54,16 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
   observer?.observe(element);
   resize();
-  function render() { if (disposed) return; controls.update(); renderer.render(scene,camera); frame = requestAnimationFrame(render); }
+  function render() { if (disposed) return; controls.update(); renderer.render(scene,camera); frame = schedule(render); }
   render();
   return () => {
     disposed = true;
-    cancelAnimationFrame(frame);
+    if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame);
     observer?.disconnect();
     controls.dispose();
     for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }
+    axes.geometry.dispose();
+    axes.material.dispose();
     renderer.dispose();
     renderer.domElement.remove();
   };
