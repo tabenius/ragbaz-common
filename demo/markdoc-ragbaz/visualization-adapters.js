@@ -195,6 +195,7 @@ export function mountVisualizations(root) {
       observers.get(host)?.disconnect(); observers.delete(host);
       const chartInstance = charts.get(host); if (chartInstance) { chartInstance.destroy(); charts.delete(host); }
       const graphInstance = graphs.get(host); if (graphInstance) { graphInstance.destroy(); graphs.delete(host); }
+      geometryViews.get(host)?.(); geometryViews.delete(host);
       host.replaceChildren();
       host.setAttribute('aria-hidden', 'true');
       if (!figure.querySelector('.visualization-adapter-note')) {
