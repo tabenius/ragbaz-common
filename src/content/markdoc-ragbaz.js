@@ -537,7 +537,7 @@ function visualizationOptions(options, manifest, diagnostics) {
   let interactive = [];
   if (requested === true) interactive = ['chartjs', 'cytoscape'];
   else if (requested !== undefined && requested !== false) {
-    if (!Array.isArray(requested) || requested.some(format => !['chartjs', 'cytoscape'].includes(format))) diagnostics.push('Interactive visualization formats refused; only chartjs and cytoscape are installed');
+    if (!Array.isArray(requested) || requested.some(format => !['chartjs', 'cytoscape', 'three-scene', 'cad-model'].includes(format))) diagnostics.push('Interactive visualization formats refused; only chartjs, cytoscape and host-provided geometry adapters are permitted');
     else interactive = requested;
   }
   return { descriptions, interactive: new Set(interactive) };
