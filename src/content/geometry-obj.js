@@ -14,7 +14,7 @@ export function exportSceneOBJ(input, THREE) {
       object.type === 'cylinder' ? new THREE.CylinderGeometry(a,a,b,32) :
       new THREE.TorusGeometry(a,b,16,64);
     const transform = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...object.rotation));
-    transform.setPosition(...object.position);
+    transform.setPosition(new THREE.Vector3(...object.position));
     const positions = mesh.getAttribute('position');
     const vertex = new THREE.Vector3();
     lines.push('o ' + object.id);
