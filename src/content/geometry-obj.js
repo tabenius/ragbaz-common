@@ -6,6 +6,8 @@ export function exportSceneOBJ(input, THREE) {
   const model = validateGeometryDocument(input);
   if (!THREE) throw new TypeError('Host must supply Three.js');
   const lines = ['# ragbaz.geometry/1', '# units: ' + model.units];
+  let vertexBudget = 0;
+  const MAX_VERTICES = 1_000_000;
   let offset = 1;
   for (const object of model.objects) {
     const [a,b,c] = object.size;
@@ -17,6 +19,8 @@ export function exportSceneOBJ(input, THREE) {
     transform.setPosition(new THREE.Vector3(...object.position));
     const positions = mesh.getAttribute('position');
     const vertex = new THREE.Vector3();
+    vertexBudget += positions.count;
+    if (vertexBudget > MAX_VERTICES) { mesh.dispose(); throw new RangeError('OBJ vertex budget exceeded'); }
     lines.push('o ' + object.id);
     for (let i = 0; i < positions.count; i++) {
       vertex.fromBufferAttribute(positions, i).applyMatrix4(transform);
