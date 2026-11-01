@@ -9,6 +9,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000000);
   camera.position.set(7, 6, 9);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(2, Math.max(1, globalThis.devicePixelRatio || 1)));
   element.appendChild(renderer.domElement);
   const controls = new OrbitControls(camera, renderer.domElement);
   scene.add(new THREE.AmbientLight(0xffffff, 1.5));
