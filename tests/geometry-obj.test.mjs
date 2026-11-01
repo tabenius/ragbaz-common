@@ -25,3 +25,18 @@ test('OBJ export emits positioned vertices and indexed faces without network',()
  assert.match(obj,/v 2 3 4/);
  assert.match(obj,/f 1 2 3/);
 });
+
+test('OBJ export rejects out-of-bounds triangle indices', () => {
+ class IndexedBox extends BoxGeometry {
+  get index() { return {count:3,getX:i=>[0,1,99][i]}; }
+ }
+ const doc={version:'ragbaz.geometry/1',profile:'cad-model',units:'mm',objects:[{id:'block',type:'box',size:[1,1,1]}]};
+ assert.throws(()=>exportSceneOBJ(doc,{...THREE,BoxGeometry:IndexedBox}),/Invalid geometry face index/);
+});
+test('OBJ export rejects incomplete nonindexed triangle buffers', () => {
+ class BrokenBox extends BoxGeometry {
+  getAttribute() { return {count:2,vertices:[[0,0,0],[1,0,0]]}; }
+ }
+ const doc={version:'ragbaz.geometry/1',profile:'cad-model',units:'mm',objects:[{id:'block',type:'box',size:[1,1,1]}]};
+ assert.throws(()=>exportSceneOBJ(doc,{...THREE,BoxGeometry:BrokenBox}),/Invalid triangulated geometry buffer/);
+});
