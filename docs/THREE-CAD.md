@@ -1,0 +1,62 @@
+# Three.js and CAD visualization contract (experimental)
+
+The core remains dependency-free, Worker-safe and declarative. Import
+`@ragbaz/common/content/geometry3d` to validate `ragbaz.geometry/1`
+documents, generate an SVG inventory and read exact dimensions.
+
+```json
+{
+  "version": "ragbaz.geometry/1",
+  "profile": "three-scene",
+  "units": "mm",
+  "objects": [
+    {"id":"torus","type":"torus","size":[3,0.8],"color":"#5e9bb5"},
+    {"id":"base","type":"box","size":[5,0.4,5],"position":[0,-2,0]}
+  ]
+}
+```
+
+The optional `@ragbaz/common/content/three-adapter` export accepts
+`mountThreeScene(element, document, THREE, OrbitControls)`. The host supplies
+pinned, locally bundled Three.js and OrbitControls; no remote code or authored
+JavaScript is evaluated. The return value disposes the scene and GPU resources.
+Do not load this adapter in a Worker. Use `geometrySvg` for no-script fallback.
+
+**Scope:** this is an initial primitive-scene contract, not a CAD kernel.
+The `cad-model` profile preserves dimensions and units but does not yet
+provide STEP/BREP, topology, Boolean solids, parametric constraints or precision CAD interchange.
+The static SVG is a dimensioned inventory, not a geometric projection. Hosts
+must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. The standalone reader now bundles pinned Three.js 0.180.0 and OrbitControls locally; the reader's default configuration still does not enable geometry interactivity. A host must opt in to the desired formats; the bundled libraries are used automatically unless the host overrides them.
+
+Security: bounded objects and numeric dimensions, unique identifiers,
+restricted primitive types and colors. No URLs, textures, shader source,
+scripts or external assets are accepted. Hosts should enforce additional
+GPU/memory budgets and a strict CSP.
+
+Mesh-based Wavefront OBJ export is available through `@ragbaz/common/content/geometry-obj` as `exportSceneOBJ(document, THREE)`. The host must provide Three.js. OBJ is a triangulated interchange format, not a precision CAD model; units are written as a comment, and importing applications must respect them. STEP, STL, glTF, BREP and parametric feature history remain unimplemented.
+
+## Rendering and deployment status
+
+The default reader includes the locally bundled Three.js runtime, while retaining offline-safe static SVG inventory, exact dimensions and inert source. The interactive adapter is exported by `demo/markdoc-ragbaz/visualization-adapters.js` as `configureGeometryAdapter(THREE, OrbitControls)`; this accepts host-owned library objects, never URLs from document data. The standalone reader includes pinned Three.js and OrbitControls; embedding hosts can override them with compatible trusted libraries. Explicitly configure `visualizations.interactive` to include `three-scene` and/or `cad-model`. The default `registry.json` does neither, so merely writing a geometry fence does not activate WebGL. Always call `disposeVisualizations(root)` before replacing a rendered subtree.
+
+The OBJ exporter triangulates the validated primitives, applies object transforms, and limits the combined generated vertex count to 1,000,000. Its units comment is informational; Wavefront OBJ has no normative physical-unit metadata. Exported OBJ must not be represented as STEP, BREP or a watertight solid model.
+
+## Remaining acceptance gates
+
+- Run the complete Node test suite and dedicated geometry tests on Node 22, including the standalone build's license-inventory gate.
+- Exercise the pinned, locally bundled Three.js and OrbitControls runtime in a real browser with networking disabled, including WebGL context loss, restoration and disposal.
+- Verify no-WebGL, keyboard, screen-reader and reduced-motion behavior; retain the exact table and SVG fallback.
+- Browser smoke-test procedure: generate the standalone HTML from `demo/markdoc-ragbaz/three-cad-example.md`, open it with browser network access disabled, and confirm the SVG and exact dimensions remain visible. For a trusted interactive configuration that includes `three-scene`, verify canvas rendering, orbit/pan/zoom, WebGL context loss/restoration, and teardown when the document is replaced. Record browser, GPU mode and results before promoting this PR.
+- Design a separate reviewed precision-CAD kernel contract before claiming STEP/BREP, Booleans, assemblies or parametric history.
+
+### Host bootstrap for interactive scenes
+
+A trusted host that bundles compatible Three.js and OrbitControls locally can provide them **before the reader's browser bundle executes**:
+
+```js
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+window.ragbazGeometryLibraries = { THREE, OrbitControls };
+```
+
+This snippet is a **host application build-time entry point**, not a Markdoc code fence to execute. The reader bootstrap consumes `window.ragbazGeometryLibraries` if present. The host must also set `visualizations.interactive` to include the relevant geometry profiles in its trusted reader configuration. Do not use a CDN, runtime URL injection or inline authored JavaScript to supply these dependencies. The standalone output now includes pinned Three.js and OrbitControls; this host bootstrap is optional and intended only for trusted runtime overrides.

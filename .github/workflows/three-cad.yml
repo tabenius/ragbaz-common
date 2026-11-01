@@ -1,0 +1,87 @@
+name: Three CAD foundation
+on:
+  pull_request:
+    paths:
+      - 'src/content/geometry3d.js'
+      - 'src/content/geometry-obj.js'
+      - 'src/content/three-adapter.js'
+      - 'src/content/visualizations.js'
+      - 'tests/geometry*.test.mjs'
+      - 'tests/three-adapter.test.mjs'
+      - 'src/content/markdoc-ragbaz.js'
+      - 'demo/markdoc-ragbaz/browser.js'
+      - 'demo/markdoc-ragbaz/visualization-adapters.js'
+      - 'package*.json'
+      - 'docs/THREE-CAD.md'
+      - 'demo/markdoc-ragbaz/pieces-three-cad-showcase.md'
+      - 'demo/markdoc-ragbaz/three-cad-interactive-registry.json'
+      - '.github/workflows/three-cad.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/geometry3d.test.mjs tests/geometry-visualization.test.mjs tests/geometry-markdoc.test.mjs tests/geometry-obj.test.mjs tests/three-adapter.test.mjs
+      - run: node --check src/content/geometry3d.js
+      - run: node --check src/content/three-adapter.js
+      - run: node --check src/content/geometry-obj.js
+      - run: node --check src/content/visualizations.js
+      - run: node --check demo/markdoc-ragbaz/browser.js
+      - run: node --check demo/markdoc-ragbaz/visualization-adapters.js
+      - run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/three-cad-example.md --output /tmp/three-cad-example.html --strict
+      - run: test -s /tmp/three-cad-example.html
+      - name: Build trusted interactive Pieces showcase
+        run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/pieces-three-cad-showcase.md --config demo/markdoc-ragbaz/three-cad-interactive-registry.json --output /tmp/pieces-three-cad-showcase.html --strict
+      - name: Install pinned Playwright browser smoke dependencies
+        run: |
+          npm install --prefix /tmp/cad-playwright --no-save playwright@1.58.2
+          /tmp/cad-playwright/node_modules/.bin/playwright install --with-deps chromium
+      - name: Run offline Chromium geometry smoke test
+        env:
+          NODE_PATH: /tmp/cad-playwright/node_modules
+        run: node scripts/test-three-cad-browser.cjs /tmp/pieces-three-cad-showcase.html
+      - name: Assert both geometry profiles in interactive showcase
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/pieces-three-cad-showcase.html", "utf8");
+            for (const marker of ["three-scene", "cad-model", "platform", "ring", "OrbitControls", "WebGLRenderer"]) assert.ok(html.includes(marker), "Missing showcase marker: " + marker);
+          '
+
+      - name: Verify standalone document contains no external fetchable resources
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/three-cad-example.html", "utf8");
+            assert.doesNotMatch(html, /<script\\b[^>]*\\bsrc\\s*=/i);
+            assert.doesNotMatch(html, /<link\\b[^>]*\\bhref\\s*=\\s*["\x27]https?:/i);
+            const shell = html.split("<script").map((part, index) => index ? part.split("</script>").slice(1).join("</script>") : part).join("").split("<style").map((part, index) => index ? part.split("</style>").slice(1).join("</style>") : part).join("");
+            assert.doesNotMatch(shell, /<iframe\\b/i);
+          '
+
+      - name: Verify offline geometry fallback survives standalone packaging
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/three-cad-example.html", "utf8");
+            for (const marker of ["three-scene", "ragbaz.geometry/1", "ring", "base"]) {
+              assert.ok(html.includes(marker), `Missing geometry payload marker: ${marker}`);
+            }
+            assert.ok(html.includes("<html"), "Missing standalone HTML root");
+            assert.ok(html.includes("WebGLRenderer"), "Bundled Three.js WebGL renderer missing");
+            assert.ok(html.includes("OrbitControls"), "Bundled orbit controls missing");
+            assert.ok(!/<script\\b[^>]*\\bsrc\\s*=/.test(html), "Standalone reader must not depend on external scripts");
+            assert.ok(!/<link\\b[^>]*\\brel\\s*=\\s*["\x27]stylesheet["\x27][^>]*\\bhref\\s*=/.test(html), "Standalone reader must not depend on external stylesheets");
+          '
+

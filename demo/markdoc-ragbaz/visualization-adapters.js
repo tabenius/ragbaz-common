@@ -5,7 +5,10 @@ import {
   LineElement, LinearScale, PointElement, Tooltip,
 } from 'chart.js';
 import cytoscape from 'cytoscape';
+import * as bundledTHREE from 'three';
+import { OrbitControls as BundledOrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { parseVisualization } from '../../src/content/visualizations.js';
+import { mountThreeScene } from '../../src/content/three-adapter.js';
 
 Chart.register(BarController, BarElement, CategoryScale, Legend, LineController, LineElement, LinearScale, PointElement, Tooltip);
 
@@ -13,6 +16,12 @@ const COLORS = Object.freeze(['#2f6f8f', '#b5651d', '#4f7d3a', '#8a4f8f', '#8c2f
 const charts = new WeakMap();
 const graphs = new WeakMap();
 const observers = new WeakMap();
+const geometryViews = new WeakMap();
+let geometryLibraries = { THREE: bundledTHREE, OrbitControls: BundledOrbitControls };
+/** Host-owned libraries only; never resolve script URLs from authored documents. */
+export function configureGeometryAdapter(THREE, OrbitControls) {
+  geometryLibraries = THREE && OrbitControls ? { THREE, OrbitControls } : { THREE: bundledTHREE, OrbitControls: BundledOrbitControls };
+}
 
 function chart(host, record) {
   const spec = record.data;
@@ -149,6 +158,7 @@ function graph(host, record) {
 export function disposeVisualizations(root) {
   for (const host of root.querySelectorAll('.visualization-interactive')) {
     observers.get(host)?.disconnect(); observers.delete(host);
+    geometryViews.get(host)?.(); geometryViews.delete(host);
     const chartInstance = charts.get(host);
     if (chartInstance) { chartInstance.destroy(); charts.delete(host); }
     const graphInstance = graphs.get(host);
@@ -177,6 +187,9 @@ export function mountVisualizations(root) {
     try {
       if (format === 'chartjs') charts.set(host, chart(host, record));
       else if (format === 'cytoscape') graphs.set(host, graph(host, record));
+      else if ((format === 'three-scene' || format === 'cad-model') && geometryLibraries) {
+        geometryViews.set(host, mountThreeScene(host, record.data, geometryLibraries.THREE, geometryLibraries.OrbitControls));
+      }
       else throw new Error('Unsupported adapter');
       figure.dataset.adapter = 'ready';
     } catch {
@@ -184,6 +197,7 @@ export function mountVisualizations(root) {
       observers.get(host)?.disconnect(); observers.delete(host);
       const chartInstance = charts.get(host); if (chartInstance) { chartInstance.destroy(); charts.delete(host); }
       const graphInstance = graphs.get(host); if (graphInstance) { graphInstance.destroy(); graphs.delete(host); }
+      geometryViews.get(host)?.(); geometryViews.delete(host);
       host.replaceChildren();
       host.setAttribute('aria-hidden', 'true');
       if (!figure.querySelector('.visualization-adapter-note')) {

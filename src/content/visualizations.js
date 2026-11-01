@@ -1,5 +1,6 @@
+import { validateGeometryDocument } from './geometry3d.js';
 /** Data-only visualization interchange. No imports, I/O or library execution. */
-export const VISUALIZATION_FORMATS = Object.freeze(['mermaid', 'plantuml', 'cytoscape', 'chartjs', 'vega-lite', 'plotly']);
+export const VISUALIZATION_FORMATS = Object.freeze(['mermaid', 'plantuml', 'cytoscape', 'chartjs', 'vega-lite', 'plotly', 'three-scene', 'cad-model']);
 const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
 const encoder = new TextEncoder();
 const fail = message => { throw new Error(`Visualization refused: ${message}`); };
@@ -41,7 +42,13 @@ export function parseVisualization(format, source, { alt } = {}) {
   try { data = JSON.parse(source); } catch { fail('invalid JSON'); }
   inspect(data);
   let fallback;
-  if (format === 'cytoscape') {
+  if (format === 'three-scene' || format === 'cad-model') {
+    let model;
+    try { model = validateGeometryDocument(data); } catch (error) { fail(error.message); }
+    if (model.profile !== format) fail('geometry profile mismatch');
+    data = model;
+    fallback = { columns: ['Object', 'Primitive', 'Dimensions', 'Position'], rows: model.objects.map(o => [o.id, o.type, o.size.join(' × ') + ' ' + model.units, o.position.join(', ') + ' ' + model.units]) };
+  } else if (format === 'cytoscape') {
     keys(data, ['nodes', 'edges']);
     if (!Array.isArray(data.nodes) || data.nodes.length > 300 || !Array.isArray(data.edges) || data.edges.length > 1000) fail('graph budget exceeded');
     const ids = new Set();
@@ -196,12 +203,27 @@ function graphTree(value, id) {
   return el('svg', { viewBox: `0 0 ${width} ${height}`, width: String(width), height: String(height), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic' }, children);
 }
 
+function geometryTree(value, id) {
+  const children = [
+    el('title', { id: id + '-title' }, [value.alt]),
+    el('desc', { id: id + '-desc' }, ['Static geometry inventory; exact dimensions are in the adjacent table.']),
+    el('rect', { x: '0', y: '0', width: '720', height: '400', fill: '#17252d' }),
+  ];
+  value.data.objects.slice(0, 12).forEach((o, i) => {
+    const y = 35 + i * 28;
+    children.push(el('rect', { x: '18', y: String(y - 14), width: '20', height: '20', fill: o.color }));
+    children.push(el('text', { x: '48', y: String(y), fill: '#ffffff', 'font-size': '13', 'font-family': 'system-ui,sans-serif' }, [truncate(o.id + ' · ' + o.type + ' · ' + o.size.join(' × ') + ' ' + value.data.units, 90)]));
+  });
+  if (value.data.objects.length > 12) children.push(el('text', { x: '48', y: '385', fill: '#ffffff', 'font-size': '13' }, ['Additional objects in table']));
+  return el('svg', { viewBox: '0 0 720 400', width: '720', height: '400', role: 'img', 'aria-labelledby': id + '-title ' + id + '-desc', class: 'visualization-graphic' }, children);
+}
+
 /** Deterministic, script-free graphic tree, or null for source-only formats. */
 export function visualizationGraphic(record, { id } = {}) {
   const value = parseVisualization(record.format, record.source, { alt: record.alt });
   if (!value.data) return null;
   const reference = id || stableId(`${value.format}\0${value.alt}\0${value.source}`);
-  return value.format === 'cytoscape' ? graphTree(value, reference) : chartTree(value, reference);
+  return value.format === 'cytoscape' ? graphTree(value, reference) : (value.format === 'three-scene' || value.format === 'cad-model') ? geometryTree(value, reference) : chartTree(value, reference);
 }
 
 const SVG_ATTRIBUTES = Object.freeze({

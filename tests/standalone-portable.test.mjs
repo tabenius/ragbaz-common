@@ -14,11 +14,11 @@ const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|--
 // scientific-identifier links and reading-copy reconciliation. Earlier equivalence was
 // checked against 0fdff6e before the SVG work.
 const expected = {
-  'markdoc-ragbaz-sci-tufte': '34ff710ea0f1c39cc7d768db55b9d4a27de2442de69092c14e6b82dac61b8a34',
-  heartfulness: '61e9a6287cdb72123afa148713245f121c987c517a4f6342fd0538abccb04da4',
-  'aether-prima-materia': '6ded740aa015ba0e0aac01e80e534291035ff1b2276cc0ce12fe05134735d112',
-  'aether-sun-and-moon': '51328d468d510e1ad0b24e5526c438749fb7a8b10c15262b12638e5f5d446b2c',
-  'aether-blackening': '58cadbf6f916be96e9d306c8213323c1abcb014e5048d18c31779d53d58d7312',
+  'markdoc-ragbaz-sci-tufte': '5163ed27fb95da52d8cbc4b6b0e079545e1a081308ac3c2bc13833116e96533d',
+  heartfulness: '5e5a2c384feb5f8d6d268b527ed5957378e066732b768d7cd2032d7833d5a483',
+  'aether-prima-materia': 'a15024969e8bfe83048afeb1e7d06cf499f11dbdaf0fd2d8898d8bb7fff7bed4',
+  'aether-sun-and-moon': '72798f1a9f51baae8595474f54d8a238bd56df4b015dcc0ec5b2680843c667c2',
+  'aether-blackening': '0898f7af19f37f33c8a442f4975aec07865f29b85008006c6285068a229be5ac',
 };
 const base = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
 
@@ -27,16 +27,19 @@ test('prepared renderer matches frozen outputs and browser-bundled execution in 
   const bundle = await build({ entryPoints: [new URL('../demo/markdoc-ragbaz/standalone.js', import.meta.url).pathname], bundle: true, write: false, metafile: true, format: 'esm', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline' });
   assert(!Object.keys(bundle.metafile.inputs).some(path => /node_modules\/(?:@esbuild|esbuild)\//.test(path)));
   const workerModule = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+  const mismatches = [];
   for (const [id, hash] of Object.entries(expected)) {
     const config = { ...base, metaDocument: { id, version: 1 }, policy: { ...base.policy, origins: [] } };
     const options = { sourceBytes: new TextEncoder().encode(fixture), config, assets };
     const result = await buildStandaloneBytes(options), portable = await workerModule.buildStandaloneBytes(options);
-    assert.equal(createHash('sha256').update(result.html).digest('hex'), hash);
+    const actualHash = createHash('sha256').update(result.html).digest('hex');
+    if (actualHash !== hash) mismatches.push({ id, expected: hash, actual: actualHash });
     assert.equal(portable.html, result.html);
     assert.equal(result.payload.source, fixture);
     assert(!result.html.includes('<script>window.INJECTED=true</script>'));
     assert(!config.dialects?.['injected-registry']);
   }
+  assert.deepEqual(mismatches, [], 'Frozen portable snapshots changed; review each template before accepting');
 });
 test('portable boundary refuses malformed bytes, host tuples and unprepared assets', async () => {
   const assets = await prepareStandaloneAssets();

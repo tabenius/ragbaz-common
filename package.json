@@ -23,7 +23,10 @@
     "./standalone": "./demo/markdoc-ragbaz/standalone.js",
     "./schema.sql": "./schema.sql",
     "./prefix-migration": "./scripts/prefix-migration.mjs",
-    "./build-llms-txt": "./scripts/build-llms-txt.mjs"
+    "./build-llms-txt": "./scripts/build-llms-txt.mjs",
+    "./content/geometry3d": "./src/content/geometry3d.js",
+    "./content/three-adapter": "./src/content/three-adapter.js",
+    "./content/geometry-obj": "./src/content/geometry-obj.js"
   },
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
@@ -41,6 +44,7 @@
   "devDependencies": {
     "chart.js": "4.6.1",
     "cytoscape": "3.34.4",
-    "esbuild": "0.25.11"
+    "esbuild": "0.25.11",
+    "three": "0.180.0"
   }
 }

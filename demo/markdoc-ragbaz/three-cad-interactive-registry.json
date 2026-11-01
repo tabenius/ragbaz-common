@@ -1,0 +1,10 @@
+{
+  "version": "ragbaz.surface/1",
+  "skeleton": "paper/1",
+  "implementation": "markdoc-ragbaz/1",
+  "defaults": { "schema": "ragbaz.document/1", "dialects": ["paper@1", "plan@1", "models@1"], "settings": { "theme": "paper@1" } },
+  "policy": { "origins": ["https://raw.githubusercontent.com"], "timeout": 8000 },
+  "visualizations": { "interactive": ["chartjs", "cytoscape", "three-scene", "cad-model"] },
+  "dialects": {},
+  "themes": {}
+}
