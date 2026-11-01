@@ -7,6 +7,10 @@ on:
       - 'src/content/three-adapter.js'
       - 'src/content/visualizations.js'
       - 'tests/geometry*.test.mjs'
+      - 'tests/three-adapter.test.mjs'
+      - 'src/content/markdoc-ragbaz.js'
+      - 'demo/markdoc-ragbaz/browser.js'
+      - 'demo/markdoc-ragbaz/visualization-adapters.js'
       - 'package*.json'
       - '.github/workflows/three-cad.yml'
   workflow_dispatch:
@@ -22,7 +26,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: node --test tests/geometry3d.test.mjs tests/geometry-visualization.test.mjs tests/geometry-markdoc.test.mjs tests/geometry-obj.test.mjs
+      - run: node --test tests/geometry3d.test.mjs tests/geometry-visualization.test.mjs tests/geometry-markdoc.test.mjs tests/geometry-obj.test.mjs tests/three-adapter.test.mjs
       - run: node --check src/content/geometry3d.js
       - run: node --check src/content/three-adapter.js
       - run: node --check src/content/geometry-obj.js
