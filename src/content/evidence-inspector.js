@@ -1,3 +1,4 @@
+import { evidenceMessages } from './evidence-locales.js';
 // Read-only portable evidence projection: never a cryptographic verifier.
 const HEX = /^[0-9a-f]{64}$/;
 const STATES = new Set(['passed','failed','stale','unavailable','pending','unknown','verified','unverified','revoked']);
@@ -32,8 +33,9 @@ export const evidenceTextEn = Object.freeze({
 export function evidenceHTML(projection, { messages = evidenceTextEn, statusLabels = {}, typeLabels = {}, lang = 'en' } = {}) {
   if (!/^[a-z]{2}(?:-[A-Za-z]{2})?$/.test(lang)) throw Error('invalid display language');
   const strings = {};
+  const selectedMessages = messages === evidenceTextEn ? (evidenceMessages[lang] || evidenceTextEn) : messages;
   for (const key of Object.keys(evidenceTextEn)) {
-    const value = messages?.[key];
+    const value = selectedMessages?.[key];
     strings[key] = typeof value === 'string' && value.length > 0 && value.length <= 300 ? value : evidenceTextEn[key];
   }
   const result = inspectEvidence({schema:projection.schema,subject:projection.subject,entries:projection.entries});
