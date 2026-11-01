@@ -36,6 +36,17 @@ jobs:
       - run: node --check demo/markdoc-ragbaz/visualization-adapters.js
       - run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/three-cad-example.md --output /tmp/three-cad-example.html --strict
       - run: test -s /tmp/three-cad-example.html
+      - name: Verify standalone document contains no external fetchable resources
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/three-cad-example.html", "utf8");
+            assert.doesNotMatch(html, /<script\\b[^>]*\\bsrc\\s*=/i);
+            assert.doesNotMatch(html, /<link\\b[^>]*\\bhref\\s*=\\s*["\x27]https?:/i);
+            assert.doesNotMatch(html, /<iframe\\b/i);
+          '
+
       - name: Verify offline geometry fallback survives standalone packaging
         run: |
           node --input-type=module -e '
