@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {inspectEvidence,evidenceHTML} from '../src/content/evidence-inspector.js';
+const A='a'.repeat(64), B='b'.repeat(64);
+const fixture=()=>({schema:'ragbaz.evidence-inspector/1',subject:{kind:'design',sha256:A},entries:[{type:'signature',label:'Signed by <script>alert(1)</script>',status:'verified',sha256:B}]});
+test('separates submitted claims from verified authority',()=>{const p=inspectEvidence(fixture());assert.equal(p.release_ready,false);assert.equal(p.verification,'host-required');});
+test('escapes malicious evidence labels',()=>{const h=evidenceHTML(inspectEvidence(fixture()));assert.ok(h.includes('&lt;script&gt;'));assert.ok(!h.includes('<script>'));});
+test('stale cross-subject evidence',()=>{const x=fixture();x.entries[0].subject_sha256=B;assert.equal(inspectEvidence(x).entries[0].status,'stale');});
+test('reject unknown schemas, status and types',()=>{for(const field of ['schema','status','type']){const x=fixture();if(field==='schema')x.schema='unknown';else x.entries[0][field]='invalid';assert.throws(()=>inspectEvidence(x));}});
+test('enforces bounds and subject digest',()=>{const x=fixture();x.entries=Array(129).fill(x.entries[0]);assert.throws(()=>inspectEvidence(x));x.entries=[];x.subject.sha256='oops';assert.throws(()=>inspectEvidence(x));});
+test('cannot convert submitted release-ready flag to authorization',()=>{const x=fixture();x.release_ready=true;assert.equal(inspectEvidence(x).release_ready,false);});
