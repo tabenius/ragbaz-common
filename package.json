@@ -28,7 +28,8 @@
     "./content/three-adapter": "./src/content/three-adapter.js",
     "./content/geometry-obj": "./src/content/geometry-obj.js",
     "./content/business-plan": "./src/content/business-plan.js",
-    "./content/business-chart": "./src/content/business-chart.js"
+    "./content/business-chart": "./src/content/business-chart.js",
+    "./content/evidence-inspector": "./src/content/evidence-inspector.js"
   },
   "scripts": {
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
