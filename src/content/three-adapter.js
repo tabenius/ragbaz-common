@@ -25,7 +25,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(5, 8, 10);
   scene.add(light);
-  const axes = new THREE.AxesHelper(3);
+  const axes = new THREE.AxesHelper(1);
   scene.add(axes);
   const meshes = [];
   for (const o of model.objects) {
@@ -46,6 +46,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   if (!bounds.isEmpty()) {
     const center = bounds.getCenter(new THREE.Vector3());
     const radius = bounds.getSize(new THREE.Vector3()).length() || 1;
+    axes.scale.setScalar(radius / 3);
     controls.target.copy(center);
     camera.position.copy(center).add(new THREE.Vector3(radius, radius, radius));
     controls.minDistance = Math.max(radius / 100000, 1e-9);
