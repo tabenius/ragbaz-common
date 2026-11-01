@@ -5,6 +5,8 @@ import {
   LineElement, LinearScale, PointElement, Tooltip,
 } from 'chart.js';
 import cytoscape from 'cytoscape';
+import * as bundledTHREE from 'three';
+import { OrbitControls as BundledOrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { parseVisualization } from '../../src/content/visualizations.js';
 import { mountThreeScene } from '../../src/content/three-adapter.js';
 
@@ -15,7 +17,7 @@ const charts = new WeakMap();
 const graphs = new WeakMap();
 const observers = new WeakMap();
 const geometryViews = new WeakMap();
-let geometryLibraries = null;
+let geometryLibraries = { THREE: bundledTHREE, OrbitControls: BundledOrbitControls };
 /** Host-owned libraries only; never resolve script URLs from authored documents. */
 export function configureGeometryAdapter(THREE, OrbitControls) {
   geometryLibraries = THREE && OrbitControls ? { THREE, OrbitControls } : null;
