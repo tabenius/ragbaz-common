@@ -1,0 +1,16 @@
+{
+  "schema": "ragbaz.business/1",
+  "currency": "USD",
+  "overlap_policy": "unknown",
+  "claims": [
+    {"id":"population-estimates","kind":"assumed","statement":"Illustrative relevant audience sizes; not survey-derived"},
+    {"id":"adoption-estimates","kind":"assumed","statement":"Illustrative penetration rates; not forecasts"},
+    {"id":"pricing-estimates","kind":"assumed","statement":"Illustrative annual paid-seat spending"}
+  ],
+  "segments": [
+    {"id":"freelance","population":200000,"adoption_ppm":150000,"annual_price_cents":30000,"claim_ids":["population-estimates","adoption-estimates","pricing-estimates"]},
+    {"id":"smb","population":600000,"adoption_ppm":200000,"annual_price_cents":60000,"claim_ids":["population-estimates","adoption-estimates","pricing-estimates"]},
+    {"id":"enterprise","population":600000,"adoption_ppm":120000,"annual_price_cents":120000,"claim_ids":["population-estimates","adoption-estimates","pricing-estimates"]},
+    {"id":"hobby","population":4000000,"adoption_ppm":20000,"annual_price_cents":6000,"claim_ids":["population-estimates","adoption-estimates","pricing-estimates"]}
+  ]
+}
