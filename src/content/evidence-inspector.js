@@ -14,7 +14,7 @@ export function inspectEvidence(value) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw Error('invalid evidence entry');
     if (!TYPES.has(entry.type) || !STATES.has(entry.status)) throw Error('unsupported evidence type/status');
     if (typeof entry.label !== 'string' || entry.label.length < 1 || entry.label.length > 120 || /[\x00-\x1f]/.test(entry.label)) throw Error('invalid label');
-    if (entry.sha256 !== undefined && !HEX.test(entry.sha256)) throw Error('invalid entry digest');
+    if (entry.sha256 !== undefined && entry.sha256 !== null && !HEX.test(entry.sha256)) throw Error('invalid entry digest');
     const bound = entry.subject_sha256 === undefined ? s.sha256 : entry.subject_sha256;
     if (!HEX.test(bound)) throw Error('invalid entry subject digest');
     return Object.freeze({index, type:entry.type, label:entry.label, status: bound === s.sha256 ? entry.status : 'stale', sha256:entry.sha256 ?? null, subject_sha256:bound});
