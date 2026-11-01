@@ -58,7 +58,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   let frame = 0, disposed = false, contextLost = false;
   const schedule = requestAnimationFrame;
   const onContextLost = event => { event.preventDefault(); contextLost = true; cancelAnimationFrame(frame); };
-  const onContextRestored = () => { if (!disposed && contextLost) { contextLost = false; frame = schedule(render); } };
+  const onContextRestored = () => { if (!disposed && contextLost) { contextLost = false; resize(); frame = schedule(render); } };
   renderer.domElement.addEventListener('webglcontextlost', onContextLost, false);
   renderer.domElement.addEventListener('webglcontextrestored', onContextRestored, false);
   function resize() {
