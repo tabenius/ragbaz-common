@@ -29,7 +29,7 @@ export const evidenceTextEn = Object.freeze({
   type:'Type', label:'Label', status:'Claimed status', digest:'Digest',
   absent:'not provided', release:'Release authorization: not evaluated.'
 });
-export function evidenceHTML(projection, { messages = evidenceTextEn, lang = 'en' } = {}) {
+export function evidenceHTML(projection, { messages = evidenceTextEn, statusLabels = {}, typeLabels = {}, lang = 'en' } = {}) {
   if (!/^[a-z]{2}(?:-[A-Za-z]{2})?$/.test(lang)) throw Error('invalid display language');
   const strings = {};
   for (const key of Object.keys(evidenceTextEn)) {
@@ -39,6 +39,6 @@ export function evidenceHTML(projection, { messages = evidenceTextEn, lang = 'en
   const result = inspectEvidence({schema:projection.schema,subject:projection.subject,entries:projection.entries});
   const esc = x => String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   return '<section lang="'+esc(lang)+'" aria-label="'+esc(strings.aria)+'"><h2>'+esc(strings.title)+'</h2><p>'+esc(strings.subject)+': '+esc(result.subject.kind)+' · <code>'+esc(result.subject.sha256)+'</code></p><p>'+esc(strings.disclaimer)+'</p><table><caption>'+esc(strings.caption)+'</caption><thead><tr><th scope="col">'+esc(strings.type)+'</th><th scope="col">'+esc(strings.label)+'</th><th scope="col">'+esc(strings.status)+'</th><th scope="col">'+esc(strings.digest)+'</th></tr></thead><tbody>'+
-    result.entries.map(e=>'<tr><td>'+esc(e.type)+'</td><td>'+esc(e.label)+'</td><td>'+esc(e.status)+'</td><td><code>'+esc(e.sha256??strings.absent)+'</code></td></tr>').join('')+
+    result.entries.map(e=>'<tr><td>'+esc(typeof typeLabels?.[e.type] === 'string' && typeLabels[e.type].length <= 120 ? typeLabels[e.type] : e.type)+'</td><td>'+esc(e.label)+'</td><td>'+esc(typeof statusLabels?.[e.status] === 'string' && statusLabels[e.status].length <= 120 ? statusLabels[e.status] : e.status)+'</td><td><code>'+esc(e.sha256??strings.absent)+'</code></td></tr>').join('')+
     '</tbody></table><p>'+esc(strings.release)+'</p></section>';
 }
