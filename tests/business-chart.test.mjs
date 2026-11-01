@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {renderSegmentChartSVG} from '../src/content/business-chart.js';
+const model={schema:'ragbaz.business/1',currency:'USD',overlap_policy:'unknown',claims:[{id:'assumed',kind:'assumed',statement:'Scenario'}],segments:[{id:'consultants',population:1000,adoption_ppm:100000,annual_price_cents:10000,claim_ids:['assumed']}]};
+const x=renderSegmentChartSVG(model);
+assert.match(x,/NON-DEDUPLICATED/);
+assert.match(x,/\$0\.01M/);
+assert.match(x,/viewBox=/);
+assert.doesNotMatch(x,/<script|foreignObject|href=/);
+assert.throws(()=>renderSegmentChartSVG(model,{title:'x',width:100}),/width/);
+const bad={...model,segments:[{...model.segments[0],id:'evil"><script>'}]};
+assert.throws(()=>renderSegmentChartSVG(bad),/invalid segment id/);
+console.log('business chart tests passed');
