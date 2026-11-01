@@ -11,3 +11,8 @@ test('capture refuses script execution bypass or overly large source',async()=>{
  await assert.rejects(()=>captureReplicadShape({name:'Bad',shape:{},source:'abc'}));
  await assert.rejects(()=>captureReplicadShape({name:'Huge',shape:{mesh:()=>({vertices:[],triangles:[]})},source:'x'.repeat(1_000_001)}));
 });
+
+test('reject oversized Replicad mesh before copying untrusted arrays',async()=>{
+ const shape={mesh:()=>({vertices:new Float32Array(30003),triangles:new Uint32Array([0,1,2])})};
+ await assert.rejects(()=>captureReplicadShape({name:'Huge',shape,source:'test'}),/exceeds bounds/);
+});
