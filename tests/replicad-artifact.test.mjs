@@ -5,3 +5,9 @@ const fixture=()=>({schema:REPLICAD_SCHEMA,name:'Box <script>',source:{language:
 test('render static preview without executing model script',()=>{const doc=inspectReplicadArtifact(fixture());assert.equal(doc.verification,'unverified');assert.equal(doc.release_ready,false);const svg=replicadPreviewSVG(doc);assert.match(svg,/polyline/);assert.match(svg,/&lt;script&gt;/);assert.doesNotMatch(svg,/<script>/);});
 test('reject unsafe preview data and forged exports',()=>{for(const change of [x=>x.preview.triangles[0]=99,x=>x.preview.positions[0]=Infinity,x=>x.exports[0].format='exe',x=>x.source.sha256='bad']){const v=fixture();change(v);assert.throws(()=>inspectReplicadArtifact(v));}});
 test('reject invalid sizes',()=>assert.throws(()=>replicadPreviewSVG(fixture(),{size:100000})));
+
+test('reject ambiguous duplicated STEP export references',()=>{
+ const v=fixture();
+ v.exports.push({...v.exports[0]});
+ assert.throws(()=>inspectReplicadArtifact(v),/duplicate export format/);
+});
