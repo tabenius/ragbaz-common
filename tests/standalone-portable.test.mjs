@@ -27,17 +27,19 @@ test('prepared renderer matches frozen outputs and browser-bundled execution in 
   const bundle = await build({ entryPoints: [new URL('../demo/markdoc-ragbaz/standalone.js', import.meta.url).pathname], bundle: true, write: false, metafile: true, format: 'esm', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline' });
   assert(!Object.keys(bundle.metafile.inputs).some(path => /node_modules\/(?:@esbuild|esbuild)\//.test(path)));
   const workerModule = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+  const mismatches = [];
   for (const [id, hash] of Object.entries(expected)) {
     const config = { ...base, metaDocument: { id, version: 1 }, policy: { ...base.policy, origins: [] } };
     const options = { sourceBytes: new TextEncoder().encode(fixture), config, assets };
     const result = await buildStandaloneBytes(options), portable = await workerModule.buildStandaloneBytes(options);
     const actualHash = createHash('sha256').update(result.html).digest('hex');
-    assert.equal(actualHash, hash, `Frozen portable snapshot for ${id} changed; review before accepting`);
+    if (actualHash !== hash) mismatches.push({ id, expected: hash, actual: actualHash });
     assert.equal(portable.html, result.html);
     assert.equal(result.payload.source, fixture);
     assert(!result.html.includes('<script>window.INJECTED=true</script>'));
     assert(!config.dialects?.['injected-registry']);
   }
+  assert.deepEqual(mismatches, [], 'Frozen portable snapshots changed; review each template before accepting');
 });
 test('portable boundary refuses malformed bytes, host tuples and unprepared assets', async () => {
   const assets = await prepareStandaloneAssets();
