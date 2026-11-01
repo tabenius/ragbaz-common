@@ -15,3 +15,9 @@ test('missing bytes remain unevaluated rather than verified',async()=>{
  const r=await verifyReplicadBytes(make());
  assert.equal(r.source_digest_match,null);assert.equal(r.exports[0].digest_match,null);
 });
+
+test('export with correct digest but false declared byte length is rejected',async()=>{
+ const input=make();input.exports[0].bytes=999;
+ const result=await verifyReplicadBytes(input,{source:'source',outputs:{step:'STEP'}});
+ assert.equal(result.exports[0].digest_match,false);
+});
