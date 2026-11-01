@@ -35,3 +35,14 @@ jobs:
       - run: node --check demo/markdoc-ragbaz/visualization-adapters.js
       - run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/three-cad-example.md --output /tmp/three-cad-example.html --strict
       - run: test -s /tmp/three-cad-example.html
+      - name: Verify offline geometry fallback survives standalone packaging
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/three-cad-example.html", "utf8");
+            for (const marker of ["three-scene", "ragbaz.geometry/1", "ring", "base"]) {
+              assert.ok(html.includes(marker), `Missing geometry payload marker: ${marker}`);
+            }
+            assert.ok(html.includes("<html"), "Missing standalone HTML root");
+          '
