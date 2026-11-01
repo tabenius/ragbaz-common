@@ -21,3 +21,10 @@ test('export with correct digest but false declared byte length is rejected',asy
  const result=await verifyReplicadBytes(input,{source:'source',outputs:{step:'STEP'}});
  assert.equal(result.exports[0].digest_match,false);
 });
+
+test('oversized Blob is rejected before reading its arrayBuffer',async()=>{
+ let read=false;
+ const oversized={size:1_000_000_001,async arrayBuffer(){read=true;throw Error('should never read')}};
+ await assert.rejects(()=>verifyReplicadBytes(make(),{outputs:{step:oversized}}),/exceed/);
+ assert.equal(read,false);
+});
