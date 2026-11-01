@@ -58,7 +58,12 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
   observer?.observe(element);
   resize();
-  function render() { if (disposed || contextLost) return; controls.update(); renderer.render(scene,camera); frame = schedule(render); }
+  function render() {
+    if (disposed || contextLost) return;
+    controls.update();
+    renderer.render(scene,camera);
+    frame = schedule(render);
+  }
   render();
   return () => {
     disposed = true;
