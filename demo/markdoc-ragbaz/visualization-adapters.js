@@ -183,8 +183,6 @@ export function mountVisualizations(root) {
       figure.dataset.adapter = 'failed';
       continue;
     }
-    const activate = () => {
-    if (figure.dataset.adapter) return;
     figure.dataset.adapter = 'mounting';
     try {
       if (format === 'chartjs') charts.set(host, chart(host, record));
@@ -209,16 +207,5 @@ export function mountVisualizations(root) {
         figure.querySelector('figcaption')?.after(note);
       }
     }
-    };
-    if (typeof IntersectionObserver !== 'function') { activate(); continue; }
-    figure.dataset.adapter = 'queued';
-    const observer = new IntersectionObserver(entries => {
-      if (!entries.some(entry => entry.isIntersecting)) return;
-      observer.disconnect(); observers.delete(host);
-      delete figure.dataset.adapter;
-      if (host.isConnected) activate();
-    }, { rootMargin: '240px 0px' });
-    observers.set(host, observer);
-    observer.observe(figure);
   }
 }
