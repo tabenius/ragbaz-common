@@ -20,7 +20,7 @@ const geometryViews = new WeakMap();
 let geometryLibraries = { THREE: bundledTHREE, OrbitControls: BundledOrbitControls };
 /** Host-owned libraries only; never resolve script URLs from authored documents. */
 export function configureGeometryAdapter(THREE, OrbitControls) {
-  geometryLibraries = THREE && OrbitControls ? { THREE, OrbitControls } : null;
+  geometryLibraries = THREE && OrbitControls ? { THREE, OrbitControls } : { THREE: bundledTHREE, OrbitControls: BundledOrbitControls };
 }
 
 function chart(host, record) {
