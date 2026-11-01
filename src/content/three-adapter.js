@@ -72,7 +72,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
-  const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+  const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => { if (!disposed && !contextLost) resize(); }) : null;
   observer?.observe(element);
   resize();
   function render() {
