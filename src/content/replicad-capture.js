@@ -1,7 +1,9 @@
 // Trusted execution-side adapter: accepts an *already evaluated* Replicad shape.
 // Does not eval source or initialize OpenCascade. Use only in a sandboxed CAD worker.
 import {REPLICAD_SCHEMA, inspectReplicadArtifact} from './replicad-artifact.js';
-const bytesOf=async input=>{
+const bytesOf=async (input,limit)=>{
+ const declaredSize=typeof input==='string'?new TextEncoder().encode(input).byteLength:(input?.size??input?.byteLength);
+ if(typeof declaredSize==='number' && declaredSize>limit) throw Error('input exceeds byte limit');
  if(input instanceof Uint8Array)return input;
  if(typeof input==='string')return new TextEncoder().encode(input);
  if(input && typeof input.arrayBuffer==='function')return new Uint8Array(await input.arrayBuffer());
@@ -14,14 +16,14 @@ const digest=async bytes=>{
 };
 export async function captureReplicadShape({name,shape,source,step=null,stl=null}){
  if(!shape||typeof shape.mesh!=='function')throw Error('already evaluated Replicad shape required');
- const sourceBytes=await bytesOf(source);
+ const sourceBytes=await bytesOf(source,1_000_000);
  if(sourceBytes.byteLength>1_000_000)throw Error('model source exceeds 1 MB');
  const faces=shape.mesh({tolerance:0.05,angularTolerance:30});
  if(!faces || !faces.vertices || !faces.triangles || faces.vertices.length > 30000 || faces.triangles.length > 30000) throw Error('Replicad preview mesh exceeds bounds');
  const exports=[];
  for(const [format,blob] of [['step',step],['stl',stl]]){
   if(blob===null)continue;
-  const bytes=await bytesOf(blob);
+  const bytes=await bytesOf(blob,1_000_000_000);
   if(bytes.byteLength>1_000_000_000)throw Error('export too large');
   exports.push({format,sha256:await digest(bytes),bytes:bytes.byteLength});
  }
