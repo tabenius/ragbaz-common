@@ -8,7 +8,7 @@ export function inspectEvidence(value) {
   if (new TextEncoder().encode(raw).length > 65536) throw Error('evidence exceeds 64 KiB');
   if (value.schema !== 'ragbaz.evidence-inspector/1') throw Error('unsupported evidence schema');
   const s = value.subject;
-  if (!s || typeof s !== 'object' || Array.isArray(s) || !['design','artifact','build','image','document'].includes(s.kind) || !HEX.test(s.sha256)) throw Error('invalid subject');
+  if (!s || typeof s !== 'object' || Array.isArray(s) || !['design','artifact','build','image','document','chain'].includes(s.kind) || !HEX.test(s.sha256)) throw Error('invalid subject');
   if (!Array.isArray(value.entries) || value.entries.length > 128) throw Error('invalid entries');
   const entries = value.entries.map((entry, index) => {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw Error('invalid evidence entry');
