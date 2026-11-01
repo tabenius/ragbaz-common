@@ -26,7 +26,7 @@ Do not load this adapter in a Worker. Use `geometrySvg` for no-script fallback.
 The `cad-model` profile preserves dimensions and units but does not yet
 provide STEP/BREP, topology, Boolean solids, parametric constraints or precision CAD interchange.
 The static SVG is a dimensioned inventory, not a geometric projection. Hosts
-must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. The standalone reader now has a host-injected adapter integration, but the default standalone bundle does not ship Three.js or OrbitControls, and the reader's default configuration does not enable geometry interactivity. A host must explicitly configure both libraries and opt in to the desired formats.
+must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. The standalone reader now bundles pinned Three.js 0.180.0 and OrbitControls locally; the reader's default configuration still does not enable geometry interactivity. A host must explicitly configure both libraries and opt in to the desired formats.
 
 Security: bounded objects and numeric dimensions, unique identifiers,
 restricted primitive types and colors. No URLs, textures, shader source,
@@ -37,7 +37,7 @@ Mesh-based Wavefront OBJ export is available through `@ragbaz/common/content/geo
 
 ## Rendering and deployment status
 
-The default reader remains offline-safe with static SVG inventory, exact dimensions and inert source. The interactive adapter is exported by `demo/markdoc-ragbaz/visualization-adapters.js` as `configureGeometryAdapter(THREE, OrbitControls)`; this accepts host-owned library objects, never URLs from document data. Hosts must include reviewed, locally bundled compatible Three.js and OrbitControls code, then explicitly configure `visualizations.interactive` to include `three-scene` and/or `cad-model`. The default `registry.json` does neither, so merely writing a geometry fence does not activate WebGL. Always call `disposeVisualizations(root)` before replacing a rendered subtree.
+The default reader includes the locally bundled Three.js runtime, while retaining offline-safe static SVG inventory, exact dimensions and inert source. The interactive adapter is exported by `demo/markdoc-ragbaz/visualization-adapters.js` as `configureGeometryAdapter(THREE, OrbitControls)`; this accepts host-owned library objects, never URLs from document data. The standalone reader includes pinned Three.js and OrbitControls; embedding hosts can override them with compatible trusted libraries. Explicitly configure `visualizations.interactive` to include `three-scene` and/or `cad-model`. The default `registry.json` does neither, so merely writing a geometry fence does not activate WebGL. Always call `disposeVisualizations(root)` before replacing a rendered subtree.
 
 The OBJ exporter triangulates the validated primitives, applies object transforms, and limits the combined generated vertex count to 1,000,000. Its units comment is informational; Wavefront OBJ has no normative physical-unit metadata. Exported OBJ must not be represented as STEP, BREP or a watertight solid model.
 
