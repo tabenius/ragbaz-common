@@ -1,0 +1,47 @@
+name: Business plan standalone publication
+on:
+  push:
+    paths:
+      - "src/content/business-*"
+      - "demo/business-plan/**"
+      - "scripts/build-markdoc-ragbaz.mjs"
+      - ".github/workflows/business-publication.yml"
+  pull_request:
+    paths:
+      - "src/content/business-*"
+      - "demo/business-plan/**"
+      - "scripts/build-markdoc-ragbaz.mjs"
+      - ".github/workflows/business-publication.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish-fixture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build and validate offline standalone business publication
+        run: |
+          node scripts/build-markdoc-ragbaz.mjs \
+            --input demo/business-plan/publication-fixture.md \
+            --output /tmp/business-plan/index.html \
+            --report /tmp/business-plan/build-report.json \
+            --strict
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const report=JSON.parse(readFileSync("/tmp/business-plan/build-report.json","utf8"));
+            const html=readFileSync("/tmp/business-plan/index.html","utf8");
+            if(!report.clean||report.diagnostics.length||!html.includes("<svg")||!html.includes("Illustrative annual spend")) process.exit(1);
+            console.log(JSON.stringify({clean:report.clean,htmlBytes:report.html.bytes,sourceSHA256:report.sourceSHA256,renderSHA256:report.renderSHA256}));
+          '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: business-plan-offline-publication
+          path: /tmp/business-plan/
+          retention-days: 14
