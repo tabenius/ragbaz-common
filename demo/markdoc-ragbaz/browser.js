@@ -7,7 +7,7 @@ import { setupAppearance } from './appearance.js';
 import { decorateHeartfulness, setupHeartfulness } from './heartfulness.js';
 import { setupAether } from './aether.js';
 import { setupThemeFonts } from './fonts.js';
-import { disposeVisualizations, mountVisualizations } from './visualization-adapters.js';
+import { configureGeometryAdapter, disposeVisualizations, mountVisualizations } from './visualization-adapters.js';
 import { readingCopy } from './reading-copy.js';
 
 setupAppearance();
@@ -15,6 +15,12 @@ setupAppearance();
 const payload = JSON.parse(document.getElementById('payload').textContent);
 const $ = id => document.getElementById(id);
 const config = payload.config;
+// Optional host-owned libraries must be installed before rendering; never use document-provided URLs.
+// A locally bundled host can set window.ragbazGeometryLibraries = { THREE, OrbitControls }.
+const geometryLibraries = window.ragbazGeometryLibraries;
+if (geometryLibraries?.THREE && geometryLibraries?.OrbitControls) {
+  configureGeometryAdapter(geometryLibraries.THREE, geometryLibraries.OrbitControls);
+}
 setupHeartfulness(config.metaDocument?.id === 'heartfulness');
 setupAether(config.metaDocument?.id);
 setupThemeFonts(config);
