@@ -48,3 +48,23 @@ jobs:
             assert.ok(!/<script\\b[^>]*\\bsrc\\s*=/.test(html), "Standalone reader must not depend on external scripts");
             assert.ok(!/<link\\b[^>]*\\brel\\s*=\\s*["\x27]stylesheet["\x27][^>]*\\bhref\\s*=/.test(html), "Standalone reader must not depend on external stylesheets");
           '
+
+  prepare-three-lock:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate reproducible Three.js dependency proposal
+        run: npm install --package-lock-only --ignore-scripts --save-dev --save-exact three@0.180.0
+      - name: Upload proposed dependency manifests for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposed-three-lock
+          path: |
+            package.json
+            package-lock.json
+          retention-days: 7
