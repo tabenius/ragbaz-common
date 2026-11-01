@@ -18,6 +18,12 @@ export function exportSceneOBJ(input, THREE) {
     const transform = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(...object.rotation));
     transform.setPosition(new THREE.Vector3(...object.position));
     const positions = mesh.getAttribute('position');
+    const indices = mesh.index;
+    if (!positions || !Number.isSafeInteger(positions.count) || positions.count < 0 || positions.count % (indices ? 1 : 3) !== 0 ||
+        (indices && (!Number.isSafeInteger(indices.count) || indices.count % 3 !== 0))) {
+      mesh.dispose();
+      throw new TypeError('Invalid triangulated geometry buffer');
+    }
     const vertex = new THREE.Vector3();
     vertexBudget += positions.count;
     if (vertexBudget > MAX_VERTICES) { mesh.dispose(); throw new RangeError('OBJ vertex budget exceeded'); }
@@ -26,10 +32,15 @@ export function exportSceneOBJ(input, THREE) {
       vertex.fromBufferAttribute(positions, i).applyMatrix4(transform);
       lines.push('v ' + [vertex.x, vertex.y, vertex.z].map(n => Number(n.toPrecision(12))).join(' '));
     }
-    if (mesh.index) {
-      const index = mesh.index;
+    if (indices) {
+      const index = indices;
       for (let i = 0; i < index.count; i += 3) {
-        lines.push('f ' + [0,1,2].map(j => index.getX(i+j) + offset).join(' '));
+        const triangle = [0,1,2].map(j => index.getX(i+j));
+        if (triangle.some(n => !Number.isSafeInteger(n) || n < 0 || n >= positions.count)) {
+          mesh.dispose();
+          throw new RangeError('Invalid geometry face index');
+        }
+        lines.push('f ' + triangle.map(n => n + offset).join(' '));
       }
     } else {
       for (let i = 0; i < positions.count; i += 3) lines.push('f ' + [offset+i,offset+i+1,offset+i+2].join(' '));
