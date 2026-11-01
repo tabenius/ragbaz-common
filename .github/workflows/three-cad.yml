@@ -12,6 +12,7 @@ on:
       - 'demo/markdoc-ragbaz/browser.js'
       - 'demo/markdoc-ragbaz/visualization-adapters.js'
       - 'package*.json'
+      - 'docs/THREE-CAD.md'
       - '.github/workflows/three-cad.yml'
   workflow_dispatch:
 jobs:
