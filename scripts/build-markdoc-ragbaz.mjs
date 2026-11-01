@@ -144,7 +144,7 @@ export async function collectBundleNotices(metafile, { readText = path => readFi
   const notices = [];
   const versions = {
     '@markdoc/markdoc': '0.5.10', '@kurkle/color': '0.3.4', 'chart.js': '4.6.1',
-    cytoscape: '3.34.4', yaml: '2.9.1',
+    cytoscape: '3.34.4', yaml: '2.9.1', three: '0.180.0',
   };
   const licenseFiles = { 'chart.js': 'LICENSE.md', '@kurkle/color': 'LICENSE.md', cytoscape: 'LICENSE' };
   for (const name of packages) {
