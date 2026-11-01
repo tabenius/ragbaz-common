@@ -1,5 +1,13 @@
 // Optional browser-only adapter. Inject Three.js; never load scripts from document data.
 import { validateGeometryDocument } from './geometry3d.js';
+/** Stable clipping planes even for sub-millimetre geometry and very large scenes. */
+export function cameraClipPlanes(extent) {
+  const radius = Number.isFinite(extent) && extent > 0 ? extent : 1;
+  const near = Math.max(radius / 10000, 1e-9);
+  const far = Math.max(radius * 100, near * 100);
+  return { near, far };
+}
+
 export function mountThreeScene(element, input, THREE, OrbitControls) {
   const model = validateGeometryDocument(input);
   if (!element || !THREE || !OrbitControls) throw new TypeError('Host must supply element, THREE and OrbitControls');
@@ -39,8 +47,9 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     const radius = bounds.getSize(new THREE.Vector3()).length() || 1;
     controls.target.copy(center);
     camera.position.copy(center).add(new THREE.Vector3(radius, radius, radius));
-    camera.near = Math.max(radius / 10000, 0.001);
-    camera.far = radius * 100;
+    const clipping = cameraClipPlanes(radius);
+    camera.near = clipping.near;
+    camera.far = clipping.far;
     camera.updateProjectionMatrix();
   }
   let frame = 0, disposed = false, contextLost = false;
