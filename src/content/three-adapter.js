@@ -20,6 +20,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   renderer.setPixelRatio(Math.min(2, Math.max(1, globalThis.devicePixelRatio || 1)));
   element.appendChild(renderer.domElement);
   const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
   scene.add(new THREE.AmbientLight(0xffffff, 1.5));
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(5, 8, 10);
@@ -47,6 +48,8 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     const radius = bounds.getSize(new THREE.Vector3()).length() || 1;
     controls.target.copy(center);
     camera.position.copy(center).add(new THREE.Vector3(radius, radius, radius));
+    controls.minDistance = Math.max(radius / 100000, 1e-9);
+    controls.maxDistance = radius * 100;
     const clipping = cameraClipPlanes(radius);
     camera.near = clipping.near;
     camera.far = clipping.far;
