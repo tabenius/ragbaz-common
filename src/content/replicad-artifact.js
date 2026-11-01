@@ -35,3 +35,25 @@ export function replicadPreviewSVG(input,{size=420}={}){
  const lines=[...edges].slice(0,30000).map(s=>{const [a,b]=s.split(':').map(Number);return '<polyline points="'+project(a)+' '+project(b)+'"/>';}).join('');
  return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Unverified Replicad mesh preview: '+esc(doc.name)+'" viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'"><g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round">'+lines+'</g></svg>';
 }
+
+/** Independently rehash supplied source/STEP/STL bytes. Never grants signer trust or release approval. */
+export async function verifyReplicadBytes(input,{source,outputs={}}={}){
+ const artifact=inspectReplicadArtifact(input);
+ if(typeof crypto==='undefined'||!crypto.subtle)throw Error('SHA-256 WebCrypto is required');
+ const digest=async bytes=>{
+  let raw;
+  if(bytes instanceof Uint8Array)raw=bytes;
+  else if(typeof bytes==='string')raw=new TextEncoder().encode(bytes);
+  else if(bytes&&typeof bytes.arrayBuffer==='function')raw=new Uint8Array(await bytes.arrayBuffer());
+  else throw Error('explicit source or export bytes required');
+  if(raw.byteLength>1_000_000_000)throw Error('bytes exceed verification limit');
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-256',raw))].map(n=>n.toString(16).padStart(2,'0')).join('');
+ };
+ const sourceMatch=source===undefined?null:(await digest(source))===artifact.source.sha256;
+ const exports=await Promise.all(artifact.exports.map(async entry=>{
+  const supplied=outputs[entry.format];
+  const match=supplied===undefined?null:(await digest(supplied))===entry.sha256;
+  return {format:entry.format,digest_match:match};
+ }));
+ return Object.freeze({source_digest_match:sourceMatch,exports:Object.freeze(exports),authorization:'not-evaluated',signature_validity:'not-evaluated'});
+}
