@@ -13,6 +13,8 @@ on:
       - 'demo/markdoc-ragbaz/visualization-adapters.js'
       - 'package*.json'
       - 'docs/THREE-CAD.md'
+      - 'demo/markdoc-ragbaz/pieces-three-cad-showcase.md'
+      - 'demo/markdoc-ragbaz/three-cad-interactive-registry.json'
       - '.github/workflows/three-cad.yml'
   workflow_dispatch:
 jobs:
