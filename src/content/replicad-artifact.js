@@ -47,12 +47,13 @@ export async function verifyReplicadBytes(input,{source,outputs={}}={}){
   else if(bytes&&typeof bytes.arrayBuffer==='function')raw=new Uint8Array(await bytes.arrayBuffer());
   else throw Error('explicit source or export bytes required');
   if(raw.byteLength>1_000_000_000)throw Error('bytes exceed verification limit');
-  return [...new Uint8Array(await crypto.subtle.digest('SHA-256',raw))].map(n=>n.toString(16).padStart(2,'0')).join('');
+  return {sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',raw))].map(n=>n.toString(16).padStart(2,'0')).join(''),bytes:raw.byteLength};
  };
- const sourceMatch=source===undefined?null:(await digest(source))===artifact.source.sha256;
+ const sourceMatch=source===undefined?null:(await digest(source)).sha256===artifact.source.sha256;
  const exports=await Promise.all(artifact.exports.map(async entry=>{
   const supplied=outputs[entry.format];
-  const match=supplied===undefined?null:(await digest(supplied))===entry.sha256;
+  const calculated=supplied===undefined?null:await digest(supplied);
+  const match=calculated===null?null:calculated.sha256===entry.sha256 && calculated.bytes===entry.bytes;
   return {format:entry.format,digest_match:match};
  }));
  return Object.freeze({source_digest_match:sourceMatch,exports:Object.freeze(exports),authorization:'not-evaluated',signature_validity:'not-evaluated'});
