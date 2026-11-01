@@ -68,7 +68,9 @@ jobs:
           git add package.json package-lock.json
           if ! git diff --cached --quiet; then
             git commit -m 'build: pin Three.js 0.180.0 and lock npm dependencies'
-            git push origin HEAD:${{ github.head_ref }}
+            git fetch origin ${{ github.head_ref }}
+          git rebase FETCH_HEAD
+          git push origin HEAD:${{ github.head_ref }}
           fi
       - name: Upload proposed dependency manifests for review
         uses: actions/upload-artifact@v4
