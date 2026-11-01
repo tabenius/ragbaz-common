@@ -17,3 +17,9 @@ test('invalid locale refused, missing translations fall back to English',()=>{
  assert.throws(()=>evidenceHTML(projection,{lang:'../../bad'}));
  assert.match(evidenceHTML(projection,{lang:'en',messages:{title:'Local'}}),/Release authorization: not evaluated/);
 });
+
+test('status and type display translations do not mutate canonical evidence',()=>{
+ const translated=evidenceHTML(projection,{lang:'sv',statusLabels:{unverified:'Ej verifierad'},typeLabels:{signature:'Signatur'}});
+ assert.match(translated,/Ej verifierad/);assert.match(translated,/Signatur/);
+ assert.equal(projection.entries[0].status,'unverified');assert.equal(projection.entries[0].type,'signature');
+});
