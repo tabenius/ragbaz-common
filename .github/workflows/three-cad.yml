@@ -44,7 +44,7 @@ jobs:
             const html = readFileSync("/tmp/three-cad-example.html", "utf8");
             assert.doesNotMatch(html, /<script\\b[^>]*\\bsrc\\s*=/i);
             assert.doesNotMatch(html, /<link\\b[^>]*\\bhref\\s*=\\s*["\x27]https?:/i);
-            const shell = html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, "").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, "");
+            const shell = html.split("<script").map((part, index) => index ? part.split("</script>").slice(1).join("</script>") : part).join("").split("<style").map((part, index) => index ? part.split("</style>").slice(1).join("</style>") : part).join("");
             assert.doesNotMatch(shell, /<iframe\\b/i);
           '
 
