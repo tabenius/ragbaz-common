@@ -36,6 +36,17 @@ jobs:
       - run: node --check demo/markdoc-ragbaz/visualization-adapters.js
       - run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/three-cad-example.md --output /tmp/three-cad-example.html --strict
       - run: test -s /tmp/three-cad-example.html
+      - name: Build trusted interactive Pieces showcase
+        run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/pieces-three-cad-showcase.md --config demo/markdoc-ragbaz/three-cad-interactive-registry.json --output /tmp/pieces-three-cad-showcase.html --strict
+      - name: Assert both geometry profiles in interactive showcase
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const html = readFileSync("/tmp/pieces-three-cad-showcase.html", "utf8");
+            for (const marker of ["three-scene", "cad-model", "platform", "ring", "OrbitControls", "WebGLRenderer"]) assert.ok(html.includes(marker), "Missing showcase marker: " + marker);
+          '
+
       - name: Verify standalone document contains no external fetchable resources
         run: |
           node --input-type=module -e '
