@@ -677,7 +677,7 @@ export async function renderDocument(source, options = {}) {
       attrs += ` data-visualization="${a['data-visualization']}" role="img" aria-label="${escapeHTML(a['aria-label'])}"`;
     }
     if (name === 'template' && a['data-visualization'] === 'spec') {
-      if (!/^viz-\d+$/.test(a['data-id'] || '') || !['chartjs', 'cytoscape'].includes(a['data-format'])) {
+      if (!/^viz-\d+$/.test(a['data-id'] || '') || !['chartjs', 'cytoscape', 'three-scene', 'cad-model'].includes(a['data-format'])) {
         diagnostics.push('Unsafe visualization adapter template refused');
         return '<span class="refusal">Unsupported visualization adapter template</span>';
       }
