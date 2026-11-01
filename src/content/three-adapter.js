@@ -49,6 +49,8 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     axes.scale.setScalar(radius / 3);
     controls.target.copy(center);
     camera.position.copy(center).add(new THREE.Vector3(radius, radius, radius));
+    camera.lookAt(center);
+    controls.update();
     controls.minDistance = Math.max(radius / 100000, 1e-9);
     controls.maxDistance = radius * 100;
     const clipping = cameraClipPlanes(radius);
@@ -75,7 +77,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   function render() {
     if (disposed || contextLost) return;
     controls.update();
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
     frame = schedule(render);
   }
   render();
