@@ -47,3 +47,15 @@ The OBJ exporter triangulates the validated primitives, applies object transform
 - Bundle and review a pinned Three.js dependency and OrbitControls, including licenses, then exercise WebGL and context-loss/disposal behavior in a browser with networking disabled.
 - Verify no-WebGL, keyboard, screen-reader and reduced-motion behavior; retain the exact table and SVG fallback.
 - Design a separate reviewed precision-CAD kernel contract before claiming STEP/BREP, Booleans, assemblies or parametric history.
+
+### Host bootstrap for interactive scenes
+
+A trusted host that bundles compatible Three.js and OrbitControls locally can provide them **before the reader's browser bundle executes**:
+
+```js
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+window.ragbazGeometryLibraries = { THREE, OrbitControls };
+```
+
+This snippet is a **host application build-time entry point**, not a Markdoc code fence to execute. The reader bootstrap consumes `window.ragbazGeometryLibraries` if present. The host must also set `visualizations.interactive` to include the relevant geometry profiles in its trusted reader configuration. Do not use a CDN, runtime URL injection or inline authored JavaScript to supply these dependencies. The repository's default standalone output does not yet include them.
