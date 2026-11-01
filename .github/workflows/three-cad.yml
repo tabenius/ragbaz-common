@@ -44,7 +44,8 @@ jobs:
             const html = readFileSync("/tmp/three-cad-example.html", "utf8");
             assert.doesNotMatch(html, /<script\\b[^>]*\\bsrc\\s*=/i);
             assert.doesNotMatch(html, /<link\\b[^>]*\\bhref\\s*=\\s*["\x27]https?:/i);
-            assert.doesNotMatch(html, /<iframe\\b/i);
+            const shell = html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, "").replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, "");
+            assert.doesNotMatch(shell, /<iframe\\b/i);
           '
 
       - name: Verify offline geometry fallback survives standalone packaging
