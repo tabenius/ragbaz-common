@@ -46,6 +46,8 @@ export async function verifyReplicadBytes(input,{source,outputs={}}={}){
  const artifact=inspectReplicadArtifact(input);
  if(typeof crypto==='undefined'||!crypto.subtle)throw Error('SHA-256 WebCrypto is required');
  const digest=async bytes=>{
+  if(typeof bytes?.size==='number' && bytes.size>1_000_000_000) throw Error('bytes exceed verification limit');
+  if(typeof bytes?.byteLength==='number' && bytes.byteLength>1_000_000_000) throw Error('bytes exceed verification limit');
   let raw;
   if(bytes instanceof Uint8Array)raw=bytes;
   else if(typeof bytes==='string')raw=new TextEncoder().encode(bytes);
