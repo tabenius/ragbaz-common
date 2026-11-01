@@ -45,4 +45,6 @@ jobs:
               assert.ok(html.includes(marker), `Missing geometry payload marker: ${marker}`);
             }
             assert.ok(html.includes("<html"), "Missing standalone HTML root");
+            assert.ok(!/<script\\b[^>]*\\bsrc\\s*=/.test(html), "Standalone reader must not depend on external scripts");
+            assert.ok(!/<link\\b[^>]*\\brel\\s*=\\s*["\x27]stylesheet["\x27][^>]*\\bhref\\s*=/.test(html), "Standalone reader must not depend on external stylesheets");
           '
