@@ -42,8 +42,12 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     camera.far = radius * 100;
     camera.updateProjectionMatrix();
   }
-  let frame = 0, disposed = false;
+  let frame = 0, disposed = false, contextLost = false;
   const schedule = requestAnimationFrame;
+  const onContextLost = event => { event.preventDefault(); contextLost = true; cancelAnimationFrame(frame); };
+  const onContextRestored = () => { if (!disposed && contextLost) { contextLost = false; frame = schedule(render); } };
+  renderer.domElement.addEventListener('webglcontextlost', onContextLost, false);
+  renderer.domElement.addEventListener('webglcontextrestored', onContextRestored, false);
   function resize() {
     const width = Math.max(1, element.clientWidth || 640);
     const height = Math.max(1, element.clientHeight || 360);
@@ -54,12 +58,14 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
   observer?.observe(element);
   resize();
-  function render() { if (disposed) return; controls.update(); renderer.render(scene,camera); frame = schedule(render); }
+  function render() { if (disposed || contextLost) return; controls.update(); renderer.render(scene,camera); frame = schedule(render); }
   render();
   return () => {
     disposed = true;
     if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame);
     observer?.disconnect();
+    renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+    renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
     controls.dispose();
     for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }
     axes.geometry.dispose();
