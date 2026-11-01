@@ -17,6 +17,7 @@ export async function captureReplicadShape({name,shape,source,step=null,stl=null
  const sourceBytes=await bytesOf(source);
  if(sourceBytes.byteLength>1_000_000)throw Error('model source exceeds 1 MB');
  const faces=shape.mesh({tolerance:0.05,angularTolerance:30});
+ if(!faces || !faces.vertices || !faces.triangles || faces.vertices.length > 30000 || faces.triangles.length > 30000) throw Error('Replicad preview mesh exceeds bounds');
  const exports=[];
  for(const [format,blob] of [['step',step],['stl',stl]]){
   if(blob===null)continue;
