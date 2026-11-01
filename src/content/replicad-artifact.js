@@ -13,8 +13,11 @@ export function inspectReplicadArtifact(value){
  if(mesh.triangles.some(i=>!Number.isSafeInteger(i)||i<0||i>=n))throw Error('invalid triangle index');
  const exports=value.exports??[];
  if(!Array.isArray(exports)||exports.length>16)throw Error('invalid exports');
+ const seenFormats=new Set();
  const outputs=exports.map(o=>{
   if(!o||!['step','stl'].includes(o.format)||!HASH.test(o.sha256)||typeof o.bytes!=='number'||!Number.isSafeInteger(o.bytes)||o.bytes<0||o.bytes>1e9)throw Error('invalid export');
+  if(seenFormats.has(o.format)) throw Error('duplicate export format');
+  seenFormats.add(o.format);
   return Object.freeze({format:o.format,sha256:o.sha256,bytes:o.bytes});
  });
  return Object.freeze({schema:REPLICAD_SCHEMA,name:value.name,source:Object.freeze({language:'javascript',sha256:value.source.sha256}),preview:Object.freeze({format:'triangle-mesh/1',positions:Object.freeze([...mesh.positions]),triangles:Object.freeze([...mesh.triangles])}),exports:Object.freeze(outputs),verification:'unverified',release_ready:false});
