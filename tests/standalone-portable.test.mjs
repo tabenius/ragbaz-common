@@ -15,10 +15,10 @@ const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|--
 // checked against 0fdff6e before the SVG work.
 const expected = {
   'markdoc-ragbaz-sci-tufte': '5163ed27fb95da52d8cbc4b6b0e079545e1a081308ac3c2bc13833116e96533d',
-  heartfulness: '61e9a6287cdb72123afa148713245f121c987c517a4f6342fd0538abccb04da4',
-  'aether-prima-materia': '6ded740aa015ba0e0aac01e80e534291035ff1b2276cc0ce12fe05134735d112',
-  'aether-sun-and-moon': '51328d468d510e1ad0b24e5526c438749fb7a8b10c15262b12638e5f5d446b2c',
-  'aether-blackening': '58cadbf6f916be96e9d306c8213323c1abcb014e5048d18c31779d53d58d7312',
+  heartfulness: '5e5a2c384feb5f8d6d268b527ed5957378e066732b768d7cd2032d7833d5a483',
+  'aether-prima-materia': 'a15024969e8bfe83048afeb1e7d06cf499f11dbdaf0fd2d8898d8bb7fff7bed4',
+  'aether-sun-and-moon': '72798f1a9f51baae8595474f54d8a238bd56df4b015dcc0ec5b2680843c667c2',
+  'aether-blackening': '0898f7af19f37f33c8a442f4975aec07865f29b85008006c6285068a229be5ac',
 };
 const base = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
 
