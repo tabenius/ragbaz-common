@@ -31,7 +31,8 @@ test('prepared renderer matches frozen outputs and browser-bundled execution in 
     const config = { ...base, metaDocument: { id, version: 1 }, policy: { ...base.policy, origins: [] } };
     const options = { sourceBytes: new TextEncoder().encode(fixture), config, assets };
     const result = await buildStandaloneBytes(options), portable = await workerModule.buildStandaloneBytes(options);
-    assert.equal(createHash('sha256').update(result.html).digest('hex'), hash);
+    const actualHash = createHash('sha256').update(result.html).digest('hex');
+    assert.equal(actualHash, hash, `Frozen portable snapshot for ${id} changed; review before accepting`);
     assert.equal(portable.html, result.html);
     assert.equal(result.payload.source, fixture);
     assert(!result.html.includes('<script>window.INJECTED=true</script>'));
