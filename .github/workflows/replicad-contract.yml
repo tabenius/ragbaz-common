@@ -1,0 +1,19 @@
+name: Replicad artifact contract
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Replicad contract, capture, locale and byte verification
+        run: node --test tests/replicad-artifact.test.mjs tests/replicad-capture.test.mjs tests/replicad-bytes.test.mjs tests/replicad-locales.test.mjs
