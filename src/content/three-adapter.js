@@ -83,6 +83,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
   }
   render();
   return () => {
+    if (disposed) return;
     disposed = true;
     if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(frame);
     observer?.disconnect();
