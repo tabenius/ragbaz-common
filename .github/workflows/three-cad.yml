@@ -40,6 +40,14 @@ jobs:
       - run: test -s /tmp/three-cad-example.html
       - name: Build trusted interactive Pieces showcase
         run: npm run markdoc-ragbaz -- --input demo/markdoc-ragbaz/pieces-three-cad-showcase.md --config demo/markdoc-ragbaz/three-cad-interactive-registry.json --output /tmp/pieces-three-cad-showcase.html --strict
+      - name: Install pinned Playwright browser smoke dependencies
+        run: |
+          npm install --prefix /tmp/cad-playwright --no-save playwright@1.58.2
+          /tmp/cad-playwright/node_modules/.bin/playwright install --with-deps chromium
+      - name: Run offline Chromium geometry smoke test
+        env:
+          NODE_PATH: /tmp/cad-playwright/node_modules
+        run: node scripts/test-three-cad-browser.cjs /tmp/pieces-three-cad-showcase.html
       - name: Assert both geometry profiles in interactive showcase
         run: |
           node --input-type=module -e '
