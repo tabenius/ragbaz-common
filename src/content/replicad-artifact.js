@@ -27,7 +27,9 @@ export function replicadPreviewSVG(input,{size=420}={}){
  const xy=[];
  for(let i=0;i<p.length;i+=3)xy.push([p[i]*0.85+p[i+1]*0.30,p[i+2]*0.9-p[i+1]*0.35]);
  const xs=xy.map(v=>v[0]),ys=xy.map(v=>v[1]);
- const minx=Math.min(0,...xs),maxx=Math.max(1,...xs),miny=Math.min(0,...ys),maxy=Math.max(1,...ys);
+ let minx=0,maxx=1,miny=0,maxy=1;
+ for(const x of xs){if(x<minx)minx=x;if(x>maxx)maxx=x;}
+ for(const y of ys){if(y<miny)miny=y;if(y>maxy)maxy=y;}
  const scale=Math.min((size-40)/(maxx-minx||1),(size-40)/(maxy-miny||1));
  const project=i=>[(20+(xy[i][0]-minx)*scale).toFixed(2),(size-20-(xy[i][1]-miny)*scale).toFixed(2)].join(',');
  const edges=new Set();
