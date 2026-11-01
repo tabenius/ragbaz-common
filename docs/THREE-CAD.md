@@ -46,6 +46,7 @@ The OBJ exporter triangulates the validated primitives, applies object transform
 - Run the complete Node test suite and dedicated geometry tests on Node 22, including the standalone build's license-inventory gate.
 - Exercise the pinned, locally bundled Three.js and OrbitControls runtime in a real browser with networking disabled, including WebGL context loss, restoration and disposal.
 - Verify no-WebGL, keyboard, screen-reader and reduced-motion behavior; retain the exact table and SVG fallback.
+- Browser smoke-test procedure: generate the standalone HTML from `demo/markdoc-ragbaz/three-cad-example.md`, open it with browser network access disabled, and confirm the SVG and exact dimensions remain visible. For a trusted interactive configuration that includes `three-scene`, verify canvas rendering, orbit/pan/zoom, WebGL context loss/restoration, and teardown when the document is replaced. Record browser, GPU mode and results before promoting this PR.
 - Design a separate reviewed precision-CAD kernel contract before claiming STEP/BREP, Booleans, assemblies or parametric history.
 
 ### Host bootstrap for interactive scenes
