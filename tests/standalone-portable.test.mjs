@@ -14,7 +14,7 @@ const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|--
 // scientific-identifier links and reading-copy reconciliation. Earlier equivalence was
 // checked against 0fdff6e before the SVG work.
 const expected = {
-  'markdoc-ragbaz-sci-tufte': '34ff710ea0f1c39cc7d768db55b9d4a27de2442de69092c14e6b82dac61b8a34',
+  'markdoc-ragbaz-sci-tufte': '5163ed27fb95da52d8cbc4b6b0e079545e1a081308ac3c2bc13833116e96533d',
   heartfulness: '61e9a6287cdb72123afa148713245f121c987c517a4f6342fd0538abccb04da4',
   'aether-prima-materia': '6ded740aa015ba0e0aac01e80e534291035ff1b2276cc0ce12fe05134735d112',
   'aether-sun-and-moon': '51328d468d510e1ad0b24e5526c438749fb7a8b10c15262b12638e5f5d446b2c',
