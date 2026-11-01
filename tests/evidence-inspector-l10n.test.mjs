@@ -23,3 +23,9 @@ test('status and type display translations do not mutate canonical evidence',()=
  assert.match(translated,/Ej verifierad/);assert.match(translated,/Signatur/);
  assert.equal(projection.entries[0].status,'unverified');assert.equal(projection.entries[0].type,'signature');
 });
+
+test('Nostoi chain subjects remain typed and do not become artifact identity',()=>{
+ const chain=inspectEvidence({schema:'ragbaz.evidence-inspector/1',subject:{kind:'chain',sha256:subject},entries:[{type:'attestation',label:'Signed chain head',status:'unverified'}]});
+ assert.equal(chain.subject.kind,'chain');
+ assert.match(evidenceHTML(chain),/Subject: chain/);
+});
