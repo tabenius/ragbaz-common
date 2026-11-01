@@ -47,6 +47,7 @@ export function mountThreeScene(element, input, THREE, OrbitControls) {
     const center = bounds.getCenter(new THREE.Vector3());
     const radius = bounds.getSize(new THREE.Vector3()).length() || 1;
     axes.scale.setScalar(radius / 3);
+    axes.position.copy(center);
     controls.target.copy(center);
     camera.position.copy(center).add(new THREE.Vector3(radius, radius, radius));
     camera.lookAt(center);
