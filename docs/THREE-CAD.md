@@ -26,7 +26,7 @@ Do not load this adapter in a Worker. Use `geometrySvg` for no-script fallback.
 The `cad-model` profile preserves dimensions and units but does not yet
 provide STEP/BREP, topology, Boolean solids, parametric constraints or precision CAD interchange.
 The static SVG is a dimensioned inventory, not a geometric projection. Hosts
-must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. The standalone reader now bundles pinned Three.js 0.180.0 and OrbitControls locally; the reader's default configuration still does not enable geometry interactivity. A host must explicitly configure both libraries and opt in to the desired formats.
+must explicitly opt into the interactive adapter. The existing Markdoc visualization registry now recognizes `three-scene` and `cad-model` fenced JSON, producing a static SVG inventory, exact dimensions table, and inert source. The standalone reader now bundles pinned Three.js 0.180.0 and OrbitControls locally; the reader's default configuration still does not enable geometry interactivity. A host must opt in to the desired formats; the bundled libraries are used automatically unless the host overrides them.
 
 Security: bounded objects and numeric dimensions, unique identifiers,
 restricted primitive types and colors. No URLs, textures, shader source,
@@ -44,7 +44,7 @@ The OBJ exporter triangulates the validated primitives, applies object transform
 ## Remaining acceptance gates
 
 - Run the complete Node test suite and dedicated geometry tests on Node 22, including the standalone build's license-inventory gate.
-- Bundle and review a pinned Three.js dependency and OrbitControls, including licenses, then exercise WebGL and context-loss/disposal behavior in a browser with networking disabled.
+- Exercise the pinned, locally bundled Three.js and OrbitControls runtime in a real browser with networking disabled, including WebGL context loss, restoration and disposal.
 - Verify no-WebGL, keyboard, screen-reader and reduced-motion behavior; retain the exact table and SVG fallback.
 - Design a separate reviewed precision-CAD kernel contract before claiming STEP/BREP, Booleans, assemblies or parametric history.
 
@@ -58,4 +58,4 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 window.ragbazGeometryLibraries = { THREE, OrbitControls };
 ```
 
-This snippet is a **host application build-time entry point**, not a Markdoc code fence to execute. The reader bootstrap consumes `window.ragbazGeometryLibraries` if present. The host must also set `visualizations.interactive` to include the relevant geometry profiles in its trusted reader configuration. Do not use a CDN, runtime URL injection or inline authored JavaScript to supply these dependencies. The repository's default standalone output does not yet include them.
+This snippet is a **host application build-time entry point**, not a Markdoc code fence to execute. The reader bootstrap consumes `window.ragbazGeometryLibraries` if present. The host must also set `visualizations.interactive` to include the relevant geometry profiles in its trusted reader configuration. Do not use a CDN, runtime URL injection or inline authored JavaScript to supply these dependencies. The standalone output now includes pinned Three.js and OrbitControls; this host bootstrap is optional and intended only for trusted runtime overrides.
