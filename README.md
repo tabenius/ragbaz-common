@@ -27,6 +27,10 @@ verification, and short-lived temporary sessions.
 
 ## What is here
 
+Schemas shared across RAGBAZ projects live in [`schemas/`](schemas/README.md), starting with the
+`ragbaz.component.json` manifest schema (0.2.0).
+
+
 | Module | Purpose |
 |---|---|
 | `crypto.js` | WebCrypto helpers: base64url, random ids, SHA-256/HMAC, session tokens, recovery codes, AES-GCM secrets |

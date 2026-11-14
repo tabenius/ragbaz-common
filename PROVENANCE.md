@@ -122,6 +122,18 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-11-14 — component manifest schema 0.2.0 lives here
+
+`schemas/ragbaz.component.schema.json` becomes the canonical home of the RAGBAZ
+component manifest schema. The 0.1.0 original existed only in the unversioned
+workspace (`/data/src/docs/schemas/`) and was lost; a reconstruction inferred
+from the 11 surviving manifests is kept beside it for reference. 0.2.0 is
+additive: it relaxes the requirement to `schemaVersion` + `identity` and adds
+`identity.repository` and a plain-text `presentation` block (featured slide,
+catalog fields) so ragbaz.cc cards are generated from the projects themselves.
+All 11 existing 0.1.0 manifests validate unchanged. Schema data only; no change
+to `src/`.
+
 ### 2026-10-26 — reconcile Pieces reading-copy dependency into main
 
 Reconcile the existing `432982f` static reading-copy feature with the newer
