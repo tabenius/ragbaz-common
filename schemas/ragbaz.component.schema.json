@@ -180,6 +180,44 @@
         }
       }
     },
+    "dependencies": {
+      "type": "array",
+      "description": "Declared dependencies on other RAGBAZ components, classified by lifecycle phase. componentId is resolved through www.ragbaz/catalog/components.lock.json; repository and commit pins stay in that lock, not here.",
+      "items": {
+        "type": "object",
+        "required": [
+          "componentId",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "componentId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+            "maxLength": 64
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "install",
+              "runtime",
+              "build",
+              "debug"
+            ]
+          },
+          "version": {
+            "type": "string"
+          },
+          "optional": {
+            "type": "boolean",
+            "default": false
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "provides": {
       "type": "object",
       "properties": {
