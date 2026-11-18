@@ -7,6 +7,8 @@ gate.
 
 Read `AGENTS.md` first, then `PROVENANCE.md` for what was extracted from where.
 
+**Fleet-wide direction:** [Open-standards-first, federated preservation charter](docs/FLEET-CHARTER.md) and [distributed-library roadmap](docs/DISTRIBUTED-LIBRARY-ROADMAP.md). **Milestone 1 remains Rebeqah storage-layer synchronization to Android and/or encrypted S3 with independent recovery.** These are proposed architectural directions, not proof of deployed synchronization.
+
 ## Why this exists
 
 Fragment is an isolated draft under [`packages/fragment`](packages/fragment/README.md).
