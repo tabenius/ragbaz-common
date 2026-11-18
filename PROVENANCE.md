@@ -122,6 +122,25 @@ rule, decide deliberately whether this package follows.
 
 ## Changelog
 
+### 2026-11-18 — markdoc-ragbaz research-paper extensions
+
+Additive. Motivated by an evidence-graded RAGBAZ review that is to grow into a
+meta-analysis; adopted by the owner as a whole. New families `text@1` (`note`,
+`lang`) and `support@1` (`support`); callout kinds `hypothesis`, `contested`,
+`correction`, `advisory`; bibliography fields `type`, `design`, `doi`, `pmid`,
+`isbn`, `n`, `k`, `checked`, `language`; grades inferred from `design` through a
+host scale (document-overridable) with a keyboard-navigable evidence map;
+`document.identifiers` shown as — until assigned and a derived content CID;
+ISBN/ISSN/ORCID/OSF/URN:NBN/PROSPERO/SFS/Riksdag prose links; `document.advisory`;
+`records` views; a `forest` visualization profile; host build options `--logo`,
+`--logo-alt`, `--canonical-url` with a dependency-free QR encoder. Owner
+decisions: RAGBAZ maintains no helpline data (support links point to a host-chosen
+external directory) and evidence lives in sources, not in a new tag attribute.
+The declarative-template attribute allowlist gains `code` and `topic`. The five
+frozen standalone hashes changed deliberately because the reader runtime, skeleton
+and styles changed. `jsqr` is a test-only devDependency used to decode generated
+QR codes; it is not bundled.
+
 ### 2026-11-14 — component manifest schema 0.2.0 lives here
 
 `schemas/ragbaz.component.schema.json` becomes the canonical home of the RAGBAZ

@@ -190,7 +190,21 @@ export async function prepareStandaloneAssets() {
 }
 
 /** No network by default. Local snapshots mapping: { sourceId: "local/path.md" }. */
-export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false, preparedAssets, strict = false, report: reportPath } = {}) {
+/** Host logo bytes → embedded config descriptor. Type is sniffed, never taken from the file name. */
+export async function hostLogoDescriptor(path, alt) {
+  const data = await bytes(path);
+  if (data.length > 1_500_000) throw new Error('Host logo exceeds 1.5 MB');
+  if (typeof alt !== 'string' || !alt.trim()) throw new Error('Host logo requires --logo-alt text');
+  const head = data.subarray(0, 512).toString('latin1');
+  const mime = data[0] === 0x89 && head.startsWith('\x89PNG') ? 'image/png'
+    : data[0] === 0xff && data[1] === 0xd8 ? 'image/jpeg'
+    : head.startsWith('RIFF') && head.slice(8, 12) === 'WEBP' ? 'image/webp'
+    : /^\s*(?:<\?xml[^>]*>\s*)?<svg[\s>]/.test(head) ? 'image/svg+xml' : null;
+  if (!mime) throw new Error('Host logo must be PNG, JPEG, WebP or SVG');
+  return { mime, data: data.toString('base64'), sha256: await sha256(new Uint8Array(data)), alt: alt.trim() };
+}
+
+export async function buildStandalone({ input, output, config: configPath, snapshots: mappingPath, fetchSources = false, preparedAssets, strict = false, report: reportPath, logo, logoAlt, canonicalURL } = {}) {
   if (!input) throw new Error('An input Markdown path is required');
   configPath ||= resolve(root, 'demo/markdoc-ragbaz/registry.json');
   // Refuse accidental replacement of source/config or aliasing report and HTML.
@@ -211,6 +225,9 @@ export async function buildStandalone({ input, output, config: configPath, snaps
   }
   const sourceBytes = await bytes(input);
   const config = JSON.parse(await readFile(configPath, 'utf8'));
+  // Host-owned publication furniture; a document cannot set either value.
+  if (logo) config.logo = await hostLogoDescriptor(logo, logoAlt);
+  if (canonicalURL) config.colophon = { ...config.colophon, url: canonicalURL };
   const mapping = mappingPath ? JSON.parse(await readFile(mappingPath, 'utf8')) : {};
   const fetcher = fetchSources ? globalThis.fetch : () => { throw new Error('Build network disabled (use --fetch-sources explicitly)'); };
   const loadSnapshot = mappingPath || fetchSources ? async entry => {
@@ -247,7 +264,7 @@ export async function buildStandalone({ input, output, config: configPath, snaps
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2); const options = {};
   for (let i = 0; i < args.length; i++) {
-    const key = { '--input': 'input', '--output': 'output', '--config': 'config', '--snapshots': 'snapshots', '--report': 'report' }[args[i]];
+    const key = { '--input': 'input', '--output': 'output', '--config': 'config', '--snapshots': 'snapshots', '--report': 'report', '--logo': 'logo', '--logo-alt': 'logoAlt', '--canonical-url': 'canonicalURL' }[args[i]];
     if (key) { if (!args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`Missing value for ${args[i]}`); options[key] = args[++i]; }
     else if (args[i] === '--fetch-sources') options.fetchSources = true;
     else if (args[i] === '--strict') options.strict = true;

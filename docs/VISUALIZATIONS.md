@@ -55,6 +55,7 @@ the static SVG is shown instead.
 | `chartjs` | JSON bar/line; inline labels and labelled numeric datasets | Interactive Chart.js canvas in the reader; static SVG bars/lines, exact values table and source |
 | `vega-lite` | JSON bar/line/point; inline values, x/y field/type encodings | Static SVG marks, exact values table and source |
 | `plotly` | JSON bar/scatter; named traces with categorical x and numeric y | Static SVG bars/lines/points, exact values table and source |
+| `forest` | JSON `{scale, null?, studies:[{label,estimate,lower,upper,weight?}], pooled?}` | Static SVG forest plot (log axis for OR/RR/HR), exact estimates table and source |
 
 The SVG baseline uses fixed geometry, a fixed colour palette, inline shapes and text,
 and no fonts, images, scripts, external URLs or animation. It is a deterministic

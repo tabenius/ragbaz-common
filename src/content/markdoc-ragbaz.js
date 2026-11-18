@@ -14,6 +14,10 @@ export const BUILTIN_REGISTRY = Object.freeze({
     paper: descriptor({ callout: { element: 'aside', attrs: ['kind', 'title'] }, aside: { element: 'aside', attrs: ['title'] }, source: { element: 'span', attrs: ['ref'], selfClosing: true }, figure: { element: 'figure', attrs: ['title'] } }),
     plan: descriptor({ example: { element: 'section', attrs: ['title'] }, milestone: { element: 'section', attrs: ['title', 'status'] }, decision: { element: 'section', attrs: ['title', 'status'] } }),
     models: descriptor({ model: { element: 'section', attrs: ['ref'], selfClosing: true }, view: { element: 'section', attrs: ['ref'], selfClosing: true } }),
+    // Research-paper families (additive v1): authored margin notes, language spans,
+    // and host-resolved links to an external support directory.
+    text: descriptor({ note: { element: 'span', attrs: [] }, lang: { element: 'span', attrs: ['code'] } }),
+    support: descriptor({ support: { element: 'aside', attrs: ['topic'], selfClosing: true } }),
   },
   themes: { paper: { version: '1', tokens: {} } },
 });
@@ -113,9 +117,164 @@ export function safeLink(value) {
   } catch { return null; }
 }
 
+export const CALLOUT_KINDS = Object.freeze(['warning', 'note', 'info', 'proposal', 'observed', 'verified', 'hypothesis', 'contested', 'correction', 'advisory']);
+const CLAIM_KINDS = new Set(['proposal', 'observed', 'verified', 'hypothesis', 'contested']);
+const LANGUAGE_TAG = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,3}$/;
+const SLUG = /^[a-z][a-z0-9-]{1,40}$/;
+const words = slug => slug.replace(/-/g, ' ');
+
+/** Default host evidence scale. Grades are inferred from a source's declared
+ * study design; they are authored classifications, never quality verdicts. */
+export const EVIDENCE_SCALE = Object.freeze([
+  Object.freeze({ grade: 'A', label: 'Synthesis or multisite evidence', designs: Object.freeze(['meta-analysis', 'systematic-review', 'umbrella-review', 'multisite']) }),
+  Object.freeze({ grade: 'B', label: 'Experimental or longitudinal evidence', designs: Object.freeze(['rct', 'experiment', 'quasi-experiment', 'cohort', 'longitudinal', 'case-control']) }),
+  Object.freeze({ grade: 'C', label: 'Cross-sectional, qualitative, measurement or clinical-model evidence', designs: Object.freeze(['cross-sectional', 'qualitative', 'scale-development', 'case-series', 'narrative-review', 'clinical-model', 'theory']) }),
+  Object.freeze({ grade: 'D', label: 'Mechanistic extrapolation or expert opinion', designs: Object.freeze(['animal', 'mechanistic', 'expert-opinion', 'consensus-statement', 'commentary', 'popular-account']) }),
+]);
+/** Sources that inform but are not evidence for a claim (law, standards, reports). */
+export const CONTEXT_DESIGNS = Object.freeze(['statute', 'bill', 'guideline', 'reporting-standard', 'report', 'dataset']);
+
+/** Validated scale: the document's `document.evidence.scale` or the host default. */
+export function evidenceScale(document = {}) {
+  const authored = document?.evidence?.scale;
+  if (authored === undefined) return { scale: EVIDENCE_SCALE, context: CONTEXT_DESIGNS, authored: false };
+  if (!Array.isArray(authored) || !authored.length || authored.length > 12) throw new Error('document.evidence.scale must list 1–12 grades');
+  const seen = new Set(), grades = new Set();
+  const scale = authored.map(level => {
+    if (!level || typeof level !== 'object' || Array.isArray(level)) throw new Error('Evidence grades must be mappings');
+    const { grade, label, designs } = level;
+    if (typeof grade !== 'string' || !/^[A-Z][A-Za-z0-9+-]{0,3}$/.test(grade) || grades.has(grade)) throw new Error('Evidence grade ids must be short, unique and start with a capital letter');
+    if (typeof label !== 'string' || !label.trim() || label.length > 120) throw new Error('Evidence grade labels must be bounded text');
+    if (!Array.isArray(designs) || !designs.length || designs.length > 40 || designs.some(d => typeof d !== 'string' || !SLUG.test(d) || seen.has(d) || CONTEXT_DESIGNS.includes(d))) throw new Error('Evidence designs must be unique slugs not reserved for context');
+    grades.add(grade); designs.forEach(d => seen.add(d));
+    return { grade, label, designs: [...designs] };
+  });
+  return { scale, context: CONTEXT_DESIGNS, authored: true };
+}
+
+/** Grade inferred from `bibliography.design`; missing or unknown designs are never guessed. */
+export function evidenceGrade(source, scaled = evidenceScale()) {
+  const design = source?.bibliography?.design;
+  if (typeof design !== 'string' || !design) return { state: 'ungraded', grade: null, design: null };
+  if (scaled.context.includes(design)) return { state: 'context', grade: null, design, label: 'Context (not graded)' };
+  const level = scaled.scale.find(l => l.designs.includes(design));
+  return level ? { state: 'inferred', grade: level.grade, label: level.label, design } : { state: 'unknown-design', grade: null, design };
+}
+
+const BASE32 = 'abcdefghijklmnopqrstuvwxyz234567';
+/** CIDv1 (raw codec, sha2-256 multihash, base32) re-encoding of a SHA-256 hex digest.
+ * Equal to an IPFS CID only for single-block raw imports; it is not a publication record. */
+export function cidFromSHA256(hex) {
+  if (!/^[0-9a-f]{64}$/.test(hex)) throw new Error('64-hex SHA-256 required');
+  const bytes = [0x01, 0x55, 0x12, 0x20, ...hex.match(/../g).map(h => parseInt(h, 16))];
+  let bits = 0, value = 0, out = 'b';
+  for (const byte of bytes) { value = (value << 8) | byte; bits += 8; while (bits >= 5) { out += BASE32[(value >>> (bits - 5)) & 31]; bits -= 5; } }
+  if (bits) out += BASE32[(value << (5 - bits)) & 31];
+  return out;
+}
+
+const digitsOf = value => value.replace(/[-\s]/g, '').toUpperCase();
+export function validISBN(value) {
+  const d = digitsOf(String(value));
+  if (/^\d{9}[\dX]$/.test(d)) return [...d].reduce((sum, c, i) => sum + (c === 'X' ? 10 : +c) * (10 - i), 0) % 11 === 0;
+  if (/^97[89]\d{10}$/.test(d)) return [...d].reduce((sum, c, i) => sum + +c * (i % 2 ? 3 : 1), 0) % 10 === 0;
+  return false;
+}
+export function validISSN(value) {
+  const d = digitsOf(String(value));
+  if (!/^\d{7}[\dX]$/.test(d)) return false;
+  const check = (11 - ([...d.slice(0, 7)].reduce((sum, c, i) => sum + +c * (8 - i), 0) % 11)) % 11;
+  return d[7] === (check === 10 ? 'X' : String(check));
+}
+export function validORCID(value) {
+  if (!/^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(String(value))) return false;
+  const d = String(value).replace(/-/g, '');
+  let total = 0;
+  for (const c of d.slice(0, 15)) total = (total + +c) * 2;
+  const check = (12 - (total % 11)) % 11;
+  return d[15] === (check === 10 ? 'X' : String(check));
+}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CID = /^(?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58,100})$/;
+const URN_NBN = /^urn:nbn:[a-z]{2}(?::[A-Za-z0-9._-]{1,60}){1,6}$/i;
+const UNASSIGNED = new Set(['\u2014', '', null]);
+// A registered DOI is "10." + registrant code + "/" + suffix; placeholders such as
+// "unassigned" must not pass as declared identifiers.
+const DOI_PUBLICATION = /^10\.\d{4,9}\/\S{1,250}$/;
+
+/** Resolver kinds whose origins come from host configuration, never from src/. */
+export const RESOLVER_KINDS = Object.freeze(['doi', 'isbn', 'issn', 'orcid', 'osf', 'urn-nbn-se', 'urn-nbn', 'prospero', 'sfs', 'riksdag']);
+/** Validates host `identifierResolvers: {kind: "https://…{value}…"}`. Missing kinds are simply not linked. */
+export function identifierResolvers(map) {
+  if (map === undefined || map === null) return Object.freeze({});
+  if (typeof map !== 'object' || Array.isArray(map)) throw new Error('identifierResolvers must be a mapping');
+  const out = {};
+  for (const [kind, template] of Object.entries(map)) {
+    if (!RESOLVER_KINDS.includes(kind)) throw new Error(`Unsupported identifier resolver: ${kind}`);
+    if (typeof template !== 'string' || template.length > 300 || template.split('{value}').length !== 2 || !template.startsWith('https://') || !safeLink(template.replace('{value}', 'x'))) throw new Error(`Identifier resolver ${kind} must be an HTTPS template with one {value}`);
+    out[kind] = template;
+  }
+  return Object.freeze(out);
+}
+function resolveIdentifier(resolvers, kind, value) {
+  const template = resolvers?.[kind];
+  if (!template) return null;
+  return safeLink(template.replace('{value}', encodeURIComponent(value).replace(/%3A/gi, ':').replace(/%2F/gi, '/')));
+}
+
+const IDENTIFIER_KINDS = Object.freeze([
+  ['issn', 'ISSN', v => validISSN(v), v => ['issn', `${digitsOf(v).slice(0, 4)}-${digitsOf(v).slice(4)}`]],
+  ['isbn', 'ISBN', v => validISBN(v), v => ['isbn', digitsOf(v)]],
+  ['doi', 'DOI', v => DOI_PUBLICATION.test(v), v => ['doi', v]],
+  ['urnnbn', 'URN:NBN', v => URN_NBN.test(v), v => [/^urn:nbn:se:/i.test(v) ? 'urn-nbn-se' : 'urn-nbn', v]],
+  ['uuid', 'UUID', v => UUID.test(v), () => null],
+  ['ipfs', 'IPFS CID', v => CID.test(v), () => null],
+]);
+/** Declared publication identifiers. An em dash (or empty value) means "not yet
+ * assigned" and is displayed as —. Form checks are not registration checks.
+ * Links appear only for kinds the host configured a resolver for. */
+export function publicationIdentifiers(document = {}, resolvers = {}) {
+  const declared = document?.identifiers;
+  const diagnostics = [], entries = [];
+  if (declared === undefined) return { entries, diagnostics };
+  if (!declared || typeof declared !== 'object' || Array.isArray(declared)) return { entries, diagnostics: ['document.identifiers must be a mapping'] };
+  for (const key of Object.keys(declared)) if (!IDENTIFIER_KINDS.some(([k]) => k === key)) diagnostics.push(`Unsupported publication identifier: ${key}`);
+  for (const [key, label, valid, resolve] of IDENTIFIER_KINDS) {
+    if (!Object.hasOwn(declared, key)) continue;
+    const raw = declared[key];
+    if (UNASSIGNED.has(raw)) { entries.push({ key, label, value: '\u2014', state: 'unassigned', href: null }); continue; }
+    if (typeof raw !== 'string' || raw.length > 200 || !valid(raw.trim())) {
+      diagnostics.push(`Malformed ${label} refused; shown as unassigned`);
+      entries.push({ key, label, value: '\u2014', state: 'refused', href: null }); continue;
+    }
+    const value = raw.trim();
+    const target = resolve(value);
+    entries.push({ key, label, value, state: 'declared', href: target ? resolveIdentifier(resolvers, target[0], target[1]) : null });
+  }
+  return { entries, diagnostics };
+}
+
+/** Validated `document.advisory`: {topics: [slug…]}. */
+export function contentAdvisory(document = {}) {
+  const advisory = document?.advisory;
+  if (advisory === undefined) return null;
+  if (!advisory || typeof advisory !== 'object' || Array.isArray(advisory) || Object.keys(advisory).some(k => k !== 'topics')) throw new Error('document.advisory accepts only topics');
+  const { topics } = advisory;
+  if (!Array.isArray(topics) || !topics.length || topics.length > 8 || topics.some(t => typeof t !== 'string' || !SLUG.test(t))) throw new Error('document.advisory.topics must list 1–8 slugs');
+  return { topics: [...new Set(topics)] };
+}
+
 // A finite set of prose identifiers with public, deterministic resolvers. This
 // is a navigational convenience, not evidence that the work exists or is sound.
-const SCIENTIFIC_IDENTIFIER = /\b(DOI|PMID|PMCID|arXiv)\s*:\s*([^\s<>"'`]+)/gid;
+const SCIENTIFIC_IDENTIFIER = /\b(DOI|PMID|PMCID|arXiv|ISBN|ISSN|ORCID|OSF|URN)\s*:\s*([^\s<>"'`]+)/gid;
+// Register-style references written without a colon prefix: PROSPERO, Swedish
+// statutes (SFS) and Riksdag propositions/committee reports.
+const REGISTER_IDENTIFIER = /\b(?:(CRD42\d{6,9})|SFS\s(\d{4}:\d{1,4})|(prop|bet)\.\s(\d{4}\/\d{2}:[A-Za-zÅÄÖåäö]{0,4}\d{1,4}))\b/g;
+function registerTarget(match, resolvers) {
+  const [kind, value] = match[1] ? ['prospero', match[1]] : match[2] ? ['sfs', match[2]] : match[3] ? ['riksdag', match[0]] : [];
+  const href = kind && resolveIdentifier(resolvers, kind, value);
+  return href ? { kind, href } : null;
+}
 const DOI_VALUE = /^[A-Za-z0-9][A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{2,299}$/;
 const ARXIV_VALUE = /^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?\/\d{7})(?:v\d+)?$/i;
 
@@ -136,9 +295,13 @@ function trimIdentifier(value) {
   }
 }
 
-function identifierTarget(kind, raw) {
+function identifierTarget(kind, raw, resolvers) {
   const value = trimIdentifier(raw);
   if (!value) return null;
+  const linked = (valid, resolver, resolved, label = resolver) => {
+    const href = valid && resolveIdentifier(resolvers, resolver, resolved);
+    return href ? { kind: label, href } : null;
+  };
   switch (kind.toUpperCase()) {
     case 'DOI': {
       if (!DOI_VALUE.test(value)) return null;
@@ -158,26 +321,44 @@ function identifierTarget(kind, raw) {
     }
     case 'ARXIV':
       return ARXIV_VALUE.test(value) && { kind: 'arxiv', href: `https://arxiv.org/abs/${value}` };
+    // Checksummed forms only; a valid checksum does not establish that a work exists.
+    // Resolver origins for these kinds are host configuration (identifierResolvers).
+    case 'ISBN': return linked(validISBN(value), 'isbn', digitsOf(value));
+    case 'ISSN': return linked(validISSN(value), 'issn', `${digitsOf(value).slice(0, 4)}-${digitsOf(value).slice(4)}`);
+    case 'ORCID': return linked(validORCID(value), 'orcid', value);
+    case 'OSF': return linked(/^[a-z0-9]{5}$/.test(value), 'osf', value);
+    case 'URN': {
+      const urn = `urn:${value}`.replace(/^urn:nbn:/i, 'urn:nbn:');
+      return linked(URN_NBN.test(urn), /^urn:nbn:se:/i.test(urn) ? 'urn-nbn-se' : 'urn-nbn', urn, 'urn-nbn');
+    }
     default: return null;
   }
 }
 
 /** Link explicit scholarly identifiers in prose without touching code, links or
  * host-owned controls. Output is escaped HTML for the renderer's text nodes. */
-export function linkScientificIdentifiers(text) {
+export function linkScientificIdentifiers(text, resolvers = {}) {
   const source = String(text ?? '');
-  let out = '', offset = 0;
+  const found = [];
   for (const match of source.matchAll(SCIENTIFIC_IDENTIFIER)) {
-    const target = identifierTarget(match[1], match[2]);
+    const target = identifierTarget(match[1], match[2], resolvers);
     if (!target) continue;
     const valueStart = match.indices[2][0];
     const valueEnd = valueStart + trimIdentifier(match[2]).length;
-    const end = match.indices[0][1];
-    if (valueEnd <= valueStart) continue;
-    out += escapeHTML(source.slice(offset, match.index));
-    out += `<a href="${escapeHTML(target.href)}" rel="noreferrer noopener" class="identifier-link" data-identifier="${target.kind}">${escapeHTML(source.slice(match.index, valueEnd))}</a>`;
-    out += escapeHTML(source.slice(valueEnd, end));
-    offset = end;
+    if (valueEnd > valueStart) found.push({ start: match.index, valueEnd, end: match.indices[0][1], target });
+  }
+  for (const match of source.matchAll(REGISTER_IDENTIFIER)) {
+    const target = registerTarget(match, resolvers);
+    if (target) found.push({ start: match.index, valueEnd: match.index + match[0].length, end: match.index + match[0].length, target });
+  }
+  found.sort((a, b) => a.start - b.start);
+  let out = '', offset = 0;
+  for (const hit of found) {
+    if (hit.start < offset) continue;
+    out += escapeHTML(source.slice(offset, hit.start));
+    out += `<a href="${escapeHTML(hit.target.href)}" rel="noreferrer noopener" class="identifier-link" data-identifier="${hit.target.kind}">${escapeHTML(source.slice(hit.start, hit.valueEnd))}</a>`;
+    out += escapeHTML(source.slice(hit.valueEnd, hit.end));
+    offset = hit.end;
   }
   return out + escapeHTML(source.slice(offset));
 }
@@ -566,7 +747,7 @@ export async function renderDocument(source, options = {}) {
     try {
       const family = await registryEntry('dialects', ref, registry, registryOptions);
       for (const [name, spec] of Object.entries(family.tags || {})) {
-        if (!CUSTOM_ELEMENTS.has(spec.element) || !Array.isArray(spec.attrs) || spec.attrs.some(a => !['title', 'kind', 'status', 'ref'].includes(a)) || own(specs, name)) throw new Error('Unsafe or conflicting declarative template');
+        if (!CUSTOM_ELEMENTS.has(spec.element) || !Array.isArray(spec.attrs) || spec.attrs.some(a => !['title', 'kind', 'status', 'ref', 'code', 'topic'].includes(a)) || own(specs, name)) throw new Error('Unsafe or conflicting declarative template');
       }
       Object.assign(specs, family.tags); used.push(ref);
     } catch (e) { diagnostics.push(e.message); }
@@ -594,7 +775,24 @@ export async function renderDocument(source, options = {}) {
         if (!spec) return refuse(node, `Unsupported tag: ${name}`);
         if ((node.errors || []).length || Object.keys(node.attributes).some(k => !spec.attrs.includes(k)) || Object.values(node.attributes).some(v => typeof v !== 'string')) return refuse(node, `Invalid attributes: ${name}`);
         const a = node.attributes;
-        if (a.kind && !['warning', 'note', 'info', 'proposal', 'observed', 'verified'].includes(a.kind)) return refuse(node, 'Unsupported callout kind');
+        if (a.kind && !CALLOUT_KINDS.includes(a.kind)) return refuse(node, 'Unsupported callout kind');
+        if (name === 'note') return new Markdoc.Tag('span', { class: 'author-note' }, node.transformChildren(config));
+        if (name === 'lang') {
+          if (!LANGUAGE_TAG.test(a.code || '')) return refuse(node, 'Language span requires a BCP 47 code');
+          return new Markdoc.Tag('span', { class: 'lang', lang: a.code }, node.transformChildren(config));
+        }
+        if (name === 'support') {
+          const directory = options.supportDirectory;
+          const topic = a.topic || '';
+          const href = SLUG.test(topic) && directory && typeof directory === 'object' ? safeLink(directory.topics?.[topic] || '') : null;
+          const label = typeof directory?.label === 'string' && directory.label.trim() ? directory.label.slice(0, 80) : '';
+          if (!href || !label) return refuse(node, `Support topic not configured by host: ${topic || '(none)'}`);
+          return new Markdoc.Tag('aside', { class: 'semantic support' }, [
+            new Markdoc.Tag('strong', { class: 'block-label' }, ['Support']),
+            new Markdoc.Tag('p', {}, [`Help for ${words(topic)}: `, new Markdoc.Tag('a', { href }, [`${label} ↗`]), '. In immediate danger, contact local emergency services.']),
+            new Markdoc.Tag('p', { class: 'support-caveat' }, [`External directory chosen by the publishing host; ${label} maintains its listings.`]),
+          ]);
+        }
         if (a.status && !['proposal', 'observed', 'verified'].includes(a.status)) return refuse(node, 'Unsupported status');
         if (name === 'source') {
           const entry = manifest.sources.find(s => s.id === a.ref);
@@ -604,7 +802,17 @@ export async function renderDocument(source, options = {}) {
         if (name === 'model' || name === 'view') {
           const entry = manifest[name === 'model' ? 'models' : 'views'].find(s => s.id === a.ref);
           const model = name === 'model' ? entry : manifest.models.find(m => m.id === entry?.model);
-          if (!entry || !model || (name === 'view' && !['table', 'json'].includes(entry.kind))) return refuse(node, `Unsupported or missing ${name}: ${a.ref}`);
+          if (!entry || !model || (name === 'view' && !['table', 'json', 'records'].includes(entry.kind))) return refuse(node, `Unsupported or missing ${name}: ${a.ref}`);
+          if (name === 'view' && entry.kind === 'records') {
+            const { columns, rows } = model.data || {};
+            if (!Array.isArray(columns) || !columns.length || columns.length > 20 || columns.some(c => typeof c !== 'string' || !c.trim() || c.length > 120)) return refuse(node, 'Records view requires 1–20 named columns');
+            if (!Array.isArray(rows) || rows.length > 300 || rows.some(r => !Array.isArray(r) || r.length !== columns.length || r.some(v => v !== null && !['string', 'number', 'boolean'].includes(typeof v)))) return refuse(node, 'Records view requires at most 300 rows matching the columns');
+            const cell = (tagName, v) => new Markdoc.Tag(tagName, {}, [v === null ? '\u2014' : String(v)]);
+            return new Markdoc.Tag('section', { class: 'model records' }, [
+              new Markdoc.Tag('strong', {}, [`${entry.title || model.title || entry.id} — read-only authored records (not a runtime observation)`]),
+              new Markdoc.Tag('table', {}, [new Markdoc.Tag('thead', {}, [new Markdoc.Tag('tr', {}, columns.map(c => cell('th', c)))]), new Markdoc.Tag('tbody', {}, rows.map(r => new Markdoc.Tag('tr', {}, r.map(v => cell('td', v)))))]),
+            ]);
+          }
           const rows = Object.entries(model.data || model);
           if (rows.length > 300) return refuse(node, 'Model row budget exceeded');
           const projection = name === 'view' && entry.kind === 'table'
@@ -612,7 +820,7 @@ export async function renderDocument(source, options = {}) {
             : new Markdoc.Tag('pre', {}, [JSON.stringify(model, null, 2)]);
           return new Markdoc.Tag('section', { class: 'model' }, [new Markdoc.Tag('strong', {}, [`${entry.title || entry.id} — read-only authored model (not a runtime observation)`]), projection]);
         }
-        return new Markdoc.Tag(spec.element, { class: `semantic ${name}${a.kind ? ` ${a.kind}` : ''}` }, [new Markdoc.Tag('strong', { class: 'block-label' }, [`${a.title || name}${a.kind ? ` · ${a.kind}${['proposal', 'observed', 'verified'].includes(a.kind) ? ' (authored claim)' : ''}` : ''}${a.status ? ` · ${a.status} (authored claim)` : ''}`]), ...node.transformChildren(config)]);
+        return new Markdoc.Tag(spec.element, { class: `semantic ${name}${a.kind ? ` ${a.kind}` : ''}` }, [new Markdoc.Tag('strong', { class: 'block-label' }, [`${a.title || name}${a.kind ? ` · ${a.kind}${CLAIM_KINDS.has(a.kind) ? ' (authored claim)' : ''}` : ''}${a.status ? ` · ${a.status} (authored claim)` : ''}`]), ...node.transformChildren(config)]);
       },
     };
   }
@@ -658,10 +866,12 @@ export async function renderDocument(source, options = {}) {
   const tree = Markdoc.transform(ast, config);
   const headings = [];
   const identifiers = options.identifiers !== false;
+  let resolvers = {};
+  try { resolvers = identifierResolvers(options.identifierResolvers); } catch (error) { diagnostics.push(error.message); }
   function render(value, plain = false) {
     if (value == null) return '';
     if (Array.isArray(value)) return value.map(child => render(child, plain)).join('');
-    if (typeof value !== 'object') return plain || !identifiers ? escapeHTML(value) : linkScientificIdentifiers(value);
+    if (typeof value !== 'object') return plain || !identifiers ? escapeHTML(value) : linkScientificIdentifiers(value, resolvers);
     const name = value.name;
     if (!ELEMENTS.has(name)) { diagnostics.push(`HTML element refused: ${name}`); return `<span class="refusal">Unsupported element: ${escapeHTML(name)}</span>`; }
     const a = value.attributes || {};
@@ -672,6 +882,7 @@ export async function renderDocument(source, options = {}) {
       else diagnostics.push('Unsafe or relative link made inert');
     }
     if (typeof a.class === 'string' && /^[a-z -]{1,150}$/.test(a.class)) attrs += ` class="${a.class}"`;
+    if (name === 'span' && typeof a.lang === 'string' && LANGUAGE_TAG.test(a.lang)) attrs += ` lang="${a.lang}"`;
     if (typeof a['data-source'] === 'string') attrs += ` data-source="${escapeHTML(a['data-source'])}" tabindex="0" role="button" aria-label="Inspect source ${escapeHTML(a['data-source'])}"`;
     if (name === 'div' && /^viz-\d+$/.test(a['data-visualization'] || '')) {
       attrs += ` data-visualization="${a['data-visualization']}" role="img" aria-label="${escapeHTML(a['aria-label'])}"`;
@@ -703,6 +914,20 @@ export async function renderDocument(source, options = {}) {
   const assetNotes = manifest.assets.filter(a => a.role === 'logo' || a.role === 'repository').map(a => a.role === 'repository'
     ? `<p class="asset-provenance">Repository: ${safeLink(a.url) ? `<a href="${escapeHTML(safeLink(a.url))}" rel="noreferrer noopener">${escapeHTML(a.title || a.id)}</a>` : escapeHTML(a.id) + ' (unavailable URL)'}</p>`
     : `<p class="unavailable">Logo asset unavailable without explicit embedding: ${escapeHTML(a.id)} · ${escapeHTML(a.alt)}</p>`).join('');
-  const html = assetNotes + render(tree);
+  let advisoryHTML = '';
+  try {
+    const advisory = contentAdvisory(manifest.document);
+    if (advisory) advisoryHTML = `<aside class="semantic callout advisory content-advisory"><strong class="block-label">Content advisory</strong><p>This document discusses ${escapeHTML(advisory.topics.map(words).join(', '))}.</p></aside>`;
+  } catch (error) { diagnostics.push(error.message); }
+  const ids = publicationIdentifiers(manifest.document, resolvers);
+  diagnostics.push(...ids.diagnostics);
+  try {
+    const scaled = evidenceScale(manifest.document);
+    for (const entry of manifest.sources) {
+      const graded = evidenceGrade(entry, scaled);
+      if (graded.state === 'unknown-design') diagnostics.push(`Unknown evidence design for source ${entry.id}: ${graded.design}`);
+    }
+  } catch (error) { diagnostics.push(`Evidence scale refused: ${error.message}`); }
+  const html = advisoryHTML + assetNotes + render(tree);
   return { html, manifest, headings, diagnostics: [...new Set(diagnostics)], clean: diagnostics.length === 0, usedDialects: used, theme, tree, resolvedRegistry, ...(options.visualizations ? { visualizations } : {}) };
 }

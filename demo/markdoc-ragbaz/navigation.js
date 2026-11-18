@@ -11,10 +11,13 @@ export const READING_BINDINGS = Object.freeze([
   { keys: ['PageUp'], label: 'Previous screen / spread', action: 'page-up' },
   { keys: ['PageDown'], label: 'Next screen / spread', action: 'page-down' },
   { keys: ['l'], label: 'Toggle shortcut legend', action: 'legend' },
+  { keys: ['e'], label: 'Evidence map by grade', action: 'evidence' },
+  { keys: ['n'], label: 'Next citation in evidence filter', action: 'next-evidence' },
+  { keys: ['N'], label: 'Previous citation in evidence filter', action: 'previous-evidence' },
 ]);
-const keyLabel = key => ({ ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Escape: 'Esc', L: 'Shift+L', PageUp: 'PgUp', PageDown: 'PgDn' })[key] || key;
+const keyLabel = key => ({ ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Escape: 'Esc', L: 'Shift+L', N: 'Shift+N', PageUp: 'PgUp', PageDown: 'PgDn' })[key] || key;
 
-export function setupReadingNavigation({ onModeChange = () => {}, closeOverlays = () => {}, closeMenu = () => {} } = {}) {
+export function setupReadingNavigation({ onModeChange = () => {}, closeOverlays = () => {}, closeMenu = () => {}, onAction = () => {} } = {}) {
   const $ = id => document.getElementById(id);
   const layout = document.querySelector('.reading-layout'), paper = $('paper');
   const legend = $('shortcut-legend');
@@ -75,6 +78,7 @@ export function setupReadingNavigation({ onModeChange = () => {}, closeOverlays 
   function dispatch(action) {
     if (action === 'fullscreen') return void fullscreen();
     if (action === 'legend') return toggleLegend();
+    if (['evidence', 'next-evidence', 'previous-evidence'].includes(action)) return onAction(action);
     if (action === 'escape') {
       if (document.fullscreenElement) void fullscreen();
       else if (!legend.hidden) { legend.hidden = true; update(); }
@@ -124,7 +128,9 @@ export function setupReadingNavigation({ onModeChange = () => {}, closeOverlays 
     // Browser/OS Escape remains available even when a modal or field has focus.
     if (e.key === 'Escape' && document.fullscreenElement) { e.preventDefault(); dispatch('escape'); return; }
     if (e.key === 'Escape' && !legend.hidden && !document.querySelector('dialog[open]')) { e.preventDefault(); dispatch('escape'); return; }
-    if (e.target.closest('input,textarea,select,button,a,summary,[contenteditable]:not([contenteditable="false"]),[role=textbox]') || document.querySelector('dialog[open]') || !$('inspector').hidden) return;
+    // Evidence stepping keeps working while a citation mark it focused has focus.
+    const citationStep = ['next-evidence', 'previous-evidence', 'evidence'].includes(binding.action) && e.target.closest('.citation-mark');
+    if ((!citationStep && e.target.closest('input,textarea,select,button,a,summary,[contenteditable]:not([contenteditable="false"]),[role=textbox]')) || document.querySelector('dialog[open]') || !$('inspector').hidden) return;
     e.preventDefault(); dispatch(binding.action);
   });
   // TOC and figure jumps must address the current spread, not scroll the book

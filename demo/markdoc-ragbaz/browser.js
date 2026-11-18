@@ -1,4 +1,4 @@
-import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, fetchResource, safeLink, verifyResourceBytes, discoverSourceProvider, checkSourceRevision, sha256 } from '../../src/content/markdoc-ragbaz.js';
+import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, fetchResource, safeLink, verifyResourceBytes, discoverSourceProvider, checkSourceRevision, sha256, cidFromSHA256 } from '../../src/content/markdoc-ragbaz.js';
 import { bibliographyHTML, decorateCitations, decorateEntities, decorateManuscript, manuscriptState } from './citations.js';
 import { decorateFigures } from './figures.js';
 import { setupReadingNavigation } from './navigation.js';
@@ -9,6 +9,8 @@ import { setupAether } from './aether.js';
 import { setupThemeFonts } from './fonts.js';
 import { configureGeometryAdapter, disposeVisualizations, mountVisualizations } from './visualization-adapters.js';
 import { readingCopy } from './reading-copy.js';
+import { setupEvidence } from './evidence.js';
+import { decoratePublication } from './publication.js';
 
 setupAppearance();
 
@@ -43,7 +45,7 @@ $('download-reading-copy').addEventListener('click', () => {
 let generation = 0;
 let previewGeneration = 0;
 let pendingSource;
-const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations };
+const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations, supportDirectory: config.supportDirectory, identifierResolvers: config.identifierResolvers };
 const bar = $('reading-bar');
 const drawer = $('reader-drawer');
 const tocPanel = $('toc-panel');
@@ -139,6 +141,7 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || drawer.open) return;
   if (!citationCard.hidden) { e.preventDefault(); hideCitation(true); }
+  else if (evidence?.isOpen()) { e.preventDefault(); evidence.close(); }
   else if (!tocPanel.hidden) { e.preventDefault(); closeContents(tocPanel.contains(document.activeElement)); }
 });
 window.addEventListener('resize', citationMode, { passive: true });
@@ -198,7 +201,12 @@ $('open-contents').addEventListener('click', () => {
 });
 $('contract-link').addEventListener('click', () => { if (contractSource) { hideCitation(); closeContents(); void inspect(contractSource.id, contractSource); } });
 revealBar();
-const readingNavigation = setupReadingNavigation({ onModeChange: citationMode, closeOverlays: () => { hideCitation(); closeContents(); }, closeMenu: closeDrawer });
+const evidence = setupEvidence({ status: message => { $('navigation-status').textContent = message; }, closeOthers: () => { hideCitation(); closeContents(); } });
+const readingNavigation = setupReadingNavigation({ onModeChange: citationMode, closeOverlays: () => { hideCitation(); closeContents(); }, closeMenu: closeDrawer, onAction: action => {
+  if (action === 'evidence') evidence.toggle();
+  else evidence.step(action === 'next-evidence' ? 1 : -1);
+} });
+$('open-evidence').addEventListener('click', () => { closeDrawer(); evidence.open(); });
 // Only embedded snapshots whose bytes match the requested digest can be used.
 // The generic verifier rehashes this untrusted cache before returning anything.
 const verifiedCache = { async get(digest) {
@@ -212,6 +220,8 @@ function updateDocumentChecks() {
     ? `${current.clean ? 'No rendering diagnostics' : 'Partial / refused markup'} · ${current.headings.length} headings · ${current.usedDialects.join(', ') || 'No dialect tags used'}`
     : 'No rendered document. Select a valid Markdown file or restore the embedded document.';
   $('document-digest').textContent = current ? `Current Markdown SHA-256: ${current.sourceSHA256}` : '';
+  // Same digest re-encoded; equals an IPFS CID only for a single-block raw import, and is not a publication record.
+  $('document-cid').textContent = current ? `Content CIDv1 (raw, derived from these bytes; not an IPFS publication): ${cidFromSHA256(current.sourceSHA256)}` : '';
   $('document-diagnostics').replaceChildren(...(current?.diagnostics || []).map(message => {
     const item = document.createElement('li'); item.textContent = message; return item;
   }));
@@ -256,8 +266,8 @@ async function display(source, provenance, embedded = false) {
     }
     decorateFigures($('paper'), result.manifest.document?.figures);
     decorateEntities($('paper'), result.manifest.document?.entities, result.manifest.sources);
-    citations = decorateCitations($('paper'), result.manifest.sources, [config.contractSource || 'rendering-contract']);
     const manuscript = result.manifest.document || {};
+    citations = decorateCitations($('paper'), result.manifest.sources, [config.contractSource || 'rendering-contract'], manuscript);
     const revisions = $('revision-list'); revisions.replaceChildren();
     const state = document.createElement('p'); state.textContent = manuscriptState(manuscript).label; revisions.append(state);
     for (const rev of (Array.isArray(manuscript.revisions) ? manuscript.revisions.slice(0, 100) : [])) {
@@ -271,10 +281,13 @@ async function display(source, provenance, embedded = false) {
       $('revision-history').open = true;
       $('revision-history').querySelector('summary').focus({ preventScroll: true });
       $('revision-history').scrollIntoView({ block: 'nearest' });
-    });
+    }, config.identifierResolvers || {});
+    decoratePublication($('paper'), config);
     document.documentElement.removeAttribute('style');
     if (result.theme) document.documentElement.setAttribute('style', result.theme);
     $('toc').innerHTML = [...$('paper').querySelectorAll('h1[id],h2[id],h3[id]')].map(h => `<a data-level="${h.tagName.slice(1)}" href="#${h.id}">${escapeHTML(h.textContent)}</a>`).join('');
+    evidence.close(false);
+    evidence.update(citations, $('paper'));
     $('notice').textContent = `${provenance} · ${config.implementation} / ${config.skeleton}${result.diagnostics.length ? ' · Partial / refused: ' + result.diagnostics.join('; ') : ''}`;
     document.title = result.manifest.document.title || result.manifest.title || result.headings[0]?.text || 'Document';
     if (drawer.open && !result.diagnostics.length) {

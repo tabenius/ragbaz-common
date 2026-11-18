@@ -57,6 +57,12 @@ may mount; print keeps the static SVG. Vega-Lite and Plotly remain static, and
 Mermaid/PlantUML remain inert source. The separate
 `@ragbaz/common/content/visualizations` API exposes the bounded parser, SVG
 projection and escaped HTML. No remote renderer or authored JavaScript is enabled.
+Research papers can grade evidence by declared study design and navigate it from
+an evidence map (press `e`, then `n` / `Shift+N`), and gain author's notes,
+language spans, records views, forest plots, a content advisory, links to a
+host-chosen external support directory, publication identifiers that show — until
+assigned, and a host-embedded logo and QR colophon — see
+[research-paper extensions](docs/MARKDOC-RAGBAZ.md#research-paper-extensions-additive-v1).
 See the [publication-library direction](docs/ARTIFACT-LIBRARY-DIRECTION.md) for the
 proposed multi-human/agent and online/mesh architecture; no sharing service exists yet.
 

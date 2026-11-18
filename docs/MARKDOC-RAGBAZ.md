@@ -348,6 +348,133 @@ Fenced tag examples are inert, even though Markdoc 0.5 normally parses their
 children. Markdoc's legacy setext-heading behavior is not rewritten into another
 Markdown dialect: use ATX `#` headings.
 
+## Research-paper extensions (additive v1)
+
+Added 2026-11-18 for evidence-graded papers and meta-analyses. Every item is
+additive: existing documents, families and host configurations render as before.
+Documents opt in by declaring `text@1` and/or `support@1` in `dialects`; the
+remaining items are frontmatter fields, callout kinds, a view kind, a fence
+profile or host configuration.
+
+| Family | Tags | Allowed attributes |
+| --- | --- | --- |
+| `text@1` | `note` (inline) | none |
+| | `lang` (inline) | `code` (BCP 47 shape) |
+| `support@1` | `support` (self-closing) | `topic` (slug) |
+
+**Author's notes.** `A claim{% note %}Markdown aside{% /note %}` renders as a
+`span.author-note`. The reader replaces it with a superscript in the same
+numbering as references and first-mention introductions, shows the note in the
+margin card or tooltip, and lists it under *Notes and references* (printed as
+endnotes). Citations inside a note keep their prose only.
+
+**Language spans.** `{% lang code="sv" %}psykiskt våld{% /lang %}` emits
+`<span lang="sv">`. No other attribute is forwarded.
+
+**Callout kinds.** `hypothesis`, `contested`, `correction` and `advisory` join
+`warning`, `note`, `info`, `proposal`, `observed`, `verified`. `hypothesis` and
+`contested` are labelled *authored claim*, like `proposal`/`observed`/`verified`.
+
+**Evidence grades live in sources.** Optional bibliography fields:
+
+| Field | Meaning |
+| --- | --- |
+| `type` | article · book · chapter · statute · bill · report · dataset … (display only) |
+| `design` | study design slug; the grade is **inferred** from it |
+| `doi`, `pmid`, `isbn` | identifiers kept apart from `url`, so a book needs no fake link |
+| `n`, `k` | participants / studies (positive integers) |
+| `checked: {via, date}` | when and through what the *metadata* was checked; not content verification |
+| `language` | language of the source |
+
+The host scale (`EVIDENCE_SCALE`) maps designs to grades: **A** meta-analysis,
+systematic-review, umbrella-review, multisite; **B** rct, experiment,
+quasi-experiment, cohort, longitudinal, case-control; **C** cross-sectional,
+qualitative, scale-development, case-series, narrative-review, clinical-model,
+theory; **D** animal, mechanistic, expert-opinion, consensus-statement,
+commentary, popular-account. `statute`, `bill`, `guideline`, `reporting-standard`,
+`report` and `dataset` are *context* and are never graded. A document may replace
+the scale with `document.evidence.scale: [{grade, label, designs}]` (1–12 grades,
+unique designs, context designs reserved). Sources without a design are
+*ungraded*; an unrecognised design is a diagnostic, never a guess. A grade
+classifies the kind of evidence, not its quality, and the reader says so.
+
+Navigation in the reader:
+
+- Each citation number carries its grade (`data-grade`), shown as a small letter
+  before the number; *Show evidence grades on citations* (Reading options) hides it.
+  The citation card shows grade, design, `k`/`n`, identifiers and the check record.
+- **e** opens the *Evidence map*: filters (All, each grade present, Context,
+  Ungraded) and every source grouped by grade with its design, size, number of
+  citations and the sections citing it. Inside the panel ↑ ↓ / j k move, ← → / h l
+  change grade group, `[` `]` change filter, Enter jumps to the source's next
+  citation (cycling and outlining all of them), Esc closes.
+- **n** / **Shift+N** step forwards/backwards through citations in the current
+  filter, also while a citation has focus. The live region announces
+  "Grade A citation 3 of 9".
+- Contents entries list the grades each section cites, and an *Evidence by grade*
+  section is appended after the bibliography (it starts a new printed page).
+
+**Publication identifiers.** `document.identifiers` may declare `issn`, `isbn`,
+`doi`, `urnnbn`, `uuid` and `ipfs`. An em dash (—), empty string or null means
+*not yet assigned* and is shown as —. Values are form-checked (ISSN/ISBN check
+digits, DOI as `10.<registrant>/<suffix>`, UUID, CID and URN:NBN syntax); malformed values are diagnosed and
+also shown as —. Form checks are not registration checks. A document cannot
+carry the hash of its own bytes: the reader shows a **derived** content CIDv1
+(raw codec, sha2-256) beside the SHA-256 under *Document checks*. It equals what
+`ipfs add --cid-version=1 --raw-leaves` reports only for a single-chunk file and
+is not an IPFS publication record.
+
+**More prose identifiers.** In addition to DOI, PMID, PMCID and arXiv:
+`ISBN:` (checksummed, → Open Library), `ISSN:` (checksummed, → ISSN Portal),
+`ORCID:` (ISO 7064 check, → orcid.org), `OSF:` (→ osf.io), `URN:NBN:…`
+(Swedish URNs → KB resolver, others → nbn-resolving.org), `CRD42…` (PROSPERO),
+`SFS 2026:123` (→ rkrattsbaser.gov.se) and `prop.`/`bet. 2025/26:…` (→ a Riksdag
+search). The resolver origins for these kinds, and for publication identifiers,
+are **host configuration**, not code: `identifierResolvers: {kind: "https://…{value}…"}`
+with kinds `doi`, `isbn`, `issn`, `orcid`, `osf`, `urn-nbn-se`, `urn-nbn`,
+`prospero`, `sfs`, `riksdag` (the destinations above are the demo registry's
+choices). A kind without a resolver stays plain text; an invalid template is a
+diagnostic. The pre-existing DOI/PMID/PMCID/arXiv prose links are unchanged. These
+are navigational links, not evidence that a work exists.
+
+**Content advisory.** `document.advisory: {topics: [slug…]}` (1–8) renders a
+standard advisory before the paper, on screen and in print.
+
+**Support links from an external directory.** RAGBAZ does not maintain helpline
+data. `{% support topic="intimate-partner-violence" /%}` links to the topic page
+of a directory chosen by the **host**: `supportDirectory: {label, topics: {slug:
+https-url}}` in the host configuration (the demo registry uses Find A Helpline).
+A missing directory or topic is a visible refusal, so a strict build fails rather
+than printing nothing. Documents never supply numbers or URLs for this tag.
+
+**Records views.** `views[].kind: records` projects `model.data: {columns,
+rows}` (≤ 20 columns, ≤ 300 rows of strings, numbers, booleans or null → —) as an
+ordinary table, labelled as read-only authored records.
+
+**Forest plots.** A `forest` fence takes `{scale, null?, studies: [{label,
+estimate, lower, upper, weight?}], pooled?}`. Scales: r, z, d, g, SMD, MD
+(linear) and OR, RR, HR (log axis, positive values). Every interval must contain
+its estimate. Output follows the other profiles: static SVG, exact table and
+source. Estimates are authored; nothing is pooled or recomputed.
+
+**Host publication furniture.** Build options, never document fields:
+
+```sh
+npm run markdoc-ragbaz -- --input paper.md --output paper.html \
+  --logo logo.png --logo-alt "Publication wordmark" \
+  --canonical-url https://example.org/record
+```
+
+`--logo` embeds a PNG, JPEG, WebP or SVG (type sniffed from bytes, ≤ 1.5 MB) with
+its SHA-256 in the host configuration; the build rechecks the digest and only then
+widens CSP to `img-src data:`. The reader shows it in colour above the title and
+draws a greyscale copy at roughly a quarter of the size into the `@top-left` page
+margin box of every printed page after the first. `--canonical-url` (HTTPS,
+≤ 200 bytes) produces a QR colophon under the title, generated in the reader by a
+dependency-free encoder (byte mode, level M, versions 1–10) that tests decode with
+an independent reader. Logo digest, colophon and support directory join the
+`ragbaz.render/1` tuple only when configured.
+
 ## Reusable APIs
 
 Import `@ragbaz/common/content/markdoc-ragbaz` or the direct source file:
@@ -378,6 +505,12 @@ const result = await renderDocument(source, {
   transport-level alias of manifest `sha256`. SHA-256 is over raw bytes before UTF-8
   decoding. A matched digest is integrity, **not publisher authentication**.
 - `sha256(bytes)`, `escapeHTML(value)`, `CONTRACT`, `LIMITS` are also exported.
+- Research extensions: `evidenceScale(document)`, `evidenceGrade(source, scale)`,
+  `EVIDENCE_SCALE`, `CONTEXT_DESIGNS`, `publicationIdentifiers(document)`,
+  `contentAdvisory(document)`, `cidFromSHA256(hex)`, `validISBN`, `validISSN`,
+  `validORCID`, `CALLOUT_KINDS`, `RESOLVER_KINDS`, `identifierResolvers(map)`.
+  `renderDocument` also accepts the host options `supportDirectory` and
+  `identifierResolvers`.
 
 Core imports no product policy, filesystem, DOM or Worker binding. It reuses
 `TOKENIZER_DEFAULTS` and the existing content layer's raw-HTML-escaping policy,
