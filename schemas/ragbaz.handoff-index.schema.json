@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ragbaz.cc/schemas/ragbaz.handoff-index.schema.json",
+  "title": "RAGBAZ handoff index v1 (.handoff/active-tasks.json)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "updatedOn", "tasks"],
+  "properties": {
+    "schema": {"const": "ragbaz.handoff-index/1"},
+    "updatedOn": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "tasks": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "title", "priority", "status", "handoff"],
+        "properties": {
+          "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"},
+          "title": {"type": "string", "minLength": 1, "maxLength": 200},
+          "priority": {"enum": ["p0", "p1", "p2", "p3"]},
+          "status": {"enum": ["todo", "in_progress", "blocked", "paused", "done"]},
+          "repository": {"type": "string", "description": "owner/repo; implied by the containing repository when omitted"},
+          "branch": {"type": "string"},
+          "handoff": {"$ref": "#/$defs/relpath"},
+          "mvh": {"$ref": "#/$defs/relpath"},
+          "owner": {"type": "string"},
+          "blockers": {"type": "array", "maxItems": 64, "items": {"type": "string", "minLength": 1}},
+          "frogTaskId": {"type": ["string", "null"]},
+          "related": {"type": "array", "items": {"type": "string"}, "description": "other repositories' handoffs or PR URLs"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "relpath": {
+      "type": "string",
+      "pattern": "^(?![/~])(?!.*\\.\\./)[^\\s].*$",
+      "description": "Repository-relative path; absolute and home-relative paths are host-specific and rejected"
+    }
+  }
+}

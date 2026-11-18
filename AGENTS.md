@@ -1,5 +1,7 @@
 # AGENTS.md: cooperation and working in ragbaz-common
 
+Read `.handoff/active-tasks.json` and the handoffs it lists before resuming.
+
 Read `README.md` and `PROVENANCE.md` before changing anything. This package is
 consumed by other repositories, so a change here is a change to more than one
 product.
@@ -45,7 +47,10 @@ paths are a convention, not an assumed running message service.
 3. Work on a dedicated branch or worktree. Preserve others' changes. Use one
    owner per overlapping edit scope; split independent files where useful.
 4. Publish a handoff with the actual commit, changed paths, completed work,
-   validation results, unresolved points and a concrete next action.
+   validation results, unresolved points and a concrete next action, in the
+   shape of the [fleet handoff standard](docs/HANDOFF-STANDARD.md):
+   `.handoff/<slug>.mvh.json` + `.handoff/<slug>-YYYYMMDD.md`, indexed in
+   `.handoff/active-tasks.json`. `scripts/handoff.py new|check` drafts and lints it.
 5. The recipient acknowledges or declines in its own record. Work remains with
    the current owner until transfer is acknowledged; the human may reassign it.
 6. Close with results and limitations, or mark blocked and explain what is

@@ -1,0 +1,32 @@
+{
+  "project": "ragbaz-common",
+  "worktree": "ragbaz-common",
+  "goal": "Adopt one fleet handoff standard and recover the earlier handoff semi-automation work",
+  "state": "verified 2026-11-18: no fleet standard existed, six partial ones found; handoff.py drafts MVHs that mneme evac build accepts. not found in git: the background handoff-improvement automation (mneme HYPOMNEMA.md plans it, unimplemented). claim: the standard is a proposal until the owner accepts it.",
+  "open_files": [
+    "docs/HANDOFF-STANDARD.md",
+    "scripts/handoff.py",
+    "schemas/ragbaz.handoff-index.schema.json",
+    "docs/fleet-history-2026-09-15_2026-11-18.md"
+  ],
+  "decisions": [
+    "Layer 0 is mneme MVH v1, not forked",
+    "Per-repo .handoff/active-tasks.json, ragbaz.handoff-index/1, relative paths",
+    "Git primary; Dash MCP, Hypomnema, rbq are fallbacks"
+  ],
+  "blockers": [
+    "Cloud session cannot see local hosts/sessions/Dash: the search needs a local agent",
+    "Owner acceptance of the standard"
+  ],
+  "next_action": "Search the local hosts for the earlier handoff semi-automation (section Next action) and record what is found",
+  "verify": [
+    "python3 scripts/handoff.py check"
+  ],
+  "refs": [
+    "branch:handoff-standard",
+    "author:claude (Claude Code cloud session)",
+    "git:tabenius/ragbaz-common@handoff-standard",
+    "tabenius/rebsync#8"
+  ],
+  "last_verified_at": 0
+}
