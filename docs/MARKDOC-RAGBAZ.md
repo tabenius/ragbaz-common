@@ -417,7 +417,7 @@ Navigation in the reader:
 **Publication identifiers.** `document.identifiers` may declare `issn`, `isbn`,
 `doi`, `urnnbn`, `uuid` and `ipfs`. An em dash (—), empty string or null means
 *not yet assigned* and is shown as —. Values are form-checked (ISSN/ISBN check
-digits, DOI, UUID, CID and URN:NBN syntax); malformed values are diagnosed and
+digits, DOI as `10.<registrant>/<suffix>`, UUID, CID and URN:NBN syntax); malformed values are diagnosed and
 also shown as —. Form checks are not registration checks. A document cannot
 carry the hash of its own bytes: the reader shows a **derived** content CIDv1
 (raw codec, sha2-256) beside the SHA-256 under *Document checks*. It equals what
@@ -429,8 +429,13 @@ is not an IPFS publication record.
 `ORCID:` (ISO 7064 check, → orcid.org), `OSF:` (→ osf.io), `URN:NBN:…`
 (Swedish URNs → KB resolver, others → nbn-resolving.org), `CRD42…` (PROSPERO),
 `SFS 2026:123` (→ rkrattsbaser.gov.se) and `prop.`/`bet. 2025/26:…` (→ a Riksdag
-search). Resolvers are fixed in reviewed code; these are navigational links, not
-evidence that a work exists.
+search). The resolver origins for these kinds, and for publication identifiers,
+are **host configuration**, not code: `identifierResolvers: {kind: "https://…{value}…"}`
+with kinds `doi`, `isbn`, `issn`, `orcid`, `osf`, `urn-nbn-se`, `urn-nbn`,
+`prospero`, `sfs`, `riksdag` (the destinations above are the demo registry's
+choices). A kind without a resolver stays plain text; an invalid template is a
+diagnostic. The pre-existing DOI/PMID/PMCID/arXiv prose links are unchanged. These
+are navigational links, not evidence that a work exists.
 
 **Content advisory.** `document.advisory: {topics: [slug…]}` (1–8) renders a
 standard advisory before the paper, on screen and in print.
@@ -503,8 +508,9 @@ const result = await renderDocument(source, {
 - Research extensions: `evidenceScale(document)`, `evidenceGrade(source, scale)`,
   `EVIDENCE_SCALE`, `CONTEXT_DESIGNS`, `publicationIdentifiers(document)`,
   `contentAdvisory(document)`, `cidFromSHA256(hex)`, `validISBN`, `validISSN`,
-  `validORCID`, `CALLOUT_KINDS`. `renderDocument` also accepts the host option
-  `supportDirectory`.
+  `validORCID`, `CALLOUT_KINDS`, `RESOLVER_KINDS`, `identifierResolvers(map)`.
+  `renderDocument` also accepts the host options `supportDirectory` and
+  `identifierResolvers`.
 
 Core imports no product policy, filesystem, DOM or Worker binding. It reuses
 `TOKENIZER_DEFAULTS` and the existing content layer's raw-HTML-escaping policy,

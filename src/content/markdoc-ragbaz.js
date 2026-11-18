@@ -198,17 +198,42 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const CID = /^(?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{58,100})$/;
 const URN_NBN = /^urn:nbn:[a-z]{2}(?::[A-Za-z0-9._-]{1,60}){1,6}$/i;
 const UNASSIGNED = new Set(['\u2014', '', null]);
+// A registered DOI is "10." + registrant code + "/" + suffix; placeholders such as
+// "unassigned" must not pass as declared identifiers.
+const DOI_PUBLICATION = /^10\.\d{4,9}\/\S{1,250}$/;
+
+/** Resolver kinds whose origins come from host configuration, never from src/. */
+export const RESOLVER_KINDS = Object.freeze(['doi', 'isbn', 'issn', 'orcid', 'osf', 'urn-nbn-se', 'urn-nbn', 'prospero', 'sfs', 'riksdag']);
+/** Validates host `identifierResolvers: {kind: "https://…{value}…"}`. Missing kinds are simply not linked. */
+export function identifierResolvers(map) {
+  if (map === undefined || map === null) return Object.freeze({});
+  if (typeof map !== 'object' || Array.isArray(map)) throw new Error('identifierResolvers must be a mapping');
+  const out = {};
+  for (const [kind, template] of Object.entries(map)) {
+    if (!RESOLVER_KINDS.includes(kind)) throw new Error(`Unsupported identifier resolver: ${kind}`);
+    if (typeof template !== 'string' || template.length > 300 || template.split('{value}').length !== 2 || !template.startsWith('https://') || !safeLink(template.replace('{value}', 'x'))) throw new Error(`Identifier resolver ${kind} must be an HTTPS template with one {value}`);
+    out[kind] = template;
+  }
+  return Object.freeze(out);
+}
+function resolveIdentifier(resolvers, kind, value) {
+  const template = resolvers?.[kind];
+  if (!template) return null;
+  return safeLink(template.replace('{value}', encodeURIComponent(value).replace(/%3A/gi, ':').replace(/%2F/gi, '/')));
+}
+
 const IDENTIFIER_KINDS = Object.freeze([
-  ['issn', 'ISSN', v => validISSN(v), v => `https://portal.issn.org/resource/ISSN/${digitsOf(v).slice(0, 4)}-${digitsOf(v).slice(4)}`],
-  ['isbn', 'ISBN', v => validISBN(v), v => `https://openlibrary.org/isbn/${digitsOf(v)}`],
-  ['doi', 'DOI', v => DOI_VALUE.test(v), v => `https://doi.org/${v}`],
-  ['urnnbn', 'URN:NBN', v => URN_NBN.test(v), v => /^urn:nbn:se:/i.test(v) ? `https://urn.kb.se/resolve?urn=${v}` : `https://nbn-resolving.org/${v}`],
+  ['issn', 'ISSN', v => validISSN(v), v => ['issn', `${digitsOf(v).slice(0, 4)}-${digitsOf(v).slice(4)}`]],
+  ['isbn', 'ISBN', v => validISBN(v), v => ['isbn', digitsOf(v)]],
+  ['doi', 'DOI', v => DOI_PUBLICATION.test(v), v => ['doi', v]],
+  ['urnnbn', 'URN:NBN', v => URN_NBN.test(v), v => [/^urn:nbn:se:/i.test(v) ? 'urn-nbn-se' : 'urn-nbn', v]],
   ['uuid', 'UUID', v => UUID.test(v), () => null],
   ['ipfs', 'IPFS CID', v => CID.test(v), () => null],
 ]);
 /** Declared publication identifiers. An em dash (or empty value) means "not yet
- * assigned" and is displayed as —. Form checks are not registration checks. */
-export function publicationIdentifiers(document = {}) {
+ * assigned" and is displayed as —. Form checks are not registration checks.
+ * Links appear only for kinds the host configured a resolver for. */
+export function publicationIdentifiers(document = {}, resolvers = {}) {
   const declared = document?.identifiers;
   const diagnostics = [], entries = [];
   if (declared === undefined) return { entries, diagnostics };
@@ -223,7 +248,8 @@ export function publicationIdentifiers(document = {}) {
       entries.push({ key, label, value: '\u2014', state: 'refused', href: null }); continue;
     }
     const value = raw.trim();
-    entries.push({ key, label, value, state: 'declared', href: safeLink(resolve(value) || '') });
+    const target = resolve(value);
+    entries.push({ key, label, value, state: 'declared', href: target ? resolveIdentifier(resolvers, target[0], target[1]) : null });
   }
   return { entries, diagnostics };
 }
@@ -244,11 +270,10 @@ const SCIENTIFIC_IDENTIFIER = /\b(DOI|PMID|PMCID|arXiv|ISBN|ISSN|ORCID|OSF|URN)\
 // Register-style references written without a colon prefix: PROSPERO, Swedish
 // statutes (SFS) and Riksdag propositions/committee reports.
 const REGISTER_IDENTIFIER = /\b(?:(CRD42\d{6,9})|SFS\s(\d{4}:\d{1,4})|(prop|bet)\.\s(\d{4}\/\d{2}:[A-Za-zÅÄÖåäö]{0,4}\d{1,4}))\b/g;
-function registerTarget(match) {
-  if (match[1]) return { kind: 'prospero', href: `https://www.crd.york.ac.uk/PROSPERO/display_record.php?ID=${match[1]}` };
-  if (match[2]) return { kind: 'sfs', href: `https://rkrattsbaser.gov.se/sfst?bet=${match[2]}` };
-  if (match[3]) return { kind: 'riksdag', href: `https://www.riksdagen.se/sv/sok/?q=${encodeURIComponent(match[0])}` };
-  return null;
+function registerTarget(match, resolvers) {
+  const [kind, value] = match[1] ? ['prospero', match[1]] : match[2] ? ['sfs', match[2]] : match[3] ? ['riksdag', match[0]] : [];
+  const href = kind && resolveIdentifier(resolvers, kind, value);
+  return href ? { kind, href } : null;
 }
 const DOI_VALUE = /^[A-Za-z0-9][A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{2,299}$/;
 const ARXIV_VALUE = /^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?\/\d{7})(?:v\d+)?$/i;
@@ -270,9 +295,13 @@ function trimIdentifier(value) {
   }
 }
 
-function identifierTarget(kind, raw) {
+function identifierTarget(kind, raw, resolvers) {
   const value = trimIdentifier(raw);
   if (!value) return null;
+  const linked = (valid, resolver, resolved, label = resolver) => {
+    const href = valid && resolveIdentifier(resolvers, resolver, resolved);
+    return href ? { kind: label, href } : null;
+  };
   switch (kind.toUpperCase()) {
     case 'DOI': {
       if (!DOI_VALUE.test(value)) return null;
@@ -293,14 +322,14 @@ function identifierTarget(kind, raw) {
     case 'ARXIV':
       return ARXIV_VALUE.test(value) && { kind: 'arxiv', href: `https://arxiv.org/abs/${value}` };
     // Checksummed forms only; a valid checksum does not establish that a work exists.
-    case 'ISBN': return validISBN(value) && { kind: 'isbn', href: `https://openlibrary.org/isbn/${digitsOf(value)}` };
-    case 'ISSN': return validISSN(value) && { kind: 'issn', href: `https://portal.issn.org/resource/ISSN/${digitsOf(value).slice(0, 4)}-${digitsOf(value).slice(4)}` };
-    case 'ORCID': return validORCID(value) && { kind: 'orcid', href: `https://orcid.org/${value}` };
-    case 'OSF': return /^[a-z0-9]{5}$/.test(value) && { kind: 'osf', href: `https://osf.io/${value}/` };
+    // Resolver origins for these kinds are host configuration (identifierResolvers).
+    case 'ISBN': return linked(validISBN(value), 'isbn', digitsOf(value));
+    case 'ISSN': return linked(validISSN(value), 'issn', `${digitsOf(value).slice(0, 4)}-${digitsOf(value).slice(4)}`);
+    case 'ORCID': return linked(validORCID(value), 'orcid', value);
+    case 'OSF': return linked(/^[a-z0-9]{5}$/.test(value), 'osf', value);
     case 'URN': {
       const urn = `urn:${value}`.replace(/^urn:nbn:/i, 'urn:nbn:');
-      if (!URN_NBN.test(urn)) return null;
-      return { kind: 'urn-nbn', href: /^urn:nbn:se:/i.test(urn) ? `https://urn.kb.se/resolve?urn=${urn}` : `https://nbn-resolving.org/${urn}` };
+      return linked(URN_NBN.test(urn), /^urn:nbn:se:/i.test(urn) ? 'urn-nbn-se' : 'urn-nbn', urn, 'urn-nbn');
     }
     default: return null;
   }
@@ -308,18 +337,18 @@ function identifierTarget(kind, raw) {
 
 /** Link explicit scholarly identifiers in prose without touching code, links or
  * host-owned controls. Output is escaped HTML for the renderer's text nodes. */
-export function linkScientificIdentifiers(text) {
+export function linkScientificIdentifiers(text, resolvers = {}) {
   const source = String(text ?? '');
   const found = [];
   for (const match of source.matchAll(SCIENTIFIC_IDENTIFIER)) {
-    const target = identifierTarget(match[1], match[2]);
+    const target = identifierTarget(match[1], match[2], resolvers);
     if (!target) continue;
     const valueStart = match.indices[2][0];
     const valueEnd = valueStart + trimIdentifier(match[2]).length;
     if (valueEnd > valueStart) found.push({ start: match.index, valueEnd, end: match.indices[0][1], target });
   }
   for (const match of source.matchAll(REGISTER_IDENTIFIER)) {
-    const target = registerTarget(match);
+    const target = registerTarget(match, resolvers);
     if (target) found.push({ start: match.index, valueEnd: match.index + match[0].length, end: match.index + match[0].length, target });
   }
   found.sort((a, b) => a.start - b.start);
@@ -837,10 +866,12 @@ export async function renderDocument(source, options = {}) {
   const tree = Markdoc.transform(ast, config);
   const headings = [];
   const identifiers = options.identifiers !== false;
+  let resolvers = {};
+  try { resolvers = identifierResolvers(options.identifierResolvers); } catch (error) { diagnostics.push(error.message); }
   function render(value, plain = false) {
     if (value == null) return '';
     if (Array.isArray(value)) return value.map(child => render(child, plain)).join('');
-    if (typeof value !== 'object') return plain || !identifiers ? escapeHTML(value) : linkScientificIdentifiers(value);
+    if (typeof value !== 'object') return plain || !identifiers ? escapeHTML(value) : linkScientificIdentifiers(value, resolvers);
     const name = value.name;
     if (!ELEMENTS.has(name)) { diagnostics.push(`HTML element refused: ${name}`); return `<span class="refusal">Unsupported element: ${escapeHTML(name)}</span>`; }
     const a = value.attributes || {};
@@ -888,7 +919,7 @@ export async function renderDocument(source, options = {}) {
     const advisory = contentAdvisory(manifest.document);
     if (advisory) advisoryHTML = `<aside class="semantic callout advisory content-advisory"><strong class="block-label">Content advisory</strong><p>This document discusses ${escapeHTML(advisory.topics.map(words).join(', '))}.</p></aside>`;
   } catch (error) { diagnostics.push(error.message); }
-  const ids = publicationIdentifiers(manifest.document);
+  const ids = publicationIdentifiers(manifest.document, resolvers);
   diagnostics.push(...ids.diagnostics);
   try {
     const scaled = evidenceScale(manifest.document);

@@ -1,6 +1,6 @@
 // Runtime-neutral standalone assembly. Host-owned, prebuilt assets are prepared
 // once by the Node build adapter; no filesystem, subprocess or esbuild is used here.
-import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, sha256 } from '../../src/content/markdoc-ragbaz.js';
+import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, sha256, identifierResolvers } from '../../src/content/markdoc-ragbaz.js';
 import { AETHER_VARIANTS } from './aether.js';
 import { themeFontStyles } from './fonts.js';
 const jsonScript = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
@@ -21,6 +21,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     if (!d || typeof d !== 'object' || typeof d.label !== 'string' || !d.label.trim() || d.label.length > 80 || !d.topics || typeof d.topics !== 'object' || Array.isArray(d.topics)
       || Object.entries(d.topics).some(([topic, url]) => !/^[a-z][a-z0-9-]{1,40}$/.test(topic) || typeof url !== 'string' || !url.startsWith('https://') || url.length > 500)) throw Error('Invalid host support directory');
   }
+  if (config.identifierResolvers !== undefined) identifierResolvers(config.identifierResolvers);
   if (config.colophon !== undefined && (!config.colophon || typeof config.colophon.url !== 'string' || !/^https:\/\/[^\s]{1,200}$/.test(config.colophon.url) || new TextEncoder().encode(config.colophon.url).length > 200)) throw Error('Colophon URL must be HTTPS and at most 200 bytes');
   if (config.logo !== undefined) {
     const l = config.logo;
@@ -34,7 +35,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     return url.origin;
   }).concat(['https://api.github.com', 'https://export.arxiv.org']).join(' ');
   const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
-  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations, supportDirectory: config.supportDirectory });
+  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations, supportDirectory: config.supportDirectory, identifierResolvers: config.identifierResolvers });
   config.dialects = { ...config.dialects, ...result.resolvedRegistry.dialects };
   config.themes = { ...config.themes, ...result.resolvedRegistry.themes };
   const snapshots = {};
@@ -62,6 +63,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
   if (config.logo) tuple.logoSHA256 = config.logo.sha256;
   if (config.colophon) tuple.colophon = config.colophon;
   if (config.supportDirectory) tuple.supportDirectory = config.supportDirectory;
+  if (config.identifierResolvers) tuple.identifierResolvers = config.identifierResolvers;
   tuple.surface = { metaDocument: config.metaDocument || null, contractSource: config.contractSource || 'rendering-contract', fontAlternatives: config.fontAlternatives || null };
   const payload = { source, sha256: digest, runtimeSHA256, renderSHA256: await hashText(canonical(tuple)), tuple, config, snapshots };
   const values = {

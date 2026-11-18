@@ -5,6 +5,18 @@
   "defaults": { "schema": "ragbaz.document/1", "dialects": ["paper@1", "plan@1", "models@1"], "settings": { "theme": "paper@1" } },
   "policy": { "origins": ["https://raw.githubusercontent.com"], "timeout": 8000 },
   "visualizations": { "interactive": ["chartjs", "cytoscape"] },
+  "identifierResolvers": {
+    "doi": "https://doi.org/{value}",
+    "isbn": "https://openlibrary.org/isbn/{value}",
+    "issn": "https://portal.issn.org/resource/ISSN/{value}",
+    "orcid": "https://orcid.org/{value}",
+    "osf": "https://osf.io/{value}/",
+    "urn-nbn-se": "https://urn.kb.se/resolve?urn={value}",
+    "urn-nbn": "https://nbn-resolving.org/{value}",
+    "prospero": "https://www.crd.york.ac.uk/PROSPERO/display_record.php?ID={value}",
+    "sfs": "https://rkrattsbaser.gov.se/sfst?bet={value}",
+    "riksdag": "https://www.riksdagen.se/sv/sok/?q={value}"
+  },
   "supportDirectory": {
     "label": "Find A Helpline",
     "topics": {

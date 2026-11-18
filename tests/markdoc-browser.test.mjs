@@ -1019,6 +1019,7 @@ sources:
   - {id: meta, title: Meta, url: "https://doi.org/10.1000/meta", bibliography: {design: meta-analysis, k: 12, checked: {via: Crossref, date: "2026-11-18"}}}
   - {id: cohort, title: Cohort, url: "https://doi.org/10.1000/cohort", bibliography: {design: cohort}}
   - {id: law, title: Law, url: "https://example.org/law", bibliography: {design: statute}}
+  - {id: note-1, title: Collides with a naive note key, url: "https://doi.org/10.1000/n1", bibliography: {design: cohort}}
 ---
 # Research fixture
 
@@ -1029,6 +1030,8 @@ Synthesis {% source ref="meta" /%} and a cohort {% source ref="cohort" /%}.{% no
 ## Second
 
 Again {% source ref="meta" /%} under {% source ref="law" /%}.
+
+Source named like a note {% source ref="note-1" /%}.
 
 {% support topic="intimate-partner-violence" /%}
 `;
@@ -1048,6 +1051,9 @@ Again {% source ref="meta" /%} under {% source ref="law" /%}.
       const marks = [...paper.querySelectorAll('.citation-mark')];
       checks.grades = marks.map(m => m.dataset.grade || '-').join(',');
       checks.noteCard = (() => { const n = paper.querySelector('.note-citation .citation-mark'); n.click(); return $('citation-body').textContent.includes('NOTE-TEXT'); })();
+      $('close-citation').click();
+      const named = marks.find(m => m.getAttribute('aria-label')?.includes('Collides')); named.click();
+      checks.noCollision = $('citation-body').textContent.includes('Collides') && !$('citation-body').textContent.includes('NOTE-TEXT');
       $('close-citation').click();
       const meta = marks.find(m => m.dataset.grade === 'A'); meta.click();
       checks.card = $('citation-body').textContent.includes('Grade A') && $('citation-body').textContent.includes('k = 12') && $('citation-body').textContent.includes('Metadata checked via Crossref');
@@ -1077,12 +1083,12 @@ Again {% source ref="meta" /%} under {% source ref="law" /%}.
     })()` }, sessionId);
     assert.equal(run.exceptionDetails, undefined, JSON.stringify(run.exceptionDetails));
     const checks = run.result.value;
-    assert.equal(checks.grades, 'A,B,-,A,context');
-    assert.equal(checks.toc, 'A B|A');
+    assert.equal(checks.grades, 'A,B,-,A,context,B');
+    assert.equal(checks.toc, 'A B|A B');
     assert.equal(checks.identifiers, '—,—');
     assert.equal(checks.support, 'https://findahelpline.com/topics/abuse-domestic-violence');
     assert.equal(checks.filter, 'A');
     assert.equal(checks.stepGrade, 'A');
-    for (const name of ['noteCard', 'card', 'summary', 'advisory', 'qr', 'logo', 'runningLogo', 'cid', 'panelOpen', 'moved', 'panelClosed', 'stepAgain', 'stepBack', 'gradesOff']) assert.equal(checks[name], true, name);
+    for (const name of ['noteCard', 'noCollision', 'card', 'summary', 'advisory', 'qr', 'logo', 'runningLogo', 'cid', 'panelOpen', 'moved', 'panelClosed', 'stepAgain', 'stepBack', 'gradesOff']) assert.equal(checks[name], true, name);
   } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });

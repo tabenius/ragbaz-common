@@ -45,7 +45,7 @@ $('download-reading-copy').addEventListener('click', () => {
 let generation = 0;
 let previewGeneration = 0;
 let pendingSource;
-const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations, supportDirectory: config.supportDirectory };
+const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations, supportDirectory: config.supportDirectory, identifierResolvers: config.identifierResolvers };
 const bar = $('reading-bar');
 const drawer = $('reader-drawer');
 const tocPanel = $('toc-panel');
@@ -281,7 +281,7 @@ async function display(source, provenance, embedded = false) {
       $('revision-history').open = true;
       $('revision-history').querySelector('summary').focus({ preventScroll: true });
       $('revision-history').scrollIntoView({ block: 'nearest' });
-    });
+    }, config.identifierResolvers || {});
     decoratePublication($('paper'), config);
     document.documentElement.removeAttribute('style');
     if (result.theme) document.documentElement.setAttribute('style', result.theme);

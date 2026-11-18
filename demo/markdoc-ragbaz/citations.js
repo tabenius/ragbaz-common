@@ -1,4 +1,4 @@
-import { escapeHTML, safeLink, discoverSourceProvider, evidenceGrade, evidenceScale, publicationIdentifiers } from '../../src/content/markdoc-ragbaz.js';
+import { escapeHTML, safeLink, discoverSourceProvider, evidenceGrade, evidenceScale, publicationIdentifiers, identifierResolvers } from '../../src/content/markdoc-ragbaz.js';
 
 const text = value => typeof value === 'string' ? value.slice(0, 1200) : '';
 const count = value => Number.isSafeInteger(value) && value > 0 ? value.toLocaleString('en-US') : '';
@@ -17,7 +17,7 @@ export function manuscriptState(document = {}) {
   return { received, published, label: [received && `Draft received ${received}`, published ? `Published ${published}` : 'Publication pending'].filter(Boolean).join(' · ') };
 }
 
-export function decorateManuscript(root, document, openRevisions) {
+export function decorateManuscript(root, document, openRevisions, resolvers = {}) {
   const doc = root.ownerDocument, heading = root.querySelector('h1');
   if (!heading) return;
   const authors = Array.isArray(document.authors) ? document.authors.filter(a => a && typeof a.name === 'string').slice(0, 32) : [];
@@ -39,7 +39,9 @@ export function decorateManuscript(root, document, openRevisions) {
     stamp.addEventListener('click', openRevisions); front.append(stamp);
   }
   // Declared identifiers only; unassigned or malformed values display as an em dash.
-  const ids = publicationIdentifiers(document).entries;
+  let checked = {};
+  try { checked = identifierResolvers(resolvers); } catch { /* host config is validated at build; refuse links otherwise */ }
+  const ids = publicationIdentifiers(document, checked).entries;
   if (ids.length) {
     const list = doc.createElement('dl'); list.className = 'publication-identifiers';
     for (const entry of ids) {
@@ -206,7 +208,7 @@ export function decorateCitations(root, sources, excludeIds = [], document = {})
   for (const node of [...root.querySelectorAll('[data-source], [data-entity], a[href], .author-note')]) {
     if (node.closest('pre, code') || !node.isConnected || node.parentElement?.closest('.author-note')) continue;
     if (node.matches('.author-note')) {
-      const id = `note-${++noteCount}`;
+      const id = `note:${++noteCount}`; // ':' is outside declared source ids [\w.-]
       const entry = { number: entries.length + 1, id, source: { id, title: "Author's note", html: node.innerHTML }, declared: false, note: true };
       entries.push(entry); byId.set(id, entry);
       const sup = doc.createElement('sup'); sup.className = 'citation note-citation';

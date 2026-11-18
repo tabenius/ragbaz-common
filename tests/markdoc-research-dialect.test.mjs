@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import jsQR from 'jsqr';
-import { renderDocument, cidFromSHA256, publicationIdentifiers, evidenceGrade, evidenceScale, linkScientificIdentifiers, contentAdvisory, validISBN, validISSN, validORCID, EVIDENCE_SCALE, sha256 } from '../src/content/markdoc-ragbaz.js';
+import { renderDocument, cidFromSHA256, publicationIdentifiers, identifierResolvers, evidenceGrade, evidenceScale, linkScientificIdentifiers, contentAdvisory, validISBN, validISSN, validORCID, EVIDENCE_SCALE, sha256 } from '../src/content/markdoc-ragbaz.js';
 import { parseVisualization, visualizationGraphic, serializeVisualizationGraphic } from '../src/content/visualizations.js';
 import { qrMatrix } from '../demo/markdoc-ragbaz/qr.js';
 import { hostLogo } from '../demo/markdoc-ragbaz/publication.js';
@@ -11,6 +11,7 @@ import { buildStandaloneBytes } from '../demo/markdoc-ragbaz/standalone.js';
 import { prepareStandaloneAssets, hostLogoDescriptor } from '../scripts/build-markdoc-ragbaz.mjs';
 import { temporaryDirectory } from './helpers/temp.mjs';
 
+const resolvers = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8')).identifierResolvers;
 const support = { label: 'Find A Helpline', topics: { 'intimate-partner-violence': 'https://findahelpline.com/topics/abuse-domestic-violence' } };
 const doc = body => `---\ndialects: [paper@1, models@1, text@1, support@1]\n---\n${body}\n`;
 
@@ -49,11 +50,15 @@ test('records views project tabular model data and refuse malformed rows', async
 });
 
 test('publication identifiers display an em dash until real values exist', () => {
-  const { entries, diagnostics } = publicationIdentifiers({ identifiers: { issn: '—', uuid: '', ipfs: null, isbn: '978-0-306-40615-7', doi: 'not a doi', handle: 'x' } });
+  const { entries, diagnostics } = publicationIdentifiers({ identifiers: { issn: '—', uuid: '', ipfs: null, isbn: '978-0-306-40615-7', doi: 'not a doi', handle: 'x' } }, resolvers);
   assert.deepEqual(entries.map(e => [e.key, e.value, e.state]), [['issn', '—', 'unassigned'], ['isbn', '978-0-306-40615-7', 'declared'], ['doi', '—', 'refused'], ['uuid', '—', 'unassigned'], ['ipfs', '—', 'unassigned']]);
   assert.equal(entries[1].href, 'https://openlibrary.org/isbn/9780306406157');
   assert.deepEqual(diagnostics, ['Unsupported publication identifier: handle', 'Malformed DOI refused; shown as unassigned']);
-  assert.equal(publicationIdentifiers({ identifiers: { issn: '0317-8471' } }).entries[0].href, 'https://portal.issn.org/resource/ISSN/0317-8471');
+  assert.equal(publicationIdentifiers({ identifiers: { issn: '0317-8471' } }, resolvers).entries[0].href, 'https://portal.issn.org/resource/ISSN/0317-8471');
+  assert.equal(publicationIdentifiers({ identifiers: { issn: '0317-8471' } }).entries[0].href, null, 'no host resolver, no link');
+  // Placeholder words are not DOIs: a DOI needs the 10.<registrant>/<suffix> shape.
+  for (const doi of ['unassigned', 'TBD', '10.1/x', '10.1234']) assert.equal(publicationIdentifiers({ identifiers: { doi } }, resolvers).entries[0].state, 'refused', doi);
+  assert.equal(publicationIdentifiers({ identifiers: { doi: '10.1038/s41583-018-0072-6' } }, resolvers).entries[0].href, 'https://doi.org/10.1038/s41583-018-0072-6');
   assert.equal(publicationIdentifiers({ identifiers: { issn: '0317-8472' } }).entries[0].state, 'refused');
   assert.equal(publicationIdentifiers({ identifiers: { uuid: 'b01d9e28-e582-49dd-a9a7-db841d58030e' } }).entries[0].state, 'declared');
 });
@@ -62,13 +67,27 @@ test('checksummed and register identifiers link; invalid ones stay text', () => 
   assert(validISBN('0-306-40615-2') && validISBN('978-0-306-40615-7') && !validISBN('978-0-306-40615-8'));
   assert(validISSN('2049-3630') && !validISSN('2049-3631'));
   assert(validORCID('0000-0002-1825-0097') && !validORCID('0000-0002-1825-0098'));
-  const html = linkScientificIdentifiers('ISBN:978-0-306-40615-8 ISSN:2049-3630, ORCID:0000-0002-1825-0097 OSF:abc12 URN:NBN:se:uu:diva-1 URN:nbn:de:0001-2 SFS 2026:123 prop. 2025/26:138 bet. 2025/26:JuU39 CRD42019123456.');
+  const prose = 'ISBN:978-0-306-40615-8 ISSN:2049-3630, ORCID:0000-0002-1825-0097 OSF:abc12 URN:NBN:se:uu:diva-1 URN:nbn:de:0001-2 SFS 2026:123 prop. 2025/26:138 bet. 2025/26:JuU39 CRD42019123456.';
+  // Resolver origins are host configuration: without it these stay plain text.
+  assert.doesNotMatch(linkScientificIdentifiers(prose), /<a /);
+  const html = linkScientificIdentifiers(prose, identifierResolvers(resolvers));
   assert.doesNotMatch(html, /data-identifier="isbn"/);
   for (const kind of ['issn', 'orcid', 'osf', 'sfs', 'riksdag', 'prospero']) assert.match(html, new RegExp(`data-identifier="${kind}"`));
   assert.match(html, /href="https:\/\/urn.kb.se\/resolve\?urn=urn:nbn:se:uu:diva-1"/);
   assert.match(html, /href="https:\/\/nbn-resolving.org\/urn:nbn:de:0001-2"/);
   assert.match(html, /href="https:\/\/rkrattsbaser.gov.se\/sfst\?bet=2026:123"/);
   assert.match(html, /CRD42019123456<\/a>\.$/);
+  assert.match(html, /href="https:\/\/www.riksdagen.se\/sv\/sok\/\?q=prop.%202025\/26:138"/);
+  for (const bad of [{ isbn: 'http://x/{value}' }, { isbn: 'https://x/' }, { gopher: 'https://x/{value}' }, { isbn: 'https://x/{value}/{value}' }]) assert.throws(() => identifierResolvers(bad));
+});
+
+test('renderer takes resolvers from host options only and diagnoses invalid ones', async () => {
+  const body = '# T\n\nSee ISSN:2049-3630.\n';
+  assert.doesNotMatch((await renderDocument(body)).html, /identifier-link/);
+  assert.match((await renderDocument(body, { identifierResolvers: resolvers })).html, /data-identifier="issn"/);
+  const bad = await renderDocument(body, { identifierResolvers: { issn: 'javascript:{value}' } });
+  assert(bad.diagnostics.some(d => d.includes('HTTPS template')));
+  assert.doesNotMatch(bad.html, /javascript:/);
 });
 
 test('evidence grades are inferred from declared designs, never guessed', async () => {
