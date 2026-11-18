@@ -708,6 +708,21 @@ CSS is provided; automated smoke does not establish aesthetic review or complete
 assistive-technology conformance. The source-intent `weft-task-v0` plan is in
 `review`, not done; actual outcomes and runtime coordination do not belong in it.
 
+### Document language and direction
+
+`document.language` (a BCP 47 tag such as `sv`, `zh-Hans`, `ar`) sets `<html lang>`
+on the standalone page, so screen readers, hyphenation and font fallback follow the
+text. `document.direction` (`ltr` or `rtl`) sets `dir`; when omitted it is `rtl` for
+Arabic, Hebrew, Persian, Urdu and other right-to-left scripts and `ltr` otherwise.
+Both are optional; a document without them renders exactly as before (`lang="en"`).
+Invalid values stop the build.
+
+```yaml
+document:
+  title: 'الخطوة الصغيرة التالية'
+  language: ar        # → <html lang="ar" dir="rtl">
+```
+
 ### Report dialect (`report@1`) and reading aids
 
 Declare `dialects: [paper@1, report@1]` to use these tags. Write block tags on

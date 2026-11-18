@@ -63,3 +63,19 @@ test('source publication and retrieval dates are validated', async () => {
   await assert.rejects(() => renderDocument(doc('x', [{ id: 's', title: 'S', url: 'https://example.org/', retrieved: '18 Nov 2026' }])), /retrieved must be/);
   await assert.rejects(() => renderDocument(doc('x', [{ id: 's', title: 'S', url: 'https://example.org/', published: '2024-13' }])), /published must be/);
 });
+
+test('document.language and direction set the root element; default output unchanged', async () => {
+  const { prepareStandaloneAssets } = await import('../scripts/build-markdoc-ragbaz.mjs');
+  const { buildStandaloneBytes } = await import('../demo/markdoc-ragbaz/standalone.js');
+  const { readFile } = await import('node:fs/promises');
+  const config = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
+  config.policy = { ...config.policy, origins: [] };
+  const assets = await prepareStandaloneAssets();
+  const run = document => buildStandaloneBytes({ sourceBytes: new TextEncoder().encode(`---\nschema: ragbaz.document/1\ndocument: ${JSON.stringify(document)}\ndialects: [paper@1]\n---\n\nx\n`), config, assets });
+  assert.match((await run({ title: 'T' })).html, /<html lang="en" data-template=/);
+  assert.match((await run({ title: 'T', language: 'ar' })).html, /<html lang="ar" dir="rtl" data-template=/);
+  assert.match((await run({ title: 'T', language: 'zh-Hans' })).html, /<html lang="zh-Hans" data-template=/);
+  assert.match((await run({ title: 'T', language: 'sh', direction: 'ltr' })).html, /<html lang="sh" data-template=/);
+  await assert.rejects(() => run({ title: 'T', language: 'en"><script>' }), /BCP 47/);
+  await assert.rejects(() => run({ title: 'T', direction: 'up' }), /ltr" or "rtl/);
+});
