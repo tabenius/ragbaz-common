@@ -5,6 +5,14 @@
   "defaults": { "schema": "ragbaz.document/1", "dialects": ["paper@1", "plan@1", "models@1"], "settings": { "theme": "paper@1" } },
   "policy": { "origins": ["https://raw.githubusercontent.com"], "timeout": 8000 },
   "visualizations": { "interactive": ["chartjs", "cytoscape"] },
+  "supportDirectory": {
+    "label": "Find A Helpline",
+    "topics": {
+      "intimate-partner-violence": "https://findahelpline.com/topics/abuse-domestic-violence",
+      "abuse": "https://findahelpline.com/topics/abuse-domestic-violence",
+      "crisis": "https://findahelpline.com/"
+    }
+  },
   "dialects": {},
   "themes": {}
 }

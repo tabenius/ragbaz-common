@@ -1,6 +1,8 @@
 import { validateGeometryDocument } from './geometry3d.js';
 /** Data-only visualization interchange. No imports, I/O or library execution. */
-export const VISUALIZATION_FORMATS = Object.freeze(['mermaid', 'plantuml', 'cytoscape', 'chartjs', 'vega-lite', 'plotly', 'three-scene', 'cad-model']);
+export const VISUALIZATION_FORMATS = Object.freeze(['mermaid', 'plantuml', 'cytoscape', 'chartjs', 'vega-lite', 'plotly', 'three-scene', 'cad-model', 'forest']);
+/** Effect-size scales accepted by the forest profile; ratio scales plot on a log axis. */
+export const FOREST_SCALES = Object.freeze({ r: 'linear', z: 'linear', d: 'linear', g: 'linear', SMD: 'linear', MD: 'linear', OR: 'ratio', RR: 'ratio', HR: 'ratio' });
 const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
 const encoder = new TextEncoder();
 const fail = message => { throw new Error(`Visualization refused: ${message}`); };
@@ -55,6 +57,27 @@ export function parseVisualization(format, source, { alt } = {}) {
     for (const node of data.nodes) { keys(node, ['id', 'label']); text(node.id); text(node.label); if (ids.has(node.id)) fail('duplicate node'); ids.add(node.id); }
     for (const edge of data.edges) { keys(edge, ['source', 'target', 'label']); if (!ids.has(edge.source) || !ids.has(edge.target)) fail('missing endpoint'); if (edge.label !== undefined) text(edge.label); }
     fallback = { columns: ['Kind', 'ID / source', 'Label / target'], rows: [...data.nodes.map(n => ['node', n.id, n.label]), ...data.edges.map(e => ['edge', e.source, e.target + (e.label ? ` · ${e.label}` : '')])] };
+  } else if (format === 'forest') {
+    // Meta-analytic summary: authored estimates and intervals, never computed pooling.
+    keys(data, ['scale', 'null', 'studies', 'pooled']);
+    if (!Object.hasOwn(FOREST_SCALES, data.scale)) fail('unsupported effect-size scale');
+    const ratio = FOREST_SCALES[data.scale] === 'ratio';
+    const nullValue = data.null === undefined ? (ratio ? 1 : 0) : data.null;
+    values([nullValue]);
+    if (ratio && nullValue <= 0) fail('ratio scales require a positive null value');
+    if (!Array.isArray(data.studies) || !data.studies.length || data.studies.length > 200) fail('1–200 studies required');
+    const row = (study, label) => {
+      keys(study, ['label', 'estimate', 'lower', 'upper', 'weight']);
+      text(study.label); values([study.estimate, study.lower, study.upper]);
+      if (study.weight !== undefined) { values([study.weight]); if (study.weight < 0) fail('weights must be nonnegative'); }
+      if (!(study.lower <= study.estimate && study.estimate <= study.upper)) fail(`${label} interval must contain its estimate`);
+      if (ratio && study.lower <= 0) fail('ratio scales require positive values');
+      return [study.label, study.estimate, study.lower, study.upper, study.weight ?? ''];
+    };
+    const rows = data.studies.map(study => row(study, 'study'));
+    if (data.pooled !== undefined) rows.push(row(data.pooled, 'pooled'));
+    data = { ...data, null: nullValue };
+    fallback = { columns: ['Study', `Estimate (${data.scale})`, 'Lower', 'Upper', 'Weight'], rows };
   } else if (format === 'chartjs') {
     keys(data, ['type', 'data']);
     if (!['bar', 'line'].includes(data.type)) fail('unsupported chart type');
@@ -203,6 +226,52 @@ function graphTree(value, id) {
   return el('svg', { viewBox: `0 0 ${width} ${height}`, width: String(width), height: String(height), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic' }, children);
 }
 
+function forestTree(value, id) {
+  const { studies, pooled, scale } = value.data;
+  const ratio = FOREST_SCALES[scale] === 'ratio';
+  const t = v => ratio ? Math.log(v) : v;
+  const all = [...studies, ...(pooled ? [pooled] : [])];
+  let minimum = Math.min(t(value.data.null), ...all.map(s => t(s.lower)));
+  let maximum = Math.max(t(value.data.null), ...all.map(s => t(s.upper)));
+  if (minimum === maximum) { minimum -= 1; maximum += 1; }
+  const padding = (maximum - minimum) * 0.06; minimum -= padding; maximum += padding;
+  const rowHeight = 24, top = 46, left = 250, plotWidth = 340, width = 720;
+  const height = top + (all.length + 1) * rowHeight + 40;
+  const x = v => left + ((t(v) - minimum) / (maximum - minimum)) * plotWidth;
+  const children = [
+    el('title', { id: `${id}-title` }, [value.alt]),
+    el('desc', { id: `${id}-desc` }, [`Static forest plot of authored ${scale} estimates with intervals${ratio ? ' on a logarithmic axis' : ''}. Exact values remain in the adjacent table.`]),
+    el('text', { x: '16', y: '28', fill: '#333333', 'font-size': '12', 'font-family': 'system-ui,sans-serif' }, ['Study']),
+    el('text', { x: number(left + plotWidth / 2), y: '28', fill: '#333333', 'font-size': '12', 'text-anchor': 'middle', 'font-family': 'system-ui,sans-serif' }, [`${scale} [interval]`]),
+  ];
+  const plotBottom = top + all.length * rowHeight + 6;
+  children.push(el('line', { x1: number(x(value.data.null)), y1: String(top - 8), x2: number(x(value.data.null)), y2: number(plotBottom), stroke: '#888888', 'stroke-width': '1' }));
+  const weights = studies.map(s => typeof s.weight === 'number' ? s.weight : 1), maxWeight = Math.max(...weights) || 1;
+  all.forEach((study, index) => {
+    const isPooled = pooled && index === all.length - 1;
+    const cy = top + index * rowHeight + (isPooled ? 10 : 0);
+    children.push(el('text', { x: '16', y: number(cy + 4), fill: '#222222', 'font-size': '11', 'font-family': 'system-ui,sans-serif' }, [truncate(study.label, 38)]));
+    children.push(el('text', { x: String(width - 16), y: number(cy + 4), fill: '#222222', 'font-size': '11', 'text-anchor': 'end', 'font-family': 'system-ui,sans-serif' }, [`${number(study.estimate)} [${number(study.lower)}, ${number(study.upper)}]`]));
+    if (isPooled) {
+      const l = x(study.lower), c = x(study.estimate), r = x(study.upper);
+      children.push(el('path', { d: `M${number(l)} ${number(cy)} L${number(c)} ${number(cy - 7)} L${number(r)} ${number(cy)} L${number(c)} ${number(cy + 7)} Z`, fill: '#b5651d' }));
+    } else {
+      children.push(el('line', { x1: number(x(study.lower)), y1: number(cy), x2: number(x(study.upper)), y2: number(cy), stroke: '#2f6f8f', 'stroke-width': '1.5' }));
+      const size = 4 + 6 * Math.sqrt(weights[index] / maxWeight);
+      children.push(el('rect', { x: number(x(study.estimate) - size / 2), y: number(cy - size / 2), width: number(size), height: number(size), fill: '#2f6f8f' }));
+    }
+  });
+  children.push(el('line', { x1: String(left), y1: number(plotBottom), x2: String(left + plotWidth), y2: number(plotBottom), stroke: '#666666', 'stroke-width': '1' }));
+  for (let tick = 0; tick <= 4; tick++) {
+    const raw = minimum + ((maximum - minimum) * tick) / 4;
+    const label = ratio ? Math.exp(raw) : raw;
+    const tickX = left + (plotWidth * tick) / 4;
+    children.push(el('line', { x1: number(tickX), y1: number(plotBottom), x2: number(tickX), y2: number(plotBottom + 5), stroke: '#666666', 'stroke-width': '1' }));
+    children.push(el('text', { x: number(tickX), y: number(plotBottom + 18), fill: '#444444', 'font-size': '10', 'text-anchor': 'middle', 'font-family': 'system-ui,sans-serif' }, [number(label)]));
+  }
+  return el('svg', { viewBox: `0 0 ${width} ${Math.min(9999, Math.round(height))}`, width: String(width), height: String(Math.round(height)), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic' }, children);
+}
+
 function geometryTree(value, id) {
   const children = [
     el('title', { id: id + '-title' }, [value.alt]),
@@ -223,6 +292,7 @@ export function visualizationGraphic(record, { id } = {}) {
   const value = parseVisualization(record.format, record.source, { alt: record.alt });
   if (!value.data) return null;
   const reference = id || stableId(`${value.format}\0${value.alt}\0${value.source}`);
+  if (value.format === 'forest') return forestTree(value, reference);
   return value.format === 'cytoscape' ? graphTree(value, reference) : (value.format === 'three-scene' || value.format === 'cad-model') ? geometryTree(value, reference) : chartTree(value, reference);
 }
 

@@ -1,0 +1,63 @@
+protocol: ragbaz-cooperation/0.1
+id: claude-opus-5-5-research-dialect-001
+task: rc-research-paper-dialect
+actor:
+  participant: claude-opus-5-5-session-01HL4gvedyH2vwUa4X3TKSRy
+  role: implementer
+  session: https://claude.ai/code/session_01HL4gvedyH2vwUa4X3TKSRy
+context:
+  repository: tabenius/ragbaz-common
+  branch: markdoc-ragbaz-research-paper-dialect
+  observed_commit: 56b809594624e3f93870524371465f420332c548
+kind: result
+status: proposed
+basis: observation
+to: [human-owner]
+reply_to: []
+supersedes: []
+scope:
+  paths:
+    - src/content/markdoc-ragbaz.js
+    - src/content/visualizations.js
+    - demo/markdoc-ragbaz/
+    - scripts/build-markdoc-ragbaz.mjs
+    - tests/markdoc-research-dialect.test.mjs
+    - tests/markdoc-browser.test.mjs
+    - tests/standalone-portable.test.mjs
+    - docs/MARKDOC-RAGBAZ.md
+    - docs/VISUALIZATIONS.md
+    - README.md
+    - PROVENANCE.md
+summary: Implemented the ten research-paper dialect proposals as additive markdoc-ragbaz v1 extensions, for review.
+body: |
+  Requested by the owner in chat ("all proposals you gave me are to be included in
+  our markdoc dialect"), with two owner decisions: no RAGBAZ-maintained helpline
+  registry (link to an external directory chosen by the host) and evidence lives in
+  sources and may be inferred, with grades easy to navigate. A further owner
+  instruction: identifiers not yet issued display as an em dash.
+  Implemented: text@1 (note, lang), support@1 (support), four callout kinds,
+  bibliography fields with design-inferred grades and an evidence map (e, n/N),
+  document.identifiers with em-dash placeholders and a derived content CID,
+  additional prose identifiers, document.advisory, records views, a forest
+  profile, and host --logo/--logo-alt/--canonical-url with a QR colophon.
+  Uncertainty: the PROSPERO display_record.php?ID= and Riksdag search URL patterns
+  were not live-checked; SFS uses rkrattsbaser.gov.se/sfst?bet=, taken from the
+  ferenda project's fetch code.
+  frog was not available in this session; no lock was claimed. Work is isolated
+  on the branch named above.
+authorization:
+  source: owner chat instruction in the linked session
+  scope: implement all proposals in the markdoc dialect on a review branch
+validation:
+  performed:
+    - baseline npm test before changes, 183/184; the failure was test 83 (network-disabled font fallback), environment-related
+    - npm test after changes, 195/196, zero skipped; the only failure is the same pre-existing test 83
+    - new tests/markdoc-research-dialect.test.mjs 11/11, including QR round-trips through jsQR
+    - new headless-Chrome test for notes, evidence map keys, identifiers, support link, QR, logo and running-logo style
+    - five frozen standalone hashes updated deliberately and rechecked
+  not_performed:
+    - live requests to the identifier resolvers
+    - deployment to meta.ragbaz or any host
+next:
+  owner: human-owner
+  action: Review the pull request; decide whether test 83 needs an environment fix separately.

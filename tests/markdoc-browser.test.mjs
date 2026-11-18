@@ -1002,3 +1002,87 @@ test('quiet reader hides tools by default, retains accessible controls and requi
     for (const [name, passed] of Object.entries(laptop.result.value)) assert.equal(passed, true, name);
   } finally { if (browser) await browser.close(); await rm(dir, { recursive: true, force: true }); }
 });
+
+test('research-paper extensions: notes, evidence map keys, identifiers, support, QR colophon and running logo', async t => {
+  const executable = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome'].find(path => spawnSync('test', ['-x', path]).status === 0);
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const dir = await temporaryDirectory('markdoc-research-');
+  const browser = headless(executable, join(dir, 'profile'));
+  try {
+    const source = `---
+document:
+  title: Research fixture
+  identifiers: {issn: "—", uuid: "—"}
+  advisory: {topics: [trauma]}
+dialects: [paper@1, text@1, support@1]
+sources:
+  - {id: meta, title: Meta, url: "https://doi.org/10.1000/meta", bibliography: {design: meta-analysis, k: 12, checked: {via: Crossref, date: "2026-11-18"}}}
+  - {id: cohort, title: Cohort, url: "https://doi.org/10.1000/cohort", bibliography: {design: cohort}}
+  - {id: law, title: Law, url: "https://example.org/law", bibliography: {design: statute}}
+---
+# Research fixture
+
+## First
+
+Synthesis {% source ref="meta" /%} and a cohort {% source ref="cohort" /%}.{% note %}NOTE-TEXT here.{% /note %}
+
+## Second
+
+Again {% source ref="meta" /%} under {% source ref="law" /%}.
+
+{% support topic="intimate-partner-violence" /%}
+`;
+    const input = join(dir, 'paper.md'), output = join(dir, 'paper.html'), logoPath = join(dir, 'logo.png');
+    await writeFile(input, source);
+    await writeFile(logoPath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64'));
+    const built = await buildStandalone({ input, output, strict: true, logo: logoPath, logoAlt: 'Fixture logo', canonicalURL: 'https://ragbaz.xyz/fixture' });
+    assert.equal(built.report.clean, true, built.report.diagnostics.join('; '));
+    const { targetId } = await browser.call('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await browser.call('Target.attachToTarget', { targetId, flatten: true });
+    await browser.call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, sessionId);
+    await browser.call('Page.navigate', { url: pathToFileURL(output).href }, sessionId);
+    const run = await browser.call('Runtime.evaluate', { returnByValue: true, awaitPromise: true, expression: `(async () => {
+      const $ = id => document.getElementById(id), paper = $('paper'), checks = {};
+      const key = (k, target = paper) => target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+      await new Promise(r => setTimeout(r, 300));
+      const marks = [...paper.querySelectorAll('.citation-mark')];
+      checks.grades = marks.map(m => m.dataset.grade || '-').join(',');
+      checks.noteCard = (() => { const n = paper.querySelector('.note-citation .citation-mark'); n.click(); return $('citation-body').textContent.includes('NOTE-TEXT'); })();
+      $('close-citation').click();
+      const meta = marks.find(m => m.dataset.grade === 'A'); meta.click();
+      checks.card = $('citation-body').textContent.includes('Grade A') && $('citation-body').textContent.includes('k = 12') && $('citation-body').textContent.includes('Metadata checked via Crossref');
+      $('close-citation').click();
+      checks.toc = [...document.querySelectorAll('#toc .toc-grades')].map(s => s.textContent).join('|');
+      checks.summary = !!paper.querySelector('.evidence-summary #reader-evidence');
+      checks.identifiers = [...paper.querySelectorAll('.publication-identifiers dd')].map(d => d.textContent).join(',');
+      checks.advisory = paper.querySelector('.content-advisory')?.textContent.includes('trauma');
+      checks.support = paper.querySelector('.semantic.support a')?.getAttribute('href');
+      checks.qr = !!paper.querySelector('.colophon-qr svg.qr-code path') && paper.querySelector('.colophon-qr a').href === 'https://ragbaz.xyz/fixture';
+      checks.logo = paper.querySelector('img.publication-logo')?.alt === 'Fixture logo';
+      await new Promise(r => setTimeout(r, 200));
+      checks.runningLogo = ($('running-logo-style')?.textContent || '').includes('@top-left');
+      checks.cid = $('document-cid').textContent.includes('bafkrei');
+      paper.focus(); key('e');
+      checks.panelOpen = !$('evidence-panel').hidden && document.activeElement.classList.contains('evidence-item');
+      key('j', document.activeElement); checks.moved = document.activeElement.classList.contains('evidence-item');
+      key(']', document.activeElement);
+      checks.filter = document.querySelector('#evidence-filters [aria-pressed=true]').dataset.filter;
+      key('Escape', document.activeElement); checks.panelClosed = $('evidence-panel').hidden;
+      paper.focus(); key('n');
+      const first = document.activeElement; checks.stepGrade = first.dataset.grade;
+      key('n', first); checks.stepAgain = document.activeElement !== first && document.activeElement.dataset.grade === 'A';
+      key('N', document.activeElement); checks.stepBack = document.activeElement === first;
+      $('show-grades').click(); checks.gradesOff = document.body.dataset.grades === 'off';
+      return checks;
+    })()` }, sessionId);
+    assert.equal(run.exceptionDetails, undefined, JSON.stringify(run.exceptionDetails));
+    const checks = run.result.value;
+    assert.equal(checks.grades, 'A,B,-,A,context');
+    assert.equal(checks.toc, 'A B|A');
+    assert.equal(checks.identifiers, '—,—');
+    assert.equal(checks.support, 'https://findahelpline.com/topics/abuse-domestic-violence');
+    assert.equal(checks.filter, 'A');
+    assert.equal(checks.stepGrade, 'A');
+    for (const name of ['noteCard', 'card', 'summary', 'advisory', 'qr', 'logo', 'runningLogo', 'cid', 'panelOpen', 'moved', 'panelClosed', 'stepAgain', 'stepBack', 'gradesOff']) assert.equal(checks[name], true, name);
+  } finally { await browser.close(); await rm(dir, { recursive: true, force: true }); }
+});
