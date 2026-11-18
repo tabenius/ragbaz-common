@@ -5,6 +5,8 @@
 # results only, not fetched. Treat unverified endpoints as leads.
 schema: ragbaz.sci-sources/0
 updated: 2026-11-18
+# Every entry carries published (source publication date, or n.d.) and
+# retrieved (when we looked it up). Dates are ISO 8601.
 
 sources:
   # ---------------------------------------------------------------- cities, land, green space
@@ -14,12 +16,16 @@ sources:
     endpoint: https://sdmx.oecd.org/public/rest/data/OECD.CFE.EDS,DSD_FUA_ENV@DF_GREEN_AREA,/all?startPeriod=2020&format=csvfilewithlabels
     gives: green share of land (PT_LAR) and m2 per person (M2_PS) per functional urban area, worldwide
     notes: No key. Same method for every city, so cross-country comparable. Counts tree/shrub/grass cover, not public access.
+    published: 'n.d. (data year 2021)'
+    retrieved: '2026-11-18'
     verified: 2026-11-18 fetched; Berlin 56.6% / 123 m2, Stockholm 60.5% / 157 m2, New York (Greater) 55.7% / 190 m2 (2021 values)
   - id: oecd-sdmx
     kind: api
     title: OECD Data Explorer SDMX REST API (all OECD dataflows)
     endpoint: https://sdmx.oecd.org/public/rest/
     gives: regions and cities, well-being, labour, environment; CSV or SDMX-JSON
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: 2026-11-18 (via the green-area dataflow)
   - id: eurostat-urb-lenv
     kind: dataset
@@ -27,6 +33,8 @@ sources:
     url: https://db.nomics.world/Eurostat/urb_lenv
     gives: share of land green urban areas + sports/leisure (EN5205V), city level
     notes: Also on the Eurostat API; DBnomics mirrors it with its own API.
+    published: '2024-10-01 (provider update)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: copernicus-urban-atlas-2021
     kind: gis
@@ -34,22 +42,30 @@ sources:
     url: https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2021
     gives: comparable land use for European cities >100k; green urban areas split by public/private access
     notes: Access via Copernicus Data Space Ecosystem (OData API).
+    published: 'n.d. (2021 reference year)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: eea-green-umz
     kind: gis
     title: EEA percentage of green space in urban morphological zones (ArcGIS REST)
     endpoint: https://climate.discomap.eea.europa.eu/arcgis/rest/services/UAMV/Percentage_Green_Space_in_UMZ/MapServer
+    published: 'n.d. (2012 data)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: eea-sdi
     kind: portal
     title: EEA geospatial data catalogue (GeoNetwork API)
     url: https://sdi.eea.europa.eu/catalogue/
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: berlin-umweltatlas
     kind: portal
     title: Berlin Umweltatlas (land use, public green, green volume)
     url: https://www.berlin.de/umweltatlas/
     gives: per-block land use, public green provision, downloads (GIS)
+    published: 'n.d. (editions 1990–2020)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: hugsi
     kind: dataset
@@ -57,22 +73,30 @@ sources:
     url: https://hugsi.green/cities/Stockholm
     gives: green share and tree cover per city (Stockholm 46% green, 42% trees)
     notes: Method not checked; prefer OECD for comparisons.
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: nyc-manhattan-density-arcgis
     kind: gis
     title: Population density of Manhattan by km2 (ArcGIS FeatureServer)
     endpoint: https://services1.arcgis.com/7uJv7I3kgh2y7Pe0/ArcGIS/rest/services/Population_Density_of_Manhattan_WFL1/FeatureServer
     notes: Third-party layer; for official figures use US Census (Manhattan 2020 pop 1,694,251 on ~59 km2 land, ~28,700/km2).
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: citypopulation
     kind: portal
     title: City Population (Brinkhoff)
     url: https://www.citypopulation.de/
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: hdx
     kind: portal
     title: Humanitarian Data Exchange (CKAN API)
     url: https://data.humdata.org/
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- wellbeing beyond GDP
@@ -80,28 +104,38 @@ sources:
     kind: document
     title: UN High-Level Expert Group on Beyond GDP, Counting What Counts (May 2026), 31-indicator dashboard
     url: https://www.un.org/en/node/242862
+    published: '2026-05-07'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: sou-2015-56
     kind: document
     title: SOU 2015:56 Får vi det bättre? Om mått på livskvalitet
     url: https://www.regeringen.se/rattsliga-dokument/statens-offentliga-utredningar/2015/06/sou-201556/
     notes: Life-quality measures to complement GDP; followed by SCB indicators (2016) and "Nya mått på välstånd" in the 2017 spring budget.
+    published: '2015-06'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: scb-livskvalitet-indikatorer
     kind: document
     title: SCB indicators for sustainable development and quality of life in budget work (2016)
     url: https://scb.se/contentassets/92383b9128b14dd8b00f641e6cef973f/indikatorer-for-hallbar-utveckling-och-livskvalitet-for-budgetarbetet.pdf
+    published: '2016-03'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: riksdagen-open-data
     kind: api
     title: Riksdagen open data (documents, votes, bills)
     endpoint: https://data.riksdagen.se/
     gives: Swedish parliamentary documents by id, e.g. /dokument/H2B168
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: oecd-wellbeing-built-env
     kind: document
     title: OECD Built environment through a well-being lens (2023)
     url: https://www.oecd.org/en/publications/built-environment-through-a-well-being-lens_1b5bebf4-en/full-report/component-5
+    published: '2023-11'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- work, time, labour markets
@@ -109,30 +143,40 @@ sources:
     kind: document
     title: WEF Future of Jobs Report 2025 (170M created, 92M displaced by 2030)
     url: https://www.weforum.org/press/2025/01/future-of-jobs-report-2025-78-million-new-job-opportunities-by-2030-but-urgent-upskilling-needed-to-prepare-workforces/
+    published: '2025-01-08'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: imf-ai-exposure-2024
     kind: document
     title: IMF Gen-AI and the future of work (Jan 2024), ~40% global / 60% advanced-economy exposure
     url: https://www.scmp.com/news/world/europe/article/3248417/ai-affect-60-cent-advanced-economy-jobs-imfs-kristalina-georgieva
     notes: Secondary coverage; replace with the IMF SDN when cited formally.
+    published: '2024-01-14 (IMF); 2024-01-15 (SCMP coverage)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: autonomy-4dw-uk
     kind: document
     title: Autonomy, UK four-day week pilot one year on (54 of 61 continuing)
     url: https://autonomy.work/2024/02/21/make-it-stick/
     notes: Organiser-produced.
+    published: '2024-02-21'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: svartedalen-6h
     kind: document
     title: Göteborg Svartedalen six-hour day, follow-up report 1 (Oct 2015)
     url: https://goteborg.vansterpartiet.se/files/2015/10/2015-10-07-6-månader-med-6-timmar-rapport-1.pdf
     notes: Party-hosted copy of the Pacta follow-up; seek the city's final evaluation.
+    published: '2015-10-07'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: arman-2010
     kind: document
     title: Arman, Fragmentation and power in managerial work in health care (GU thesis, 2010)
     url: https://gupea.ub.gu.se/handle/2077/23226
     gives: GUPEA is GU's open repository (OAI-PMH)
+    published: '2010-09-10 (thesis defence)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- health evidence
@@ -141,21 +185,29 @@ sources:
     title: Twohig-Bennett & Jones 2018, health benefits of greenspace (143 studies)
     url: https://pmc.ncbi.nlm.nih.gov/articles/PMC6562165
     notes: PubMed Central has E-utilities and OA APIs.
+    published: '2018-10'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: celis-morales-2017
     kind: document
     title: Celis-Morales et al. BMJ 2017, active commuting (cycling HR 0.59 all-cause mortality)
     url: https://eprints.gla.ac.uk/138376/
+    published: '2017-04-19'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: cochrane-handwashing
     kind: document
     title: Cochrane, hand-washing promotion for preventing diarrhoea (CD004265)
     url: https://cidg.cochrane.org/news/update-hand-washing-promotion-preventing-diarrhoea
+    published: '2021-01 (CD004265.pub4)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: microcredit-six-rcts
     kind: document
     title: Banerjee, Karlan & Zinman 2015, six randomized evaluations of microcredit
     url: https://economics.mit.edu/sites/default/files/publications/Six%20Randomized%20Evaluations%20of%20Microcredit.pdf
+    published: '2015-01'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- resources, transport, food
@@ -164,16 +216,22 @@ sources:
     title: USGS Mineral Commodity Summaries (phosphate rock et al.)
     url: https://www.usgs.gov/centers/national-minerals-information-center/morocco
     notes: Morocco + Western Sahara ~68% of phosphate rock reserves; China largest producer.
+    published: 'n.d. (annual)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: nrel-platooning
     kind: document
     title: NREL truck platooning fleet tests
     url: https://www.nrel.gov/transportation/fleettest-platooning.html
+    published: 'n.d. (tests 2014–2021)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: gotham-greens-farms
     kind: document
     title: Gotham Greens farm list
     url: https://www.gothamgreens.com/our-farms/
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- safety
@@ -181,6 +239,8 @@ sources:
     kind: portal
     title: Metropolitan Police press releases (phone theft figures)
     url: https://news.met.police.uk/
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
 
   # ---------------------------------------------------------------- added 2026-11-18 (second pass)
@@ -189,46 +249,129 @@ sources:
     title: Mölndal orthopaedic operating unit six-hour day (permanent 2018; 32 h/week in 2025)
     url: https://www.vardfokus.se/arbetsmiljo/sextimmarsdag-i-molndal-far-fortsatta/
     notes: Also arbetet.se 2025-01-08, Syre 2018, SVT. No public evaluation report found; request SU board decision 2018 and evaluation via SU registrator (offentlighetsprincipen).
+    published: '2018 (Vårdfokus); 2025-01-08 (Arbetet)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: ocp-ownership
     kind: document
     title: OCP Group ownership (Moroccan state ~94-95%, Banque Populaire ~5-6%)
     url: https://en.wikipedia.org/wiki/OCP_Group
     notes: Secondary; confirm in OCP annual report. Bou Craa (Western Sahara) via Phosboucraa; see WSRW reports (advocacy).
+    published: 'n.d.'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: peak-phosphorus-gpri
     kind: document
     title: GPRI statement on global phosphorus scarcity (response to IFDC 2010)
     url: https://phosphorusfutures.net/?p=202
+    published: '2010'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: graduation-science-2015
     kind: document
     title: Banerjee et al. 2015, Science 348(6236), multifaceted graduation programme, six countries
     url: https://www.povertyactionlab.org/updates/anti-poverty-strategy-offers-sustained-benefit-worlds-ultra-poor-says-new-study-science
+    published: '2015-05-15'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: egger-2022-cash-ge
     kind: document
     title: Egger et al. 2022, Econometrica 90(6), general-equilibrium effects of cash transfers in Kenya (multiplier 2.5)
     url: https://www.nber.org/system/files/working_papers/w26600/w26600.pdf
+    published: '2022-11 (Econometrica 90:6)'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: tyler-legitimacy
     kind: document
     title: Tyler, Goff & MacCoun, legitimacy and compliance with the law (APS review)
     url: https://www.psychologicalscience.org/publications/policing.html
+    published: '2015-12'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: fajnzylber-2002
     kind: document
     title: Fajnzylber, Lederman & Loayza 2002, Inequality and violent crime (J Law Econ 45:1)
     url: https://econpapers.repec.org/RePEc:ucp:jlawec:v:45:y:2002:i:1:p:1-40
+    published: '2002-04'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: lead-crime-review-2023
     kind: document
     title: 2023 systematic review, early-life lead exposure and adult criminal behaviour
     url: https://pmc.ncbi.nlm.nih.gov/articles/PMC10393136
+    published: '2023'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
   - id: eu-ai-act-art14
     kind: document
     title: Regulation (EU) 2024/1689 (AI Act), Article 14 human oversight of high-risk AI systems
     url: https://eur-lex.europa.eu/eli/reg/2024/1689/oj
     notes: EUR-Lex also offers SPARQL/REST access to EU law (CELLAR).
+    published: '2024-07-12 (OJ); in force 2024-08-01'
+    retrieved: '2026-11-18'
     verified: listed 2026-11-18
+
+  # ---------------------------------------------------------------- added 2026-11-18 (third pass: AI governance)
+  - id: eu-digital-omnibus-ai
+    kind: document
+    title: Digital Omnibus on AI, Regulation (EU) 2026/1744 (AI Act high-risk deadlines moved)
+    url: https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/
+    notes: Parliament adopted 2026-06-16, Council 2026-06-29, in force 2026-07-27. Annex III high-risk obligations 2027-12-02; Annex I 2028-08-02; Art. 50 transparency unchanged. Secondary (law-firm summary); confirm in the Official Journal.
+    published: 'n.d. (2026)'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: fk-vab-model-2024
+    kind: document
+    title: Försäkringskassan VAB fraud-risk model flagged women about twice as often (Lighthouse Reports / Svenska Dagbladet)
+    url: https://www.amnesty.org/en/latest/news/2024/11/sweden-authorities-must-discontinue-discriminatory-ai-systems-used-by-welfare-agency/
+    notes: Investigation 2024-11-27; Amnesty call same date. IMY inspection from 2025-06; model taken out of use, no plan to resume the risk profile (Computer Weekly, 2025). IMY decision text not retrieved.
+    published: '2024-11-27'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: fk-vab-suspended-2025
+    kind: document
+    title: Computer Weekly, Swedish welfare authorities suspend 'discriminatory' AI model
+    url: https://www.computerweekly.com/news/366634703/Swedish-welfare-authorities-suspend-discriminatory-AI-model
+    published: 'n.d. (2025-11)'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: ai-index-2025-open-closed
+    kind: document
+    title: Stanford AI Index 2025, technical performance (open vs closed gap 8.04% → 1.70% on Chatbot Arena, Jan 2024 → Feb 2025)
+    url: https://hai.stanford.edu/ai-index/2025-ai-index-report/technical-performance
+    notes: Human-preference leaderboard, one snapshot; not a general capability measure.
+    published: '2025-04-07'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: bartlett-2021-fintech-lending
+    kind: document
+    title: Bartlett, Morse, Stanton & Wallace, Consumer-lending discrimination in the FinTech era (J Financial Economics)
+    url: https://faculty.haas.berkeley.edu/morse/research/papers/discrim.pdf
+    notes: Algorithmic lenders reduce rate disparities by more than a third but do not remove them; no discrimination in FinTech approval rates.
+    published: '2021 (JFE); NBER WP 2019'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: alesina-2013-women-credit
+    kind: document
+    title: Alesina, Lotti & Mistrulli, Do women pay more for credit? Evidence from Italy (JEEA 11)
+    url: https://www.nber.org/papers/w14202
+    notes: Women pay more for overdrafts than men with no evidence of higher risk.
+    published: '2013 (JEEA); NBER WP 2008'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: nydfs-apple-card-2021
+    kind: document
+    title: NYDFS report on Apple Card (no fair-lending violation; credit scoring rules need modernising)
+    url: https://www.bloomberg.com/news/articles/2021-03-23/goldman-didn-t-discriminate-with-apple-card-n-y-regulator-says
+    published: '2021-03-23'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+  - id: toeslagenaffaire
+    kind: document
+    title: Dutch childcare benefits scandal (nationality as a risk factor; cabinet resigned)
+    url: https://www.iamexpat.nl/expat-info/dutch-expat-news/dutch-cabinet-resigns-wake-childcare-benefit-scandal
+    notes: Parliamentary inquiry report 2020-12; cabinet resigned 2021-01-15; tens of thousands of families affected (sources differ).
+    published: '2021-01-15'
+    retrieved: '2026-11-18'
+    verified: listed 2026-11-18
+

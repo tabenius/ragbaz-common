@@ -69,6 +69,28 @@ teams. World topics are kept below for later pieces, not for that essay.
 - London: 81,365 phone thefts/robberies recorded 2024, 71,391 in 2025 (Met);
   ~14,000 of 587,498 phones stolen 2017–Feb 2024 recovered [met-police-news].
 
+### AI governance, public decisions and bias (added 2026-11-18; all retrieved 2026-11-18)
+- EU AI Act: in force 2024-08-01; prohibitions 2025-02-02; GPAI duties 2025-08-02.
+  Digital Omnibus, Reg. (EU) 2026/1744 (in force 2026-07-27): Annex III high-risk
+  (incl. public benefits eligibility, creditworthiness) moved to **2027-12-02**,
+  Annex I products to 2028-08-02; Art. 50 transparency unchanged [eu-digital-omnibus-ai,
+  eu-ai-act-art14].
+- Sweden: Försäkringskassan's VAB fraud-risk model flagged women about twice as
+  often as men with similar error rates (Lighthouse Reports/SvD, published
+  2024-11-27); Amnesty called for discontinuation the same day; after an IMY
+  inspection (from 2025-06) the model was taken out of use, no plan to resume
+  (Computer Weekly, 2025) [fk-vab-model-2024, fk-vab-suspended-2025].
+- Netherlands: childcare-benefit fraud scoring used non-Dutch nationality as a
+  risk factor; cabinet resigned 2021-01-15 [toeslagenaffaire].
+- Lending: algorithmic lenders cut ethnic rate gaps by more than a third but did not
+  remove them (Bartlett et al., JFE 2021); women paid more for overdrafts with no
+  higher risk (Alesina et al., JEEA 2013); NYDFS found no Apple Card violation but
+  said credit-scoring law needs modernising (2021-03-23)
+  [bartlett-2021-fintech-lending, alesina-2013-women-credit, nydfs-apple-card-2021].
+- Open vs closed models: top closed model ahead by 8.04% (Jan 2024) and 1.70%
+  (Feb 2025) on Chatbot Arena (AI Index, published 2025-04-07); human-preference
+  leaderboard, one snapshot [ai-index-2025-open-closed].
+
 ### Kept for later pieces (not the AI essay)
 - Phosphate: Morocco/Western Sahara ~68% of reserves; OCP ~94–95% state-owned;
   China largest producer and restricts exports. Peak: Cordell 2009 ~2033 vs
