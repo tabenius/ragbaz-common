@@ -182,3 +182,47 @@ sources:
     title: Metropolitan Police press releases (phone theft figures)
     url: https://news.met.police.uk/
     verified: listed 2026-11-18
+
+  # ---------------------------------------------------------------- added 2026-11-18 (second pass)
+  - id: su-molndal-6h-ortopedi
+    kind: document
+    title: Mölndal orthopaedic operating unit six-hour day (permanent 2018; 32 h/week in 2025)
+    url: https://www.vardfokus.se/arbetsmiljo/sextimmarsdag-i-molndal-far-fortsatta/
+    notes: Also arbetet.se 2025-01-08, Syre 2018, SVT. No public evaluation report found; request SU board decision 2018 and evaluation via SU registrator (offentlighetsprincipen).
+    verified: listed 2026-11-18
+  - id: ocp-ownership
+    kind: document
+    title: OCP Group ownership (Moroccan state ~94-95%, Banque Populaire ~5-6%)
+    url: https://en.wikipedia.org/wiki/OCP_Group
+    notes: Secondary; confirm in OCP annual report. Bou Craa (Western Sahara) via Phosboucraa; see WSRW reports (advocacy).
+    verified: listed 2026-11-18
+  - id: peak-phosphorus-gpri
+    kind: document
+    title: GPRI statement on global phosphorus scarcity (response to IFDC 2010)
+    url: https://phosphorusfutures.net/?p=202
+    verified: listed 2026-11-18
+  - id: graduation-science-2015
+    kind: document
+    title: Banerjee et al. 2015, Science 348(6236), multifaceted graduation programme, six countries
+    url: https://www.povertyactionlab.org/updates/anti-poverty-strategy-offers-sustained-benefit-worlds-ultra-poor-says-new-study-science
+    verified: listed 2026-11-18
+  - id: egger-2022-cash-ge
+    kind: document
+    title: Egger et al. 2022, Econometrica 90(6), general-equilibrium effects of cash transfers in Kenya (multiplier 2.5)
+    url: https://www.nber.org/system/files/working_papers/w26600/w26600.pdf
+    verified: listed 2026-11-18
+  - id: tyler-legitimacy
+    kind: document
+    title: Tyler, Goff & MacCoun, legitimacy and compliance with the law (APS review)
+    url: https://www.psychologicalscience.org/publications/policing.html
+    verified: listed 2026-11-18
+  - id: fajnzylber-2002
+    kind: document
+    title: Fajnzylber, Lederman & Loayza 2002, Inequality and violent crime (J Law Econ 45:1)
+    url: https://econpapers.repec.org/RePEc:ucp:jlawec:v:45:y:2002:i:1:p:1-40
+    verified: listed 2026-11-18
+  - id: lead-crime-review-2023
+    kind: document
+    title: 2023 systematic review, early-life lead exposure and adult criminal behaviour
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC10393136
+    verified: listed 2026-11-18
