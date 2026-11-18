@@ -240,7 +240,7 @@ test('Aether variants render native palettes, family navigation, optional plates
       assert.equal(await ev("getComputedStyle(document.querySelector('#paper h1')).fontStyle"), template === 'aether-sun-and-moon' ? 'normal' : 'italic');
       assert.equal(await ev("document.querySelectorAll('.aether-plate').length"), 1);
       assert(await ev("!!document.querySelector('.aether-plate[aria-label] desc')"));
-      assert.equal(await ev("document.querySelectorAll('.aether-tail nav a').length"), 3);
+      assert.equal(await ev("document.querySelectorAll('.aether-footer nav a').length"), 3);
       assert(!requests.some(path => path.endsWith('.md')), 'no automatic manuscript request before explicit loading');
       const expected = template === 'aether-blackening' ? 'rgb(29, 26, 32)' : template === 'aether-sun-and-moon' ? 'rgb(240, 238, 229)' : 'rgb(238, 230, 209)';
       assert.equal(await ev('getComputedStyle(document.body).backgroundColor'), expected);
@@ -249,7 +249,7 @@ test('Aether variants render native palettes, family navigation, optional plates
       requests.length = 0;
       await navigate(base + '?document=starter.md');
       assert.equal(await ev("document.querySelector('#paper h1').textContent"), 'An observation, offered gently');
-      assert(await ev("Array.from(document.querySelectorAll('.aether-tail nav a')).every(a=>!a.search)"), 'variant links never carry manuscript URLs');
+      assert(await ev("Array.from(document.querySelectorAll('.aether-footer nav a')).every(a=>!a.search)"), 'variant links never carry manuscript URLs');
       assert.equal(await ev("getComputedStyle(document.querySelector('.aether-art')).display"), 'none', 'plate preference survives replacement');
       await ev("document.getElementById('aether-plates').click();document.getElementById('contract-link').click()");
       await new Promise(r => setTimeout(r, 70));

@@ -47,7 +47,7 @@ body[data-reading-mode=paper]{overflow:hidden;background:#eeece4}body[data-readi
   html[data-template], html[data-template] body { color-scheme: light; background: white !important; color: black; overflow: visible !important; }
   html[data-template] body > :not(.reading-layout),
   html[data-template] .reading-layout > :not(#paper),
-  html[data-template] :is(.heart-frame,.heart-grain,.aether-tail,.bib-actions) { display: none !important; }
+  html[data-template] :is(.heart-frame,.heart-grain,.aether-footer,.bib-actions) { display: none !important; }
   html[data-template] body .reading-layout,
   html[data-template] body[data-reading-mode] .reading-layout {
     display: block !important; position: static; width: auto !important; max-width: none !important;
