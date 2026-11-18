@@ -21,7 +21,8 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     return url.origin;
   }).concat(['https://api.github.com', 'https://export.arxiv.org']).join(' ');
   const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
-  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations });
+  if (config.linkTarget !== undefined && config.linkTarget !== '_top') throw Error('Unsupported host linkTarget (only _top)');
+  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations, linkTarget: config.linkTarget });
   config.dialects = { ...config.dialects, ...result.resolvedRegistry.dialects };
   config.themes = { ...config.themes, ...result.resolvedRegistry.themes };
   const snapshots = {};

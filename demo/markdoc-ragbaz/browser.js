@@ -43,7 +43,7 @@ $('download-reading-copy').addEventListener('click', () => {
 let generation = 0;
 let previewGeneration = 0;
 let pendingSource;
-const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations };
+const options = { registry, defaults: config.defaults, policy, visualizations: config.visualizations, linkTarget: config.linkTarget === '_top' ? '_top' : undefined };
 const bar = $('reading-bar');
 const drawer = $('reader-drawer');
 const tocPanel = $('toc-panel');
