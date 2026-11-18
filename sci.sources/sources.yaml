@@ -226,3 +226,9 @@ sources:
     title: 2023 systematic review, early-life lead exposure and adult criminal behaviour
     url: https://pmc.ncbi.nlm.nih.gov/articles/PMC10393136
     verified: listed 2026-11-18
+  - id: eu-ai-act-art14
+    kind: document
+    title: Regulation (EU) 2024/1689 (AI Act), Article 14 human oversight of high-risk AI systems
+    url: https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+    notes: EUR-Lex also offers SPARQL/REST access to EU law (CELLAR).
+    verified: listed 2026-11-18
