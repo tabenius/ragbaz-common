@@ -664,10 +664,10 @@ The builder checks esbuild inputs, pinned package versions, vendored inventory,
 generated-parser identity and notice availability, refusing unreviewed changes.
 Notices participate in render identity and require no build-time network fetch.
 
-This checkout declares no repository/package redistribution license for
-ragbaz-common. Credits explicitly preserve that uncertainty rather than invent
-an MIT grant; common and authored-paper redistribution need their owners'
-permission. A future declared common license must ship its full text. esbuild
+ragbaz-common is licensed GPL-3.0-or-later (`LICENSE`, since 2026-11-18). The
+builder embeds the full license text in every standalone page's credits, beside
+the dependency notices. The license covers ragbaz-common's code, not the
+authored documents a page displays; those keep their own owners' terms. esbuild
 is build-only; its implementation is not distributed in the browser runtime.
 
 `npm test` includes official-AST, unsafe HTML/URL/attribute/frontmatter/theme,
