@@ -14,11 +14,11 @@ const fixture = '# Portable fixture\n\nExact **åäö** words.\n\n| A | B |\n|--
 // scientific-identifier links and reading-copy reconciliation. Earlier equivalence was
 // checked against 0fdff6e before the SVG work.
 const expected = {
-  'markdoc-ragbaz-sci-tufte': 'c3e269594d2e81516ffd7659cab9edb52eece6e4f30b8028f0a15ff7ae3152bf',
-  heartfulness: '9fd4e17edf94ca0bbbc3a46a009ea880c9fbb25f57196ed821852e7105ca8c75',
-  'aether-prima-materia': 'f22cc5372a365126dd0661414b235096d5d4ec40320d77bf503decc5b06c022b',
-  'aether-sun-and-moon': 'a0d5c4c85600dd009c32f32fa3e7f3f016900e110ce89d2862c651ec17fc7874',
-  'aether-blackening': 'dad4b6bc5d266e0c9fde1c580d57f4f75d14d5aa5edb1449320d36c7b54a7510',
+  'markdoc-ragbaz-sci-tufte': 'c9ff59d9a443498e2b0a08b2b402fcee51e652bc820e537bc7fff4aa8dbf4d9b',
+  heartfulness: '080c74b84cacc24b470cc2528ee36ae2e88071aff24338f240cc4eed37b9b87f',
+  'aether-prima-materia': '0c20071f208427c5b3626cbc907847febaaae5b5129044f52d39d00bd3dc6344',
+  'aether-sun-and-moon': '2ce30871b3372aea09ba5f1cc435408c4a69e1825b4159244dbe73f359944e5d',
+  'aether-blackening': '59017b787877b70deb4c65013a2e29f3c5b83ffd1c200dcce5bf872f183dcae6',
 };
 const base = JSON.parse(await readFile(new URL('../demo/markdoc-ragbaz/registry.json', import.meta.url), 'utf8'));
 

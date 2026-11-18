@@ -3,6 +3,12 @@
 import { BUILTIN_REGISTRY, LIMITS, escapeHTML, renderDocument, sha256 } from '../../src/content/markdoc-ragbaz.js';
 import { AETHER_VARIANTS } from './aether.js';
 import { themeFontStyles } from './fonts.js';
+const RTL_LANGUAGES = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb']);
+// Mirrors the reading column for right-to-left documents; reader chrome stays as is.
+const RTL_STYLES = `
+/* rtl: document.direction */
+html[dir=rtl] #paper{text-align:start}html[dir=rtl] blockquote{border-left:0;border-right:2px solid var(--accent);padding-left:0;padding-right:1.2rem}html[dir=rtl] .semantic{border-left:0;border-right:3px solid var(--accent)}html[dir=rtl] .semantic.warning{border-right-color:var(--warning)}html[dir=rtl] .semantic.aside{border-right:1px solid var(--rule);margin-right:0;max-width:100%}html[dir=rtl] .semantic.product{border-right-color:#3f86d6}html[dir=rtl] th,html[dir=rtl] td{text-align:right}html[dir=rtl] th:first-child,html[dir=rtl] td:first-child{padding-left:.8rem;padding-right:0}html[dir=rtl] .timeline{padding-left:0;padding-right:1.1em;border-left:0;border-right:2px solid var(--rule)}html[dir=rtl] .event{padding-left:0;padding-right:.7em}html[dir=rtl] .event::before{left:auto;right:calc(-1.1em - 6px)}html[dir=rtl] .bibliography ol{padding-left:0;padding-right:2em}html[dir=rtl] .citation{margin-left:0;margin-right:.1em}html[dir=rtl] ul,html[dir=rtl] ol{padding-left:0;padding-right:1.6em}html[dir=rtl] #toc a[data-level='3']{padding-left:0;padding-right:.8rem}html[dir=rtl] pre,html[dir=rtl] code{direction:ltr;unicode-bidi:isolate}
+`;
 const jsonScript = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 const canonical = value => JSON.stringify(value, (_, v) => v && !Array.isArray(v) && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, v[k]])) : v);
 
@@ -21,7 +27,8 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     return url.origin;
   }).concat(['https://api.github.com', 'https://export.arxiv.org']).join(' ');
   const registry = { dialects: { ...BUILTIN_REGISTRY.dialects, ...config.dialects }, themes: { ...BUILTIN_REGISTRY.themes, ...config.themes } };
-  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations });
+  if (config.linkTarget !== undefined && config.linkTarget !== '_top') throw Error('Unsupported host linkTarget (only _top)');
+  const result = await renderDocument(source, { registry, defaults: config.defaults, policy: config.policy, fetcher, visualizations: config.visualizations, linkTarget: config.linkTarget });
   config.dialects = { ...config.dialects, ...result.resolvedRegistry.dialects };
   config.themes = { ...config.themes, ...result.resolvedRegistry.themes };
   const snapshots = {};
@@ -36,10 +43,20 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     }
   }
   const { runtime, skeleton, credits } = assets;
+  // document.language / document.direction set the root element; absent, the output stays byte-identical (en, ltr).
+  const { language, direction } = result.manifest.document || {};
+  let root = null;
+  if (language !== undefined || direction !== undefined) {
+    if (language !== undefined && (typeof language !== 'string' || !/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(language))) throw Error('document.language must be a BCP 47 tag such as "sv" or "zh-Hans"');
+    if (direction !== undefined && !['ltr', 'rtl'].includes(direction)) throw Error('document.direction must be "ltr" or "rtl"');
+    const lang = language || 'en';
+    root = { lang, dir: direction || (RTL_LANGUAGES.has(lang.split('-')[0]) ? 'rtl' : 'ltr') };
+  }
   let styles = assets.baseStyles;
   if (config.metaDocument?.id === 'heartfulness') styles += '\n' + assets.heartfulnessStyles;
   if (AETHER_VARIANTS[config.metaDocument?.id]) styles += '\n' + assets.aetherStyles;
   if (config.fontAlternatives === 'google-curated/1') styles += themeFontStyles(config.metaDocument.id);
+  if (root?.dir === 'rtl') styles += RTL_STYLES;
   const digest = await sha256(sourceBytes), hashText = text => sha256(new TextEncoder().encode(text));
   const runtimeSHA256 = await hashText(runtime);
   const tuple = { schema: 'ragbaz.render/1', sourceSHA256: digest, skeleton: { id: config.skeleton, sha256: await hashText(skeleton) }, implementation: { id: config.implementation, sha256: runtimeSHA256, markdoc: '0.5.10' }, stylesSHA256: await hashText(styles), assets: result.manifest.assets, settings: result.manifest.settings, defaults: config.defaults || {}, policy: config.policy || {}, visualizations: config.visualizations || null, registry: { dialects: config.dialects, themes: config.themes }, snapshots: Object.fromEntries(Object.entries(snapshots).map(([id, s]) => [id, s.sha256])) };
@@ -57,5 +74,7 @@ export async function buildStandaloneBytes({ sourceBytes, config: inputConfig, a
     PROVENANCE: escapeHTML(`Embedded snapshot · SHA-256 ${digest} · ${config.implementation} / ${config.skeleton}${result.diagnostics.length ? ' · Partial / refused: ' + result.diagnostics.join('; ') : ''}`),
     PAYLOAD: jsonScript(payload), RUNTIME: runtime.replace(/<\/script/gi, '<\\/script'),
   };
-  return { html: skeleton.replace(/@@([A-Z]+)@@/g, (_, key) => values[key]), result, payload, assets: { runtime, styles, credits } };
+  let html = skeleton.replace(/@@([A-Z]+)@@/g, (_, key) => values[key]);
+  if (root) html = html.replace('<html lang="en"', `<html lang="${root.lang}"${root.dir === 'rtl' ? ' dir="rtl"' : ''}`);
+  return { html, result, payload, assets: { runtime, styles, credits } };
 }

@@ -14,6 +14,16 @@ export const BUILTIN_REGISTRY = Object.freeze({
     paper: descriptor({ callout: { element: 'aside', attrs: ['kind', 'title'] }, aside: { element: 'aside', attrs: ['title'] }, source: { element: 'span', attrs: ['ref'], selfClosing: true }, figure: { element: 'figure', attrs: ['title'] } }),
     plan: descriptor({ example: { element: 'section', attrs: ['title'] }, milestone: { element: 'section', attrs: ['title', 'status'] }, decision: { element: 'section', attrs: ['title', 'status'] } }),
     models: descriptor({ model: { element: 'section', attrs: ['ref'], selfClosing: true }, view: { element: 'section', attrs: ['ref'], selfClosing: true } }),
+    // Reports, essays and technical notes: status tags, headline numbers,
+    // fact/guess timelines and structured product notes.
+    report: descriptor({
+      status: { element: 'span', attrs: ['kind', 'title'], selfClosing: true },
+      stats: { element: 'div', attrs: ['title'] },
+      stat: { element: 'div', attrs: ['value', 'title'] },
+      timeline: { element: 'div', attrs: ['title'] },
+      event: { element: 'div', attrs: ['when', 'kind'] },
+      product: { element: 'aside', attrs: ['name', 'status', 'ref', 'title'] },
+    }),
   },
   themes: { paper: { version: '1', tokens: {} } },
 });
@@ -21,6 +31,10 @@ const ELEMENTS = new Set(['article', 'section', 'aside', 'figure', 'figcaption',
 const SVG_ELEMENTS = new Set(['svg', 'g', 'title', 'desc', 'defs', 'marker', 'path', 'rect', 'line', 'circle', 'polyline', 'text']);
 const CUSTOM_ELEMENTS = new Set(['aside', 'section', 'figure', 'div', 'span', 'blockquote']);
 const BAD_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+export const STATUS_KINDS = Object.freeze(['measured', 'built', 'early', 'planned', 'coming', 'retired']);
+export const EVENT_KINDS = Object.freeze(['fact', 'guess', 'planned']);
+const SOURCE_DATE = /^(?:n\.d\.|[12]\d{3}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?)$/;
+const ANCHOR = /^[a-z][a-z0-9-]{0,63}$/;
 const PROVIDER_QUERY = Symbol('host-owned provider query');
 
 function checkData(value, depth = 0, seen = new Set()) {
@@ -72,6 +86,11 @@ export function parseDocument(source, defaults = {}) {
     if (!manifest[key] || Array.isArray(manifest[key]) || typeof manifest[key] !== 'object') throw new Error(`${key} must be a mapping`);
   }
   for (const key of ['assets', 'sources', 'models', 'views']) manifest[key] = list(manifest[key], key);
+  for (const entry of manifest.sources) {
+    for (const key of ['published', 'retrieved']) {
+      if (entry[key] !== undefined && (typeof entry[key] !== 'string' || !SOURCE_DATE.test(entry[key]))) throw new Error(`Source ${key} must be YYYY, YYYY-MM, YYYY-MM-DD or n.d.`);
+    }
+  }
   for (const entry of [...manifest.assets, ...manifest.sources]) {
     integrityDescriptor(entry);
     if (entry.revision !== undefined) validateRevision(entry);
@@ -566,7 +585,7 @@ export async function renderDocument(source, options = {}) {
     try {
       const family = await registryEntry('dialects', ref, registry, registryOptions);
       for (const [name, spec] of Object.entries(family.tags || {})) {
-        if (!CUSTOM_ELEMENTS.has(spec.element) || !Array.isArray(spec.attrs) || spec.attrs.some(a => !['title', 'kind', 'status', 'ref'].includes(a)) || own(specs, name)) throw new Error('Unsafe or conflicting declarative template');
+        if (!CUSTOM_ELEMENTS.has(spec.element) || !Array.isArray(spec.attrs) || spec.attrs.some(a => !['title', 'kind', 'status', 'ref', 'value', 'when', 'name'].includes(a)) || own(specs, name)) throw new Error('Unsafe or conflicting declarative template');
       }
       Object.assign(specs, family.tags); used.push(ref);
     } catch (e) { diagnostics.push(e.message); }
@@ -594,6 +613,30 @@ export async function renderDocument(source, options = {}) {
         if (!spec) return refuse(node, `Unsupported tag: ${name}`);
         if ((node.errors || []).length || Object.keys(node.attributes).some(k => !spec.attrs.includes(k)) || Object.values(node.attributes).some(v => typeof v !== 'string')) return refuse(node, `Invalid attributes: ${name}`);
         const a = node.attributes;
+        const label = (cls, value) => new Markdoc.Tag('span', { class: cls }, [value]);
+        if (name === 'status') {
+          if (!STATUS_KINDS.includes(a.kind)) return refuse(node, `Unsupported status kind: ${a.kind}`);
+          return new Markdoc.Tag('span', { class: `status-tag ${a.kind}` }, [a.title || a.kind]);
+        }
+        if (name === 'stats') return new Markdoc.Tag('div', { class: 'stats' }, node.transformChildren(config));
+        if (name === 'stat') {
+          if (!a.value || a.value.length > 40) return refuse(node, 'A stat needs a value of at most 40 characters');
+          return new Markdoc.Tag('div', { class: 'stat' }, [label('stat-value', a.value), ...(a.title ? [label('stat-label', a.title)] : []), new Markdoc.Tag('div', { class: 'stat-note' }, node.transformChildren(config))]);
+        }
+        if (name === 'timeline') return new Markdoc.Tag('div', { class: 'timeline' }, [...(a.title ? [new Markdoc.Tag('strong', { class: 'block-label' }, [a.title])] : []), ...node.transformChildren(config)]);
+        if (name === 'event') {
+          if (!a.when || a.when.length > 40) return refuse(node, 'An event needs a when of at most 40 characters');
+          if (!EVENT_KINDS.includes(a.kind)) return refuse(node, `Unsupported event kind: ${a.kind}`);
+          return new Markdoc.Tag('div', { class: `event ${a.kind}` }, [new Markdoc.Tag('div', { class: 'event-head' }, [label('event-when', a.when), label(`event-kind ${a.kind}`, a.kind)]), ...node.transformChildren(config)]);
+        }
+        if (name === 'product') {
+          if (!a.name || a.name.length > 60) return refuse(node, 'A product needs a name of at most 60 characters');
+          if (a.status && !STATUS_KINDS.includes(a.status)) return refuse(node, `Unsupported status kind: ${a.status}`);
+          const entry = a.ref ? manifest.sources.find(s => s.id === a.ref) : null;
+          if (a.ref && !entry) return refuse(node, `Unknown source: ${a.ref}`);
+          const head = [new Markdoc.Tag('strong', { class: 'block-label' }, [a.title || 'Can help']), new Markdoc.Tag('span', { class: 'product-name' }, [a.name]), ...(a.status ? [new Markdoc.Tag('span', { class: `status-tag ${a.status}` }, [a.status])] : []), ...(entry ? [new Markdoc.Tag('span', { class: 'source-reference', 'data-source': entry.id }, [`[Source: ${entry.title || entry.id}]`])] : [])];
+          return new Markdoc.Tag('aside', { class: 'semantic product' }, [new Markdoc.Tag('div', { class: 'product-head' }, head), ...node.transformChildren(config)]);
+        }
         if (a.kind && !['warning', 'note', 'info', 'proposal', 'observed', 'verified'].includes(a.kind)) return refuse(node, 'Unsupported callout kind');
         if (a.status && !['proposal', 'observed', 'verified'].includes(a.status)) return refuse(node, 'Unsupported status');
         if (name === 'source') {
@@ -643,6 +686,12 @@ export async function renderDocument(source, options = {}) {
       }
       return new Markdoc.Tag('pre', {}, [new Markdoc.Tag('code', {}, [source])]);
     } },
+    heading: { ...Markdoc.nodes.heading, attributes: { ...Markdoc.nodes.heading.attributes, id: { type: String } }, transform(node, config) {
+      const children = node.transformChildren(config);
+      // An anchor annotation leaves the heading text with a trailing space.
+      if (typeof children.at(-1) === 'string') children[children.length - 1] = children.at(-1).replace(/\s+$/, '');
+      return new Markdoc.Tag(`h${node.attributes.level}`, node.transformAttributes(config), children);
+    } },
     image: { transform(node) { diagnostics.push('Image inert: explicit asset loading required'); return new Markdoc.Tag('span', { class: 'unavailable' }, [`[Image unavailable: ${node.attributes.alt || 'image'}]`]); } },
   } };
   const validation = Markdoc.validate(ast, config);
@@ -650,12 +699,35 @@ export async function renderDocument(source, options = {}) {
   // Built-in executable constructs (if/for/partial) are not part of this grammar.
   for (const node of ast.walk()) {
     if (node.type === 'tag' && !own(tags, node.tag)) throw new Error('Unregistered AST tag');
-    if (node.type !== 'tag' && node.annotations?.length) throw new Error('Author HTML annotations refused; use declared semantic tags');
+    if (node.type === 'heading' && node.annotations?.length) {
+      // The one permitted annotation: a stable anchor, e.g. "## Title {% #anchor %}".
+      if (node.annotations.some(x => x.type !== 'attribute' || x.name !== 'id' || typeof x.value !== 'string' || !ANCHOR.test(x.value))) throw new Error('Only heading anchors {% #lowercase-id %} are permitted');
+    } else if (node.type !== 'tag' && node.annotations?.length) throw new Error('Author HTML annotations refused; use declared semantic tags');
     if (node.type === 'variable' || node.type === 'function') throw new Error('Executable expressions refused');
     if (Object.getPrototypeOf(node.attributes) !== Object.prototype || Object.keys(node.attributes).some(k => BAD_KEYS.has(k))) throw new Error('Unsafe AST attribute map');
     try { checkData(Object.values(node.attributes)); } catch { throw new Error('Executable expressions or unsafe AST attributes refused'); }
   }
   const tree = Markdoc.transform(ast, config);
+  const textOf = v => Array.isArray(v) ? v.map(textOf).join('') : v && typeof v === 'object' ? textOf(v.children) : String(v ?? '');
+  // A block tag written on one line arrives wrapped in <p>; a block element
+  // inside a paragraph is invalid HTML, so unwrap it.
+  (function unwrapBlocks(value) {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) return value.forEach(unwrapBlocks);
+    if (Array.isArray(value.children)) value.children = value.children.map(c => c?.name === 'p' && c.children.length === 1 && ['div', 'aside', 'section', 'figure'].includes(c.children[0]?.name) ? c.children[0] : c);
+    unwrapBlocks(value.children);
+  })(tree);
+  (function labelCells(value) {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) return value.forEach(labelCells);
+    if (value.name === 'table') {
+      const head = value.children.find(c => c?.name === 'thead');
+      const labels = (head?.children.find(c => c?.name === 'tr')?.children || []).map(th => textOf(th).trim().slice(0, 80));
+      for (const body of value.children.filter(c => c?.name === 'tbody')) for (const tr of body.children) (tr.children || []).forEach((td, i) => { if (td?.name === 'td' && labels[i]) td.attributes = { ...td.attributes, 'data-label': labels[i] }; });
+    }
+    labelCells(value.children);
+  })(tree);
+  const anchors = new Set();
   const headings = [];
   const identifiers = options.identifiers !== false;
   function render(value, plain = false) {
@@ -668,7 +740,7 @@ export async function renderDocument(source, options = {}) {
     let attrs = '';
     if (name === 'a') {
       const href = safeLink(a.href);
-      if (href) attrs += ` href="${escapeHTML(href)}" rel="noreferrer noopener"`;
+      if (href) attrs += ` href="${escapeHTML(href)}" rel="noreferrer noopener"${options.linkTarget === '_top' && !href.startsWith('#') ? ' target="_top"' : ''}`;
       else diagnostics.push('Unsafe or relative link made inert');
     }
     if (typeof a.class === 'string' && /^[a-z -]{1,150}$/.test(a.class)) attrs += ` class="${a.class}"`;
@@ -692,8 +764,13 @@ export async function renderDocument(source, options = {}) {
       }
       return `<${name}${attrs}>${render(value.children, childPlain)}</${name}>`;
     }
+    if (name === 'td' && typeof a['data-label'] === 'string') attrs += ` data-label="${escapeHTML(a['data-label'])}"`;
     if (/^h[1-6]$/.test(name)) {
-      const id = `section-${headings.length + 1}`;
+      let id = `section-${headings.length + 1}`;
+      if (typeof a.id === 'string' && ANCHOR.test(a.id)) {
+        if (anchors.has(a.id)) diagnostics.push(`Duplicate heading anchor: ${a.id}`);
+        else { id = a.id; anchors.add(id); }
+      }
       const plainText = (v) => Array.isArray(v) ? v.map(plainText).join('') : typeof v === 'object' && v ? plainText(v.children) : String(v ?? '');
       headings.push({ id, level: Number(name[1]), text: plainText(value.children) });
       attrs += ` id="${id}"`;
