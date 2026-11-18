@@ -1,6 +1,7 @@
 # Artifact publication and sharing library — design direction
 
 Status: proposal, not an implemented service, protocol standard or deployment.
+Fleet-wide priorities and the recovery-first roadmap live in [FLEET-CHARTER.md](FLEET-CHARTER.md) and [DISTRIBUTED-LIBRARY-ROADMAP.md](DISTRIBUTED-LIBRARY-ROADMAP.md). This document is scoped to artifact publication and collaboration, not a mandatory centralized fleet topology.
 Goal: one inspectable library usable by many humans and agents, online and during
 disconnection, with optional mesh exchange. Fragment describes an artifact;
 Markdoc renders one content type. Neither owns account policy, publication rights
@@ -44,9 +45,7 @@ as executable instructions or a source of delegated authority.
 
 ## Online and mesh transport
 
-Start with one authoritative workspace service, immutable object storage and
-capability-checked metadata APIs; add portable export/import bundles before peer
-discovery. A bundle contains a versioned manifest, bounded content graph, hashes,
+For a **single product's private workspace**, one local or product-owned authoritative decision point may simplify access-control and release policy. **This is not a central RAGBAZ fleet authority.** Fleet preservation starts with independently recoverable Rebeqah storage layers, explicit peer exchange and encrypted off-machine backup. Add portable export/import before broad peer discovery. A workspace may use immutable object storage and capability-checked metadata APIs without becoming necessary to other nodes. A bundle contains a versioned manifest, bounded content graph, hashes,
 provenance and optional signatures. Verify bytes and signer authority separately.
 
 Mesh peers exchange inventory summaries and explicitly requested blobs; authorize
@@ -78,6 +77,8 @@ build reports or public caches. Audit publish/grant/revoke/import operations whi
 minimizing personal data. Test membership changes against cached search and assets.
 
 ## Suggested staged implementation
+
+The stages below describe this **artifact-library product surface**; they do not supersede fleet milestone 1 (Rebeqah local storage layers → phone and/or encrypted S3 → independent owner-level restore). See the distributed-library roadmap first.
 
 1. **Local library:** Fragment + Markdoc + explicit assets, validate/export/import,
    accessible diagram/table fallbacks, reproducible rendering, offline browsing.
