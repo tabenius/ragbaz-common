@@ -507,7 +507,9 @@ The builder verifies the reviewed bundle inventory and refuses missing notices
 or unreviewed dependency changes. Normal builds and tests need no notice fetch.
 No common LICENSE or package license declaration exists in this checkout;
 credits explicitly do not grant a common/paper redistribution license by
-association with permissive dependencies.
+association with permissive dependencies. *(Superseded 2026-11-18: ragbaz-common
+is now GPL-3.0-or-later; its full LICENSE text is embedded in the credits.
+Authored papers keep their own terms.)*
 
 The Fragment draft at `0d9114a6014721bfba52e4d2b54d33dc373b7ee5` was inspected
 read-only. Documentation distinguishes local `ragbaz.surface/1` and

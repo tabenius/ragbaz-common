@@ -619,7 +619,8 @@ test('standalone bundle contains complete offline runtime, escaped payload and e
     assert.match(built.html, /Copyright \(c\) Felix Böhm/);
     assert.match(built.html, /2017\+ Futago-za Ryuu/);
     assert.match(built.html, /yaml 2\.9\.1 \(ISC\)/);
-    assert.match(built.html, /No repository\/package redistribution license is declared/);
+    assert.match(built.html, /GNU GENERAL PUBLIC LICENSE/);
+    assert.match(built.html, /Version 3, 29 June 2007/);
     assert.match(built.html, /@media print/);
     assert.equal(built.result.usedDialects.length, 1);
     const response = await worker.fetch(new Request('https://surface.example/paper.html'), { ASSETS: { fetch: () => new Response(built.html, { headers: { 'Content-Type': 'text/html' } }) } });
@@ -650,7 +651,7 @@ test('license inventory refuses missing notices, unreviewed dependencies and dec
     'node_modules/cytoscape/dist/cytoscape.cjs': {},
   } });
   assert.deepEqual(adapterNotices.map(notice => notice.name), [
-    '@kurkle/color 0.3.4 (MIT)', 'chart.js 4.6.1 (MIT)', 'cytoscape 3.34.4 (MIT)', '@ragbaz/common',
+    '@kurkle/color 0.3.4 (MIT)', 'chart.js 4.6.1 (MIT)', 'cytoscape 3.34.4 (MIT)', '@ragbaz/common — LICENSE',
   ]);
   await assert.rejects(() => collectBundleNotices({ inputs: { 'node_modules/new-dependency/index.js': {} } }), /Unreviewed bundled license/);
   await assert.rejects(() => collectBundleNotices(inventory, { readText: path => path === 'node_modules/yaml/LICENSE' ? Promise.reject(new Error('missing')) : actual(path) }), /Required bundled LICENSE unavailable/);
@@ -663,6 +664,7 @@ test('license inventory refuses missing notices, unreviewed dependencies and dec
   } }), /vendored license inventory/);
   await assert.rejects(() => collectBundleNotices(inventory, { readText: async path => {
     if (path === 'package.json') return JSON.stringify({ name: '@ragbaz/common', license: 'MIT' });
+    if (['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'COPYING', 'NOTICE'].includes(path)) throw Object.assign(new Error('absent'), { code: 'ENOENT' });
     return actual(path);
   } }), /Declared common license text unavailable/);
 });
