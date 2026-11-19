@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ragbaz.cc/schemas/collection-view.schema.json",
+  "title": "Source-scoped collection view",
+  "description": "Transport-neutral internal model for concrete, aggregated and virtual collections. Does not grant authorization or prescribe UI vocabulary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "representation", "sources", "factories", "artifacts"],
+  "properties": {
+    "schema": { "const": "ragbaz.collection-view.v1" },
+    "id": { "$ref": "#/$defs/id" },
+    "representation": { "enum": ["concrete", "aggregate", "virtual"] },
+    "sources": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/source" } },
+    "factories": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/factory" } },
+    "artifacts": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/artifact" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "ref": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "id"],
+      "properties": { "source_id": { "$ref": "#/$defs/id" }, "id": { "$ref": "#/$defs/id" } }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "status", "capabilities"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "enum": ["ready", "snapshot", "unavailable", "unknown"] },
+        "capabilities": {
+          "type": "object", "additionalProperties": false, "required": ["stores", "produces", "computes"],
+          "properties": { "stores": { "type": ["boolean", "null"] }, "produces": { "type": ["boolean", "null"] }, "computes": { "type": ["boolean", "null"] } }
+        }
+      }
+    },
+    "factory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_id", "name", "kind", "parent"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "source_id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "parent": { "anyOf": [{ "$ref": "#/$defs/ref" }, { "type": "null" }] }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_id", "title", "kind", "factory", "relationship", "association_verified"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "source_id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "factory": { "$ref": "#/$defs/ref" },
+        "relationship": { "enum": ["owner", "author", "attester", "participant", "member", "unknown"] },
+        "association_verified": { "type": "boolean" },
+        "evidence_ref": { "type": "string", "maxLength": 2048 },
+        "revision": { "type": "string", "maxLength": 512 }
+      }
+    }
+  }
+}

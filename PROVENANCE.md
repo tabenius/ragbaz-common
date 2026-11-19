@@ -5,6 +5,16 @@ tell a deliberate divergence from an accident.
 
 ## Lineage
 
+### Additive collection-view contract (2026-11-19)
+
+New, provider-neutral schema for the user's internal village/factory/artifact
+model. Source-scoped references prevent an RBQ sink or aggregate from silently
+flattening different upstream sources. Optional compute, production and storage
+remain independent, with unknown values explicit. No product routes, rendered
+pages, authentication rule or cryptographic verifier was extracted or copied;
+there is no change to existing identity/rendering contracts. Initial consumer
+work is in Dash; v-baz and device/peer adoption remains future integration.
+
 ```
 survivors.se / bereaved.dad (Elias.Venn)
   └─ src/identity/            passkeys, pseudonyms, recovery codes, abuse gate

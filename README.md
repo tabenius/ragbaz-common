@@ -30,6 +30,12 @@ verification, and short-lived temporary sessions.
 Schemas shared across RAGBAZ projects live in [`schemas/`](schemas/README.md), starting with the
 `ragbaz.component.json` manifest schema (0.2.0).
 
+The transport-neutral [collection-view contract](docs/COLLECTION-VIEW.md)
+keeps source IDs/names, factories, artifacts and optional storage/production/
+compute capabilities distinct across concrete, aggregate and virtual views.
+It is our internal village model, not mandatory UI vocabulary or a new
+authorization/identity system.
+
 
 | Module | Purpose |
 |---|---|
