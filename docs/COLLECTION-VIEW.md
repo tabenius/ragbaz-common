@@ -41,3 +41,8 @@ Consumers may vendor a checksummed, pinned **schema artifact**, but must not
 fork its semantics or copy authentication/rendering implementations. Adoption
 in a product is explicit; this initial contract does not claim that v-baz,
 device peers or a global identity graph are already connected.
+
+Artifacts may be addressed as [signed gifts](GIFTS.md), including trivial text
+and human-in-the-loop invitations. Delivery streams, including email adapters,
+preserve source identity and original signatures rather than creating a second
+artifact/identity model in each transport.

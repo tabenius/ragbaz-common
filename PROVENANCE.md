@@ -15,6 +15,12 @@ pages, authentication rule or cryptographic verifier was extracted or copied;
 there is no change to existing identity/rendering contracts. Initial consumer
 work is in Dash; v-baz and device/peer adoption remains future integration.
 
+The same additive draft now includes gift envelope projections: a sender
+public key/signature, recipient public keys, trivial text or an artifact ref,
+optional HITL invitation context and allowed delivery transports. Email,
+Telegram and Discord are adapter directions only; no delivery, acceptance,
+signature verifier or new signing authority is claimed by schema validation.
+
 ```
 survivors.se / bereaved.dad (Elias.Venn)
   └─ src/identity/            passkeys, pseudonyms, recovery codes, abuse gate

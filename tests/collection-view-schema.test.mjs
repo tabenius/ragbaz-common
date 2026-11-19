@@ -13,6 +13,11 @@ test('the shared collection contract keeps source identity, capabilities and ass
   for (const capability of ['stores', 'produces', 'computes']) assert.deepEqual(schema.$defs.source.properties.capabilities.properties[capability].type, ['boolean', 'null'])
   assert(schema.$defs.artifact.properties.relationship.enum.includes('attester'))
   assert(schema.$defs.artifact.required.includes('association_verified'))
+  assert(schema.$defs.gift.required.includes('signature'))
+  assert(schema.$defs.gift.required.includes('sender_public_key'))
+  assert(schema.$defs.gift.required.includes('recipient_public_keys'))
+  assert.equal(schema.$defs.gift.properties.delivery_policy.properties.email_content.enum[0], 'notification_only')
+  assert.deepEqual(schema.$defs.gift.properties.delivery_policy.properties.allowed_transports.items.enum, ['rbq', 'app', 'email', 'telegram', 'discord'])
   const walk = node => {
     if (!node || typeof node !== 'object') return
     if (node.$ref) {
