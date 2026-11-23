@@ -132,7 +132,7 @@ export const EVIDENCE_SCALE = Object.freeze([
   Object.freeze({ grade: 'D', label: 'Mechanistic extrapolation or expert opinion', designs: Object.freeze(['animal', 'mechanistic', 'expert-opinion', 'consensus-statement', 'commentary', 'popular-account']) }),
 ]);
 /** Sources that inform but are not evidence for a claim (law, standards, reports). */
-export const CONTEXT_DESIGNS = Object.freeze(['statute', 'bill', 'guideline', 'reporting-standard', 'report', 'dataset']);
+export const CONTEXT_DESIGNS = Object.freeze(['statute', 'bill', 'guideline', 'reporting-standard', 'report', 'dataset', 'method']);
 
 /** Validated scale: the document's `document.evidence.scale` or the host default. */
 export function evidenceScale(document = {}) {

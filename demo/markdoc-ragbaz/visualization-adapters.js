@@ -136,7 +136,7 @@ function graph(host, record) {
         },
       },
     ],
-    layout: { name: 'breadthfirst', directed: true, padding: 24, spacingFactor: 1.2, animate: false },
+    layout: { name: 'breadthfirst', directed: true, padding: 24, spacingFactor: 1.35, avoidOverlap: true, nodeDimensionsIncludeLabels: true, animate: false },
     minZoom: 0.2,
     maxZoom: 3,
     wheelSensitivity: 0.2,
@@ -145,9 +145,20 @@ function graph(host, record) {
     userPanningEnabled: true,
     userZoomingEnabled: true,
   });
-  instance.resize();
+  // Size the host to the laid-out graph so labels stay legible: wide graphs
+  // scale to the available width, tall graphs get a taller host (bounded).
+  const fitHost = () => {
+    const box = instance.elements().boundingBox({}), width = host.clientWidth - 16;
+    if (!(box.w > 0) || !(width > 0)) { instance.resize(); return; }
+    const zoom = Math.min(1.1, width / (box.w + 48));
+    const height = Math.max(224, Math.min(960, Math.round(box.h * zoom + 64)));
+    if (Math.abs(host.clientHeight - height) > 2) host.style.height = `${height}px`;
+    instance.resize(); instance.fit(undefined, 24);
+  };
+  fitHost();
   if (typeof ResizeObserver === 'function') {
-    const observer = new ResizeObserver(() => instance.resize());
+    let lastWidth = host.clientWidth;
+    const observer = new ResizeObserver(() => { if (host.clientWidth !== lastWidth) { lastWidth = host.clientWidth; fitHost(); } else instance.resize(); });
     observer.observe(host);
     observers.set(host, observer);
   }

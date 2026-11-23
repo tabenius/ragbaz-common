@@ -95,6 +95,7 @@ test('evidence grades are inferred from declared designs, never guessed', async 
   assert.equal(scaled.scale, EVIDENCE_SCALE);
   assert.deepEqual(evidenceGrade({ bibliography: { design: 'meta-analysis' } }), { state: 'inferred', grade: 'A', label: EVIDENCE_SCALE[0].label, design: 'meta-analysis' });
   assert.equal(evidenceGrade({ bibliography: { design: 'statute' } }).state, 'context');
+  assert.equal(evidenceGrade({ bibliography: { design: 'method' } }).state, 'context');
   assert.equal(evidenceGrade({ title: 'no design' }).state, 'ungraded');
   assert.equal(evidenceGrade({ bibliography: { design: 'vibes' } }).state, 'unknown-design');
   const custom = { evidence: { scale: [{ grade: 'I', label: 'Trials', designs: ['rct'] }, { grade: 'II', label: 'Other', designs: ['cohort', 'meta-analysis'] }] } };

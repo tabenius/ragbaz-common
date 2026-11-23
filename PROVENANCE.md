@@ -139,7 +139,15 @@ external directory) and evidence lives in sources, not in a new tag attribute.
 The declarative-template attribute allowlist gains `code` and `topic`. The five
 frozen standalone hashes changed deliberately because the reader runtime, skeleton
 and styles changed. `jsqr` is a test-only devDependency used to decode generated
-QR codes; it is not bundled.
+QR codes; it is not bundled. `method` (statistical and methodological
+references) joins the context designs, so a meta-analysis can cite its methods
+without them appearing as ungraded evidence.
+Responsive reading polish: table cells no longer break mid-word (they scroll
+with edge shadows and hyphenate), interactive graphs size their host to the
+laid-out graph, static graph and forest SVGs carry `visualization-graph` /
+`visualization-forest` classes and scroll on phones, and the contents handle no
+longer covers text below 700px. Checked from 320 to 1920 px with no horizontal
+page overflow.
 
 ### 2026-11-14 — component manifest schema 0.2.0 lives here
 

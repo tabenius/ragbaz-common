@@ -223,7 +223,7 @@ function graphTree(value, id) {
     children.push(el('circle', { cx: number(point.x), cy: number(point.y), r: '20', fill: COLORS[index % COLORS.length], stroke: '#ffffff', 'stroke-width': '2' }));
     children.push(el('text', { x: number(point.x), y: number(point.y + 34), fill: '#222222', 'font-size': '11', 'text-anchor': 'middle', 'font-family': 'system-ui,sans-serif' }, [truncate(node.label, 20)]));
   });
-  return el('svg', { viewBox: `0 0 ${width} ${height}`, width: String(width), height: String(height), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic' }, children);
+  return el('svg', { viewBox: `0 0 ${width} ${height}`, width: String(width), height: String(height), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic visualization-graph' }, children);
 }
 
 function forestTree(value, id) {
@@ -269,7 +269,7 @@ function forestTree(value, id) {
     children.push(el('line', { x1: number(tickX), y1: number(plotBottom), x2: number(tickX), y2: number(plotBottom + 5), stroke: '#666666', 'stroke-width': '1' }));
     children.push(el('text', { x: number(tickX), y: number(plotBottom + 18), fill: '#444444', 'font-size': '10', 'text-anchor': 'middle', 'font-family': 'system-ui,sans-serif' }, [number(label)]));
   }
-  return el('svg', { viewBox: `0 0 ${width} ${Math.min(9999, Math.round(height))}`, width: String(width), height: String(Math.round(height)), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic' }, children);
+  return el('svg', { viewBox: `0 0 ${width} ${Math.min(9999, Math.round(height))}`, width: String(width), height: String(Math.round(height)), role: 'img', 'aria-labelledby': `${id}-title ${id}-desc`, class: 'visualization-graphic visualization-forest' }, children);
 }
 
 function geometryTree(value, id) {

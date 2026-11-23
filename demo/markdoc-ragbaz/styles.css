@@ -125,3 +125,12 @@ body[data-grades=on] .citation-mark[data-grade]:not([data-grade=context])::befor
   body[data-grades=on] .citation-mark[data-grade]::before{color:black}
 }
 #document-cid{overflow-wrap:anywhere;font-size:12px}
+/* Responsive reading: tables scroll instead of breaking words mid-syllable. */
+#paper :is(th,td){overflow-wrap:break-word;hyphens:auto;min-width:7.5em}#paper :is(th,td):first-child{min-width:6.5em}
+#paper table{background:linear-gradient(to right,var(--paper) 30%,transparent) left/2.5rem 100% no-repeat local,linear-gradient(to left,var(--paper) 30%,transparent) right/2.5rem 100% no-repeat local,radial-gradient(farthest-side at 0 50%,#24251f22,transparent) left/.7rem 100% no-repeat scroll,radial-gradient(farthest-side at 100% 50%,#24251f22,transparent) right/.7rem 100% no-repeat scroll;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#paper .publication-logo{width:min(200px,50%)}
+#paper figure.visualization{margin-inline:0;max-width:100%}
+@media(max-width:700px){.toc-handle{width:18px;height:60px;padding:0;background:transparent;opacity:.5}.toc-handle svg{width:15px;height:40px}#paper :is(th,td){padding:.45rem .55rem}#paper .semantic{padding:.85rem 1rem}#paper .colophon-qr{flex-wrap:wrap}}
+@media print{#paper table{background:none}#paper :is(th,td){min-width:0}}
+#paper figure.visualization>p{font:12px/1.5 system-ui,sans-serif;color:var(--muted);margin:.5rem 0}#paper figure.visualization>figcaption{font-size:.92em;line-height:1.55}#paper figure.visualization:has(>svg.visualization-graphic)>pre{max-height:5.5em;opacity:.8}
+@media(max-width:700px){#paper figure.visualization:has(template[data-format=cytoscape],svg.visualization-forest,svg.visualization-graph){overflow-x:auto;overscroll-behavior-x:contain}#paper figure.visualization:has(template[data-format=cytoscape]) .visualization-interactive{width:600px}#paper svg:is(.visualization-forest,.visualization-graph){min-width:600px}}

@@ -105,7 +105,7 @@ export function setupEvidence({ status = () => {}, closeOthers = () => {} } = {}
     const headings = [...root.querySelectorAll('h1[id],h2[id],h3[id]')];
     const scale = citations.scale.scale;
     const groups = [...scale.map(level => ({ id: level.grade, title: `Grade ${level.grade}`, description: level.label })),
-      { id: 'context', title: 'Context', description: 'Law, standards and reports — informative, not graded' },
+      { id: 'context', title: 'Context', description: 'Law, standards, reports and methods — informative, not graded' },
       { id: 'ungraded', title: 'Ungraded', description: 'No study design declared' }];
     const counts = Object.fromEntries(groups.map(g => [g.id, 0]));
     entries.forEach(e => { counts[bucket(e)] += 1; });

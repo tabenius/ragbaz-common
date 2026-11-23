@@ -392,7 +392,8 @@ quasi-experiment, cohort, longitudinal, case-control; **C** cross-sectional,
 qualitative, scale-development, case-series, narrative-review, clinical-model,
 theory; **D** animal, mechanistic, expert-opinion, consensus-statement,
 commentary, popular-account. `statute`, `bill`, `guideline`, `reporting-standard`,
-`report` and `dataset` are *context* and are never graded. A document may replace
+`report`, `dataset` and `method` (statistical or methodological references) are
+*context* and are never graded. A document may replace
 the scale with `document.evidence.scale: [{grade, label, designs}]` (1–12 grades,
 unique designs, context designs reserved). Sources without a design are
 *ungraded*; an unrecognised design is a diagnostic, never a guess. A grade
