@@ -179,7 +179,7 @@ export async function collectBundleNotices(metafile, { readText = path => readFi
 
 /** Build-time only. License/inventory gates stay here, never in a request handler. */
 export async function prepareStandaloneAssets() {
-  const bundle = await build({ entryPoints: [resolve(root, 'demo/markdoc-ragbaz/browser.js')], bundle: true, write: false, metafile: true, format: 'iife', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline' });
+  const bundle = await build({ entryPoints: [resolve(root, 'demo/markdoc-ragbaz/browser.js')], bundle: true, write: false, metafile: true, format: 'iife', platform: 'browser', target: ['es2022'], minify: true, legalComments: 'inline', tsconfigRaw: {} });
   const notices = await collectBundleNotices(bundle.metafile);
   const credits = notices.map(n => `${n.name}\n\n${n.text}`).join('\n\n────────────────────────────────────────\n\n');
   return { schema: 'ragbaz.standalone-assets/1', runtime: bundle.outputFiles[0].text, credits,
