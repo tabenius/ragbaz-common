@@ -1,13 +1,14 @@
 import React from 'react';
 import { stateTone } from './presentation';
 
-export type WidgetIconName = 'process' | 'task' | 'changeset' | 'evidence' | 'review' | 'handoff' | 'container' | 'oversight' | 'pull-request' | 'merge-request' | 'issue' | 'commit' | 'other' | 'external' | 'inspect' | 'check' | 'close' | 'clock' | 'merge' | 'draft' | 'unknown' | 'person' | 'agent' | 'persona' | 'terminal' | 'copy';
+export type WidgetIconName = 'process' | 'task' | 'changeset' | 'evidence' | 'review' | 'handoff' | 'container' | 'oversight' | 'pull-request' | 'merge-request' | 'issue' | 'commit' | 'other' | 'external' | 'inspect' | 'check' | 'close' | 'clock' | 'merge' | 'draft' | 'unknown' | 'person' | 'agent' | 'persona' | 'terminal' | 'copy' | 'menu';
 const paths: Record<WidgetIconName, React.ReactNode> = {
   person: <><circle cx="12" cy="7" r="4" /><path d="M4 21v-2a8 8 0 0 1 16 0v2" /></>,
   agent: <><rect x="4" y="7" width="16" height="14" rx="3" /><path d="M12 3v4M2 12h2m16 0h2M8 16h8" /><circle cx="8" cy="12" r="1" /><circle cx="16" cy="12" r="1" /></>,
   persona: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="9" r="3" /><path d="M6 19a6 6 0 0 1 12 0" /></>,
   terminal: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m7 9 3 3-3 3m5 0h5" /></>,
   copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V4H4v12h4" /></>,
+  menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
   process: <><rect x="3" y="4" width="18" height="13" rx="2" /><path d="m7 8 3 3-3 3m6 0h4M8 21h8m-4-4v4" /></>,
   task: <><rect x="5" y="4" width="15" height="17" rx="2" /><path d="M9 3h7v4H9zm0 9h7m-7 5h7M2 12h1m-1 5h1" /></>,
   changeset: <><path d="m12 2 9 10-9 10L3 12Z" /><path d="M8 12h8m-4-4v8" /></>,

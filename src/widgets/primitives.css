@@ -66,8 +66,50 @@
 .ragbaz-copy-button:hover { color: var(--ragbaz-focus); border-color: var(--ragbaz-focus); }
 .ragbaz-copy-button:focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
 .ragbaz-copy-status { font-size: .75rem; color: var(--ragbaz-muted); overflow-wrap: anywhere; }
+/* Product-neutral application bar: 62–74px, right-aligned controls, no web-page chrome assumptions. */
+.ragbaz-appbar {
+  --ragbaz-appbar-height: 68px;
+  --ragbaz-appbar-panel-width: 20rem;
+  --ragbaz-appbar-z: 40;
+  position: sticky;
+  top: 0;
+  z-index: var(--ragbaz-appbar-z);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--ragbaz-appbar-height);
+  min-height: 62px;
+  max-height: 74px;
+  padding-inline: clamp(.75rem, 2.5vw, 2rem);
+  border-bottom: 1px solid var(--ragbaz-edge);
+  background: var(--ragbaz-surface);
+  color: var(--ragbaz-ink);
+  transition: transform 160ms ease;
+}
+.ragbaz-appbar--hidden { transform: translateY(-110%); }
+.ragbaz-appbar__hotzone { position: fixed; inset: 0 0 auto; height: 14px; z-index: calc(var(--ragbaz-appbar-z) + 1); }
+.ragbaz-appbar__brand { display: flex; align-items: center; gap: .6rem; min-width: 0; }
+.ragbaz-appbar__actions { display: flex; align-items: center; gap: .5rem; margin-inline-start: auto; }
+.ragbaz-appbar__menu { position: relative; }
+.ragbaz-appbar__button { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--ragbaz-edge); border-radius: .5rem; background: var(--ragbaz-surface); color: var(--ragbaz-ink); cursor: pointer; }
+.ragbaz-appbar__button:hover { border-color: var(--ragbaz-focus); color: var(--ragbaz-focus); }
+.ragbaz-appbar__button:focus-visible, .ragbaz-appbar__panel :focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
+.ragbaz-appbar__button .ragbaz-icon { width: 1.35rem; height: 1.35rem; }
+.ragbaz-appbar__panel { position: absolute; top: calc(100% + .4rem); right: 0; width: var(--ragbaz-appbar-panel-width); max-width: calc(100vw - 1.5rem); max-height: calc(100dvh - var(--ragbaz-appbar-height) - 1rem); overflow: auto; padding: .75rem; border: 1px solid var(--ragbaz-edge); border-radius: .75rem; background: var(--ragbaz-surface); color: var(--ragbaz-ink); box-shadow: 0 12px 32px #10232f24; }
+.ragbaz-appbar__panel[hidden] { display: none; }
+.ragbaz-appbar__panel :is(button, a, select, input) { min-height: 44px; }
+.ragbaz-appbar__panel :is(button, a) { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .55rem .65rem; border: 0; border-radius: .4rem; background: transparent; color: inherit; text-align: start; text-decoration: none; }
+.ragbaz-appbar__panel :is(button, a):hover { background: var(--ragbaz-inset); }
+.ragbaz-appbar__panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
+.ragbaz-appbar__avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ragbaz-inset); border: 1px solid var(--ragbaz-edge); font: 700 .75rem/1 system-ui, sans-serif; letter-spacing: .02em; }
+.ragbaz-appbar__avatar .ragbaz-icon { width: 1.1rem; height: 1.1rem; }
+.ragbaz-appbar__identity { display: grid; gap: .15rem; padding: .5rem .65rem .75rem; margin-bottom: .5rem; border-bottom: 1px solid var(--ragbaz-edge); }
+.ragbaz-appbar__identity span, .ragbaz-appbar__identity small { color: var(--ragbaz-muted); font-size: .75rem; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .ragbaz-appbar { padding-inline: .75rem; } .ragbaz-appbar__panel { width: min(20rem, calc(100vw - 1.5rem)); } }
+@media (prefers-reduced-motion: reduce) { .ragbaz-appbar { transition: none; } }
+@media print { .ragbaz-appbar, .ragbaz-appbar__hotzone { display: none; } }
 @media (forced-colors: active) {
-  .ragbaz-status-pill, .ragbaz-reference-link, .ragbaz-avatar, .ragbaz-terminal-command-inline, .ragbaz-terminal-command-block, .ragbaz-copy-button { color: CanvasText; background: Canvas; border-color: CanvasText; }
+  .ragbaz-status-pill, .ragbaz-reference-link, .ragbaz-avatar, .ragbaz-terminal-command-inline, .ragbaz-terminal-command-block, .ragbaz-copy-button, .ragbaz-appbar, .ragbaz-appbar__button, .ragbaz-appbar__panel, .ragbaz-appbar__avatar { color: CanvasText; background: Canvas; border-color: CanvasText; }
   .ragbaz-navigation-feedback { color: CanvasText; background: Canvas; border-color: Highlight; }
   .ragbaz-copy-button:focus-visible { outline-color: Highlight; }
 }

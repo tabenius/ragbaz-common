@@ -10,3 +10,4 @@ export * from './date-labels';
 export * from './copy-text';
 export * from './copy-button';
 export * from './terminal-command';
+export * from './app-bar';

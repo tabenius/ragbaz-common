@@ -10,7 +10,7 @@ import { WidgetInspectionProvider } from '../src/widgets/inspection';
 import { safeInspectionHref, snapshotState } from '../src/widgets/presentation';
 import { WidgetExample } from '../src/widgets/example';
 import { StatusPill, ActorLabel } from '../src/widgets/visual-language';
-import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText } from '../src/widgets/primitives';
+import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu } from '../src/widgets/primitives';
 
 test('plain widgets render without a graph store and mark inherited mock data', () => {
   const html = renderToStaticMarkup(<AdminWidget data={MOCK_CONTAINER_NODE} />);
@@ -204,6 +204,25 @@ test('terminal commands stay literal code with an accessible copy button', () =>
   assert.ok(block.includes('Copy into your terminal.'));
   assert.ok(block.includes('aria-label="Copy RBQ command"'));
   assert.ok(!block.includes('<script>'));
+});
+
+test('app bar keeps product chrome neutral and exposes labelled menu disclosures', () => {
+  const html = renderToStaticMarkup(<AppBar label="Dash" brand={<a href="/">Dash</a>} height={72}>
+    <AppBarMenu label="Main menu"><ul><li><a href="/">Overview</a></li></ul></AppBarMenu>
+    <AppBarAvatarMenu label="Account menu" name="Ada" email="ada@example.test" initial="AD"><button type="button">Sign out</button></AppBarAvatarMenu>
+  </AppBar>);
+  assert.ok(html.includes('aria-label="Dash"'));
+  assert.ok(html.includes('--ragbaz-appbar-height:72px'));
+  assert.ok(html.includes('aria-label="Main menu"'));
+  assert.ok(html.includes('aria-label="Account menu"'));
+  assert.ok(html.includes('aria-haspopup="dialog"'));
+  assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('role="dialog"'));
+  assert.ok(html.includes('hidden'));
+  assert.ok(html.includes('>AD</span>'));
+  assert.ok(html.includes('Display identity only'));
+  assert.ok(html.includes('>Sign out</button>'));
+  assert.ok(!html.includes('<iframe'));
 });
 
 test('copyText writes the exact value without executing or logging it', async () => {
