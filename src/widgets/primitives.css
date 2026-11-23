@@ -90,17 +90,17 @@
 .ragbaz-appbar__hotzone { position: fixed; inset: 0 0 auto; height: 14px; z-index: calc(var(--ragbaz-appbar-z) + 1); }
 .ragbaz-appbar__brand { display: flex; align-items: center; gap: .6rem; min-width: 0; }
 .ragbaz-appbar__actions { display: flex; align-items: center; gap: .5rem; margin-inline-start: auto; }
-.ragbaz-appbar__menu { position: relative; }
+.ragbaz-appbar__menu, .ragbaz-popover { position: relative; }
 .ragbaz-appbar__button { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--ragbaz-edge); border-radius: .5rem; background: var(--ragbaz-surface); color: var(--ragbaz-ink); cursor: pointer; }
 .ragbaz-appbar__button:hover { border-color: var(--ragbaz-focus); color: var(--ragbaz-focus); }
-.ragbaz-appbar__button:focus-visible, .ragbaz-appbar__panel :focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
+.ragbaz-appbar__button:focus-visible, .ragbaz-appbar__panel :focus-visible, .ragbaz-popover-panel :focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
 .ragbaz-appbar__button .ragbaz-icon { width: 1.35rem; height: 1.35rem; }
-.ragbaz-appbar__panel { position: absolute; top: calc(100% + .4rem); right: 0; width: var(--ragbaz-appbar-panel-width); max-width: calc(100vw - 1.5rem); max-height: calc(100dvh - var(--ragbaz-appbar-height) - 1rem); overflow: auto; padding: .75rem; border: 1px solid var(--ragbaz-edge); border-radius: .75rem; background: var(--ragbaz-surface); color: var(--ragbaz-ink); box-shadow: 0 12px 32px #10232f24; }
-.ragbaz-appbar__panel[hidden] { display: none; }
-.ragbaz-appbar__panel :is(button, a, select, input) { min-height: 44px; }
-.ragbaz-appbar__panel :is(button, a) { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .55rem .65rem; border: 0; border-radius: .4rem; background: transparent; color: inherit; text-align: start; text-decoration: none; }
-.ragbaz-appbar__panel :is(button, a):hover { background: var(--ragbaz-inset); }
-.ragbaz-appbar__panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
+.ragbaz-appbar__panel, .ragbaz-popover-panel { position: absolute; top: calc(100% + .4rem); right: 0; width: var(--ragbaz-popover-width, var(--ragbaz-appbar-panel-width, 20rem)); max-width: calc(100vw - 1.5rem); max-height: calc(100dvh - var(--ragbaz-appbar-height, 68px) - 1rem); overflow: auto; padding: .75rem; border: 1px solid var(--ragbaz-edge); border-radius: .75rem; background: var(--ragbaz-surface); color: var(--ragbaz-ink); box-shadow: 0 12px 32px #10232f24; }
+.ragbaz-appbar__panel[hidden], .ragbaz-popover-panel[hidden] { display: none; }
+.ragbaz-appbar__panel :is(button, a, select, input), .ragbaz-popover-panel :is(button, a, select, input) { min-height: 44px; }
+.ragbaz-appbar__panel :is(button, a), .ragbaz-popover-panel :is(button, a) { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .55rem .65rem; border: 0; border-radius: .4rem; background: transparent; color: inherit; text-align: start; text-decoration: none; }
+.ragbaz-appbar__panel :is(button, a):hover, .ragbaz-popover-panel :is(button, a):hover { background: var(--ragbaz-inset); }
+.ragbaz-appbar__panel ul, .ragbaz-popover-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
 .ragbaz-appbar__avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ragbaz-inset); border: 1px solid var(--ragbaz-edge); font: 700 .75rem/1 system-ui, sans-serif; letter-spacing: .02em; }
 .ragbaz-appbar__avatar .ragbaz-icon { width: 1.1rem; height: 1.1rem; }
 .ragbaz-appbar__identity { display: grid; gap: .15rem; padding: .5rem .65rem .75rem; margin-bottom: .5rem; border-bottom: 1px solid var(--ragbaz-edge); }
