@@ -114,6 +114,41 @@ the mistake.
 
 ## Known divergence
 
+### Administrative widgets — additive prototype
+
+Dash adoption: a graph-free primitives entry and semantic light/dark/forced-color
+CSS preserve Dash's specialized forms, authorization and provenance. Added
+evidence count summary, host-content dialog, shared web legend/native+Vim key
+table with spatial geometry, steady visual/opt-in audio feedback and render-time
+calendar-day labels. Dash ships a generated npm package delivery rather than a
+fork. Current full-card/canvas adoption remains pending; earlier statements about
+all product adoption being pending are superseded for these primitives.
+
+Graphical vocabulary now uses original inline SVG icons, separate semantic state
+pills, risk/priority scales, structured source-link buttons and explicit actor
+persona hints. Remote merge state stays distinct from local readiness, and an
+unspecified author is not presented as a verified human. No external images or
+icon service is required.
+
+Added provider-neutral related-source links (PR/MR/issue/commit/review/other),
+safe new-tab navigation and separately labelled reported remote state. Demo
+Change Set and review cards include illustrative GitHub and self-hosted GitLab
+URLs. No forge integration, verification or state synchronization is implied.
+
+2026-10-14: added type vocabulary, source capture/update timestamps, explicit
+lifecycle/reopen capability, inspection provider (native modal or safe new tab),
+structured example frames and Ephor-style oversight records. Layout now measures
+nested groups before placement and uses bounded, scrollable graph cards; the
+previous fixed row spacing and centered origin could overlap children. Supplied
+manual positions are currently ignored by automatic layout. Product screens and
+read-side contracts informed semantics; no product authority or mutation logic
+was extracted, and product adoption remains pending.
+
+Original React/React Flow administrative cards, view inheritance and mock graph
+fixtures live in `src/widgets/`. No product implementation was extracted or
+removed. They are opt-in and read-only; Dash, Shambala and Rebekah adoption is
+pending. Mock state is visibly labeled and never treated as authorization.
+
 Mouseion remains on its in-repo copy until someone performs the migration in
 that repository. Until then there are two implementations of these rules, which
 `AGENTS.md` invariant 2 treats as a tracked debt. `ADOPTION.md` describes the

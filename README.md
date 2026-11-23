@@ -242,6 +242,111 @@ These are inherited from Elias.Venn and are deliberate, not oversights:
 
 ## Checks
 
+### Administrative widgets (opt-in)
+
+`@ragbaz/common/widgets` is a TypeScript/React entry point for bundlers. Hosts
+provide React, React DOM and React Flow 11; server-side identity modules do not
+import them. `AdminWidget` renders standalone read-only cards; `WidgetCanvas`
+adds a React Flow canvas with real parent/child nodes. Review and handoff cards
+are supported alongside process, task, evidence and Change Set cards.
+
+Wrap cards in `ViewConfigProvider` to select `detail` and visible `aspects`.
+Node overrides replace only supplied fields; omitted fields inherit. For graph
+nodes, `toFlowNodes` resolves inheritance explicitly because React Flow parentage
+does not create React context ancestry. `inherited` describes view provenance,
+not authority. Security configuration and reported attestations are not verified
+security evidence.
+
+Mock factories mark their records with `demo: true`. Containers propagate that
+flag to descendants. A missing `WidgetNode` dataset displays a visibly marked
+demo; an explicitly empty dataset stays empty and malformed JSON displays an
+error, not simulated live success. The current Markdoc adapter is React-oriented;
+registration with the shared static HTML Markdoc renderer is not yet implemented.
+Dash now adopts the lighter presentation primitives, not the full graph cards.
+
+Run `npm run demo` for the widget gallery (loopback-only Vite server).
+`npm run demo:build` generates `dist-demo/` for static hosting. The gallery
+includes all eight cards (including a human oversight hold), a runtime/inheritance example, an evidence-to-handoff
+example, and a complete nested workflow using every widget type. Detail and
+aspect controls update all inherited views; a linear alternative accompanies
+the graph for keyboard and screen-reader use. All data is mock data.
+
+Import `@ragbaz/common/widgets/styles.css` in the host application. Type labels,
+symbols and accent bands distinguish planning, execution, proof, judgment and
+continuity without relying on color alone. Graph cards have fixed bounding boxes
+with scrollable bodies; container bounds are calculated recursively from their
+children. Automatic layout currently owns positioning (manual `position` hints
+are not applied).
+
+Supply `snapshot.source`, `observedAt`, `updatedAt` and optionally
+`statusObservedAt`, `revision`, `stale` and `staleAfterSeconds`. Capture time is
+not entity update time; omitted timestamps say unknown. Staleness updates every
+15 seconds, but does not fetch or refresh the source. Lifecycle `phase` and
+`canReopen` are explicitly source-supplied; reopening capability is informational,
+not a fake mutation button. Demonstration timestamps are fixed and labelled.
+
+`WidgetInspectionProvider` accepts `mode="modal"` or `mode="tab"`, a host-owned
+`renderDetail(record)` and optional `resolveHref(record)`. Tab mode requires a
+safe `inspectHref` or resolved URL; absent links say unavailable. Modal mode uses
+a native dialog (Escape, focus containment and return), with optional new-tab
+navigation. The host owns routing and authorization. The demo persists its mode
+preference locally and supplies read-only `?inspect=<id>` pages.
+
+`WidgetExample` consistently frames a heading, description, example stage and
+optional note. The gallery draws on Frog's read-only board projection, Dash's
+decision-delivery UI, Rebekah's pushed observations and WeftMark's separation of
+task intent, Change Sets, receipts and reviews. Oversight records keep decision
+state separate from queued/sent/applied delivery. No product has been migrated
+to the full administrative cards yet; Dash consumes the presentation primitives
+while preserving its existing authorized controls. Common connects no write API.
+
+All widget records may supply `links` for PRs, MRs, issues, commits, reviews or
+other surfaces. These remain visible in terse views and full inspection, and
+always open a new tab independently of the inspection preference. For example:
+
+```ts
+links: [{ kind: 'pull-request', surface: 'GitHub', label: '#42 · Evidence freshness',
+  href: 'https://github.com/your-org/your-repo/pull/42', state: 'open' }]
+```
+
+The host supplies URLs and labels: GitHub, GitLab, Forgejo and internal surfaces
+are not special-cased. Unsafe URLs are non-clickable. Optional state is labelled
+as reported remote state; linking does not verify, synchronize or mutate a PR,
+and remote merge state never replaces the local Change Set or review outcome.
+Gallery URLs are illustrative placeholders, not verified remote records.
+
+`StatusPill` and `WidgetIcon` provide a shared graphical vocabulary: coded values
+use icon-and-color pills, not plain prose. PR states distinguish neutral draft,
+green open, purple merged and red closed. Risk has an independent low/medium/high
+scale (green/amber/red); priority high is amber and critical red. Labels and icons
+remain visible so color is not the sole signal. Source labels distinguish local
+record state from reported remote state. Reference navigation uses entity icons,
+a surface/type caption, a literal title and an external-navigation icon.
+
+`ActorLabel` adds a persona icon; `authorKind` on reviews and `assigneeKind` on tasks
+may explicitly report `person`, `agent` or `unknown`. Missing actor kinds use a
+generic persona, never inferred human identity. These are presentation hints,
+not identity verification. The demo includes a visual-vocabulary example.
+
+### Lightweight Dash adoption
+
+Use `@ragbaz/common/widgets/primitives` with `widgets/primitives.css` when a host
+already has specialized product cards. This entry has no graph runtime, mock
+records or per-card timer. It adds `EvidenceSummary` (current receipts, not pass
+rate), host-content `InspectionDialog`, `KeyboardLegend`, shared native/Vim
+keyboard resolvers and steady visual/optional audio navigation feedback. React
+Flow is an optional peer for these primitives, but remains required for canvases.
+Dash's generated package delivery is documented in its `vendor/README.md` and
+`docs/WIDGET-DESIGN-REVIEW.md`; do not fork the widget source in product repos.
+
+`relativeDayLabel(date, now, zone, compact)` derives today/yesterday/tomorrow,
+nearby weekday or distant date at render time. Models keep raw instants. Dash
+supplies a single display clock and its account/alternate display zones; shared
+standalone cards currently use UTC and their existing view timer. ISO UTC tooltips
+remain exact. The web binding table drives legend/dispatch, suppresses printable
+Vim shortcuts unless opted in, and supports spatial record movement without
+stealing browser Tab or editable-field keys.
+
 ```sh
 npm ci
 npm test
