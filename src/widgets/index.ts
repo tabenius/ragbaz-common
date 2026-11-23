@@ -10,3 +10,6 @@ export * from './inspection';
 export * from './example';
 export * from './reference-links';
 export * from './visual-language';
+export * from './copy-text';
+export * from './copy-button';
+export * from './terminal-command';

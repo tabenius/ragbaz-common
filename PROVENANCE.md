@@ -3,6 +3,15 @@
 Where each piece came from, and what changed. Recorded so a future reader can
 tell a deliberate divergence from an accident.
 
+### Terminal command widget (2026-11-23)
+
+Extracted from the copyable command snippets shown in Dash's Frog and MCP
+surfaces. `TerminalCommand` keeps the command as inert `<code>` text and adds an
+icon-only `CopyButton`; `copyText` is an injectable clipboard helper with no
+telemetry. No command is executed, validated, logged or granted authority by the
+widget. Dash imports the graph-free primitives entry point and vendors the
+generated package; the source of truth stays here.
+
 ## Lineage
 
 ### Additive collection-view contract (2026-11-19)

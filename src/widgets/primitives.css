@@ -53,8 +53,22 @@
 .ragbaz-evidence-summary { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .ragbaz-evidence-summary meter { width: 5rem; max-width: 100%; }
 .ragbaz-navigation-feedback { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .5rem .75rem; border: 2px solid var(--ragbaz-warning-ink); background: var(--ragbaz-warning-bg); color: var(--ragbaz-warning-ink); }
+.ragbaz-terminal-command { max-width: 100%; color: var(--ragbaz-ink); }
+.ragbaz-terminal-command-inline { display: inline-flex; align-items: center; gap: .35rem; padding: .1rem .25rem; border: 1px solid var(--ragbaz-edge); border-radius: .5rem; background: var(--ragbaz-inset); vertical-align: middle; }
+.ragbaz-terminal-command-block { display: grid; gap: .35rem; padding: .5rem; border: 1px solid var(--ragbaz-edge); border-radius: .5rem; background: var(--ragbaz-inset); }
+.ragbaz-command-description { margin: 0; font-size: .875rem; color: var(--ragbaz-muted); }
+.ragbaz-command-line { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.ragbaz-command-line pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; white-space: pre-wrap; }
+.ragbaz-command-text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .875em; overflow-wrap: anywhere; }
+.ragbaz-command-glyph { width: .875rem; height: .875rem; color: var(--ragbaz-muted); }
+.ragbaz-copy-control { display: inline-flex; align-items: center; gap: .35rem; min-width: 0; }
+.ragbaz-copy-button { display: inline-grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 1px solid var(--ragbaz-edge); border-radius: .4rem; background: var(--ragbaz-surface); color: var(--ragbaz-muted); }
+.ragbaz-copy-button:hover { color: var(--ragbaz-focus); border-color: var(--ragbaz-focus); }
+.ragbaz-copy-button:focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
+.ragbaz-copy-status { font-size: .75rem; color: var(--ragbaz-muted); overflow-wrap: anywhere; }
 @media (forced-colors: active) {
-  .ragbaz-status-pill, .ragbaz-reference-link, .ragbaz-avatar { color: CanvasText; background: Canvas; border-color: CanvasText; }
+  .ragbaz-status-pill, .ragbaz-reference-link, .ragbaz-avatar, .ragbaz-terminal-command-inline, .ragbaz-terminal-command-block, .ragbaz-copy-button { color: CanvasText; background: Canvas; border-color: CanvasText; }
   .ragbaz-navigation-feedback { color: CanvasText; background: Canvas; border-color: Highlight; }
+  .ragbaz-copy-button:focus-visible { outline-color: Highlight; }
 }
 @media (max-width: 400px) { .ragbaz-keyboard-legend dl { grid-template-columns: minmax(0, 1fr); gap: .25rem; } .ragbaz-keyboard-legend dd { margin-bottom: .75rem; } }

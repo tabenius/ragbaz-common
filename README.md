@@ -350,6 +350,12 @@ Flow is an optional peer for these primitives, but remains required for canvases
 Dash's generated package delivery is documented in its `vendor/README.md` and
 `docs/WIDGET-DESIGN-REVIEW.md`; do not fork the widget source in product repos.
 
+`TerminalCommand` renders a literal command in a `<code>` element with an
+icon-only `CopyButton` (`copyText` underneath). Commands are presentation data:
+nothing executes, validates or parses them, and the copied value is exactly the
+displayed string. Hosts supply an accessible `label` so the button says what it
+copies. Dash uses this for native Frog record commands and RBQ examples.
+
 `relativeDayLabel(date, now, zone, compact)` derives today/yesterday/tomorrow,
 nearby weekday or distant date at render time. Models keep raw instants. Dash
 supplies a single display clock and its account/alternate display zones; shared

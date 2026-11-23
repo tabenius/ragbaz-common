@@ -10,7 +10,7 @@ import { WidgetInspectionProvider } from '../src/widgets/inspection';
 import { safeInspectionHref, snapshotState } from '../src/widgets/presentation';
 import { WidgetExample } from '../src/widgets/example';
 import { StatusPill, ActorLabel } from '../src/widgets/visual-language';
-import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel } from '../src/widgets/primitives';
+import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText } from '../src/widgets/primitives';
 
 test('plain widgets render without a graph store and mark inherited mock data', () => {
   const html = renderToStaticMarkup(<AdminWidget data={MOCK_CONTAINER_NODE} />);
@@ -190,4 +190,26 @@ test('friendly dates use calendar boundaries, compact weekdays and distant exact
   assert.equal(relativeDayLabel(new Date('2026-10-12T12:00:00Z'), now, 'UTC', true), 'last Mon');
   assert.equal(relativeDayLabel(new Date('2026-09-12T12:00:00Z'), now), '2026-09-12');
   assert.equal(relativeDayLabel(new Date('2026-10-25T00:30:00Z'), new Date('2026-10-25T23:30:00Z'), 'Europe/Stockholm'), 'yesterday', 'DST-short/long days do not use elapsed-day arithmetic');
+});
+
+test('terminal commands stay literal code with an accessible copy button', () => {
+  const inline = renderToStaticMarkup(<TerminalCommand command="frog --json task info FRG-42" label="Frog native record command" inline />);
+  assert.ok(inline.includes('<code class="ragbaz-command-text">frog --json task info FRG-42</code>'));
+  assert.ok(inline.includes('aria-label="Copy Frog native record command"'));
+  assert.ok(inline.includes('aria-hidden="true"'));
+  assert.ok(!inline.includes('onclick'));
+
+  const block = renderToStaticMarkup(<TerminalCommand command="rbq repository --endpoint URL --token-file PRIVATE_FILE describe" label="RBQ command" description="Copy into your terminal." />);
+  assert.ok(block.includes('<pre><code class="ragbaz-command-text">rbq repository --endpoint URL --token-file PRIVATE_FILE describe</code></pre>'));
+  assert.ok(block.includes('Copy into your terminal.'));
+  assert.ok(block.includes('aria-label="Copy RBQ command"'));
+  assert.ok(!block.includes('<script>'));
+});
+
+test('copyText writes the exact value without executing or logging it', async () => {
+  const written: string[] = [];
+  assert.deepEqual(await copyText('frog --json task info FRG-42', { writeText: async (value) => { written.push(value); } }), { ok: true });
+  assert.deepEqual(written, ['frog --json task info FRG-42']);
+  assert.deepEqual(await copyText('anything', null), { ok: false, reason: 'unavailable' });
+  assert.deepEqual(await copyText('anything', { writeText: async () => { throw new Error('denied'); } }), { ok: false, reason: 'denied' });
 });
