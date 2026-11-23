@@ -1,9 +1,9 @@
-import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import React, { createContext, useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { PopoverMenu } from './popover-menu';
 import { WidgetIcon, type WidgetIconName } from './visual-language';
 
 type AppBarContextValue = { openMenu: (id: string) => void; closeMenu: (id: string) => void };
-const AppBarContext = createContext<AppBarContextValue | null>(null);
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+export const AppBarContext = createContext<AppBarContextValue | null>(null);
 
 /**
  * Product-neutral application bar. The host supplies the brand and all action
@@ -69,43 +69,23 @@ export interface AppBarMenuProps {
 
 /** A right-aligned disclosure panel. Content stays in normal Tab order. */
 export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, onOpenChange }: AppBarMenuProps) {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
+  const context = React.useContext(AppBarContext);
   const id = useId();
-  const context = useContext(AppBarContext);
-  useEffect(() => {
-    if (!open) return;
-    context?.openMenu(id);
-    return () => context?.closeMenu(id);
-  }, [open, id, context]);
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!trigger.current?.contains(target) && !panel.current?.contains(target)) change(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown, true);
-    const first = panel.current?.querySelector<HTMLElement>(FOCUSABLE) ?? panel.current;
-    first?.focus();
-    return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  });
-  function change(next: boolean) {
-    setOpen(next);
-    onOpenChange?.(next);
-  }
-  const panelStyle = width === undefined ? undefined : { '--ragbaz-appbar-panel-width': typeof width === 'number' ? `${width}px` : width } as CSSProperties;
-  return <div className="ragbaz-appbar__menu" onKeyDown={(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); change(false); trigger.current?.focus(); } }}>
-    <button ref={trigger} type="button" className="ragbaz-appbar__button" aria-label={label} title={label} aria-haspopup="dialog" aria-expanded={open} aria-controls={id} aria-keyshortcuts={shortcut} onClick={() => change(!open)}>
-      {typeof icon === 'string' ? <WidgetIcon name={icon as WidgetIconName} /> : icon}
-    </button>
-    <div ref={panel} id={id} className="ragbaz-appbar__panel" role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false); }} onClick={(event) => {
-      const target = event.target as HTMLElement;
-      if (closeOnSelect && target.closest('a,button,[data-appbar-close]') && !target.closest('[data-appbar-keep-open]')) change(false);
-    }}>
-      {children}
-    </div>
-  </div>;
+  return <PopoverMenu
+    id={id}
+    label={label}
+    icon={icon}
+    width={width}
+    shortcut={shortcut}
+    closeOnSelect={closeOnSelect}
+    triggerClassName="ragbaz-appbar__button"
+    panelClassName="ragbaz-appbar__panel"
+    onOpenChange={(next) => {
+      onOpenChange?.(next);
+      if (next) context?.openMenu(id);
+      else context?.closeMenu(id);
+    }}
+  >{children}</PopoverMenu>;
 }
 
 /** Preset avatar trigger; identity text is presentation only, never authority. */

@@ -15,7 +15,7 @@ export function PopoverMenuProvider({ children }: { children: ReactNode }) {
 }
 
 /** A right-aligned disclosure panel shared by product chrome and other surfaces. */
-export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, renderTrigger, onOpenChange }: {
+export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, id: idProp, renderTrigger, onOpenChange }: {
   /** Accessible name of the trigger and its panel. */
   label: string;
   children: ReactNode;
@@ -27,6 +27,7 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   shortcut?: string;
   /** Close after an ordinary link/button activation unless the target opts out with data-appbar-keep-open or data-menu-keep-open. */
   closeOnSelect?: boolean;
+  id?: string;
   /** Replace the default icon button trigger (must forward ref/aria externally). */
   renderTrigger?: (args: { open: boolean; toggle: () => void; triggerProps: { ref: React.RefObject<HTMLButtonElement | null>; id: string; 'aria-haspopup': 'dialog'; 'aria-expanded': boolean; 'aria-controls': string; 'aria-keyshortcuts'?: string; className: string; type: 'button'; onClick: () => void } }) => ReactNode;
   onOpenChange?: (open: boolean) => void;
@@ -34,7 +35,8 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const id = useId();
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
   const context = useContext(MenuContext);
   useEffect(() => {
     if (!open) return;
