@@ -10,6 +10,7 @@
     "node": ">=22"
   },
   "exports": {
+    "./schemas/collection-view": "./schemas/collection-view.schema.json",
     "./crypto": "./src/crypto.js",
     "./handles": "./src/handles.js",
     "./http": "./src/request-bounds.js",
