@@ -67,7 +67,7 @@ export interface AppBarMenuProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-/** A right-aligned disclosure panel. Content stays in normal Tab order. */
+/** A right-aligned disclosure panel coordinated with the parent AppBar for auto-hide. Content stays in normal Tab order. */
 export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, onOpenChange }: AppBarMenuProps) {
   const context = React.useContext(AppBarContext);
   const id = useId();
