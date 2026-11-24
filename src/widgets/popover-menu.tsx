@@ -21,7 +21,7 @@ export function usePopoverMenuGroup() {
 }
 
 /** A right-aligned disclosure panel shared by product chrome and other surfaces. */
-export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, id: idProp, align = 'end', renderTrigger, onOpenChange }: {
+export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, id: idProp, align = 'end', restoreFocusOnClose = true, renderTrigger, onOpenChange }: {
   /** Accessible name of the trigger and its panel. */
   label: string;
   children: ReactNode;
@@ -35,6 +35,8 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   closeOnSelect?: boolean | 'links' | ((el: HTMLElement) => boolean);
   id?: string;
   align?: 'start' | 'end';
+  /** On keyboard dismissal or item activation, focus the trigger (or the supplied ref). Outside clicks and Tab-out keep the user's focus. */
+  restoreFocusOnClose?: boolean | React.RefObject<HTMLElement | null>;
   /** Replace the default icon button trigger (must forward ref/aria externally). */
   renderTrigger?: (args: { open: boolean; toggle: () => void; triggerProps: { ref: React.RefObject<HTMLButtonElement | null>; id: string; 'aria-haspopup': 'dialog'; 'aria-expanded': boolean; 'aria-controls': string; 'aria-keyshortcuts'?: string; className: string; type: 'button'; onClick: () => void } }) => ReactNode;
   onOpenChange?: (open: boolean) => void;
@@ -54,16 +56,23 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (!trigger.current?.contains(target) && !panel.current?.contains(target)) change(false);
+      if (!trigger.current?.contains(target) && !panel.current?.contains(target)) change(false, false);
     };
     document.addEventListener('pointerdown', onPointerDown, true);
     const first = panel.current?.querySelector<HTMLElement>(FOCUSABLE) ?? panel.current;
     first?.focus();
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
   });
-  function change(next: boolean) {
+  function change(next: boolean, restoreFocus = true) {
+    const wasOpen = open;
     setOpen(next);
     onOpenChange?.(next);
+    if (wasOpen && !next && restoreFocus && restoreFocusOnClose !== false) {
+      const target = typeof restoreFocusOnClose === 'object' && restoreFocusOnClose
+        ? restoreFocusOnClose.current
+        : trigger.current;
+      target?.focus();
+    }
   }
   const panelStyle = width === undefined ? undefined : { '--ragbaz-popover-width': typeof width === 'number' ? `${width}px` : width } as CSSProperties;
   const triggerProps = {
@@ -75,15 +84,15 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
     'aria-keyshortcuts': shortcut,
     className: triggerClassName,
     type: 'button' as const,
-    onClick: () => change(!open),
+    onClick: () => change(!open, false),
   };
-  return <div className="ragbaz-popover" onKeyDown={(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); change(false); trigger.current?.focus(); } }}>
-    {renderTrigger ? renderTrigger({ open, toggle: () => change(!open), triggerProps }) : (
+  return <div className="ragbaz-popover" onKeyDown={(event) => { if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); change(false); } }}>
+    {renderTrigger ? renderTrigger({ open, toggle: () => change(!open, false), triggerProps }) : (
       <button {...triggerProps} aria-label={label} title={label}>
         {icon === undefined || typeof icon === 'string' ? <WidgetIcon name={(icon ?? 'menu') as WidgetIconName} /> : icon}
       </button>
     )}
-    <div ref={panel} id={id} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} data-align={align === 'start' ? 'start' : undefined} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false); }} onClick={(event) => {
+    <div ref={panel} id={id} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} data-align={align === 'start' ? 'start' : undefined} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false, false); }} onClick={(event) => {
       const target = event.target as HTMLElement;
       if (target.closest('[data-appbar-keep-open],[data-menu-keep-open]')) return;
       if (closeOnSelect === false) return;

@@ -65,13 +65,15 @@ export interface AppBarMenuProps {
   /** Close after an ordinary link/button activation. Actions that show status can opt out. */
   closeOnSelect?: boolean;
   align?: 'start' | 'end';
+  /** Focus target after keyboard dismissal or item activation; defaults to the menu trigger. */
+  restoreFocusOnClose?: boolean | React.RefObject<HTMLElement | null>;
   panelClassName?: string;
   menuClassName?: string;
   onOpenChange?: (open: boolean) => void;
 }
 
 /** A right-aligned disclosure panel coordinated with the parent AppBar for auto-hide. Content stays in normal Tab order. */
-export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, align = 'end', panelClassName = '', menuClassName = '', onOpenChange }: AppBarMenuProps) {
+export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, align = 'end', restoreFocusOnClose = true, panelClassName = '', menuClassName = '', onOpenChange }: AppBarMenuProps) {
   const context = React.useContext(AppBarContext);
   const id = useId();
   return <div className={`ragbaz-appbar__menu ${menuClassName}`.trim()}>
@@ -83,6 +85,7 @@ export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, cl
       shortcut={shortcut}
       closeOnSelect={closeOnSelect}
       align={align}
+      restoreFocusOnClose={restoreFocusOnClose}
       triggerClassName="ragbaz-appbar__button"
       panelClassName={`ragbaz-appbar__panel ${panelClassName}`.trim()}
       onOpenChange={(next) => {
