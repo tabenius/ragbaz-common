@@ -10,7 +10,7 @@ import { WidgetInspectionProvider } from '../src/widgets/inspection';
 import { safeInspectionHref, snapshotState } from '../src/widgets/presentation';
 import { WidgetExample } from '../src/widgets/example';
 import { StatusPill, ActorLabel } from '../src/widgets/visual-language';
-import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu } from '../src/widgets/primitives';
+import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu, PopoverMenu } from '../src/widgets/primitives';
 
 test('plain widgets render without a graph store and mark inherited mock data', () => {
   const html = renderToStaticMarkup(<AdminWidget data={MOCK_CONTAINER_NODE} />);
@@ -223,6 +223,16 @@ test('app bar keeps product chrome neutral and exposes labelled menu disclosures
   assert.ok(html.includes('Display identity only'));
   assert.ok(html.includes('>Sign out</button>'));
   assert.ok(!html.includes('<iframe'));
+});
+
+test('popover menu renders trigger and hidden dialog panel', () => {
+  const html = renderToStaticMarkup(<PopoverMenu label="Actions"><button type="button">Do it</button></PopoverMenu>);
+  assert.ok(html.includes('aria-label="Actions"'));
+  assert.ok(html.includes('aria-haspopup="dialog"'));
+  assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('role="dialog"'));
+  assert.ok(html.includes('hidden'));
+  assert.ok(html.includes('>Do it</button>'));
 });
 
 test('copyText writes the exact value without executing or logging it', async () => {

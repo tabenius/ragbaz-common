@@ -30,6 +30,9 @@ export function InspectionShell({ open, title, onClose, mode, children, inlineCl
   }, [open, focusRestoreSelector]);
   if (!open || mode === 'tab') return null;
   if (notFound) {
+    if (mode === 'modal') {
+      return <InspectionDialog open title={`${title} (not found)`} onClose={onClose}>{notFoundContent ?? <p className="hint">Not found in this snapshot.</p>}</InspectionDialog>;
+    }
     return <section
       className={inlineClassName}
       aria-label={`${title} (not found)`}

@@ -1,9 +1,9 @@
-import React, { createContext, useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { PopoverMenu } from './popover-menu';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { MenuGroupContext, type MenuGroupContextValue, PopoverMenu } from './popover-menu';
 import { WidgetIcon, type WidgetIconName } from './visual-language';
 
-type AppBarContextValue = { openMenu: (id: string) => void; closeMenu: (id: string) => void };
-export const AppBarContext = createContext<AppBarContextValue | null>(null);
+export type AppBarContextValue = MenuGroupContextValue;
+export const AppBarContext = MenuGroupContext;
 
 /**
  * Product-neutral application bar. The host supplies the brand and all action
@@ -64,28 +64,34 @@ export interface AppBarMenuProps {
   shortcut?: string;
   /** Close after an ordinary link/button activation. Actions that show status can opt out. */
   closeOnSelect?: boolean;
+  align?: 'start' | 'end';
+  panelClassName?: string;
+  menuClassName?: string;
   onOpenChange?: (open: boolean) => void;
 }
 
 /** A right-aligned disclosure panel coordinated with the parent AppBar for auto-hide. Content stays in normal Tab order. */
-export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, onOpenChange }: AppBarMenuProps) {
+export function AppBarMenu({ label, children, icon = 'menu', width, shortcut, closeOnSelect = true, align = 'end', panelClassName = '', menuClassName = '', onOpenChange }: AppBarMenuProps) {
   const context = React.useContext(AppBarContext);
   const id = useId();
-  return <PopoverMenu
-    id={id}
-    label={label}
-    icon={icon}
-    width={width}
-    shortcut={shortcut}
-    closeOnSelect={closeOnSelect}
-    triggerClassName="ragbaz-appbar__button"
-    panelClassName="ragbaz-appbar__panel"
-    onOpenChange={(next) => {
-      onOpenChange?.(next);
-      if (next) context?.openMenu(id);
-      else context?.closeMenu(id);
-    }}
-  >{children}</PopoverMenu>;
+  return <div className={`ragbaz-appbar__menu ${menuClassName}`.trim()}>
+    <PopoverMenu
+      id={id}
+      label={label}
+      icon={icon}
+      width={width}
+      shortcut={shortcut}
+      closeOnSelect={closeOnSelect}
+      align={align}
+      triggerClassName="ragbaz-appbar__button"
+      panelClassName={`ragbaz-appbar__panel ${panelClassName}`.trim()}
+      onOpenChange={(next) => {
+        onOpenChange?.(next);
+        if (next) context?.openMenu(id);
+        else context?.closeMenu(id);
+      }}
+    >{children}</PopoverMenu>
+  </div>;
 }
 
 /** Preset avatar trigger; identity text is presentation only, never authority. */

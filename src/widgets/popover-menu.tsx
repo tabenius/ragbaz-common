@@ -1,21 +1,27 @@
 import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { WidgetIcon, type WidgetIconName } from './visual-language';
 
-type MenuContextValue = { openMenu: (id: string) => void; closeMenu: (id: string) => void };
-const MenuContext = createContext<MenuContextValue | null>(null);
+export type MenuGroupContextValue = { openMenu: (id: string) => void; closeMenu: (id: string) => void };
+const MenuContext = createContext<MenuGroupContextValue | null>(null);
+export const MenuGroupContext = MenuContext;
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Wrap popovers so only one is open at a time. */
-export function PopoverMenuProvider({ children }: { children: ReactNode }) {
+/** Wrap popovers so a group can coordinate open state (e.g. auto-hide). */
+export function PopoverMenuProvider({ children, value }: { children: ReactNode; value?: MenuGroupContextValue | null }) {
   const [openMenus, setOpenMenus] = useState<Set<string>>(() => new Set());
   const openMenu = useCallback((id: string) => setOpenMenus((before) => new Set(before).add(id)), []);
   const closeMenu = useCallback((id: string) => setOpenMenus((before) => { const next = new Set(before); next.delete(id); return next; }), []);
-  const context = useMemo(() => ({ openMenu, closeMenu }), [openMenu, closeMenu]);
+  const context = useMemo(() => value ?? ({ openMenu, closeMenu }), [value, openMenu, closeMenu]);
   return <MenuContext.Provider value={context}>{children}</MenuContext.Provider>;
 }
 
+/** Access the menu-group coordination context (open/close ids) when present. */
+export function usePopoverMenuGroup() {
+  return useContext(MenuContext);
+}
+
 /** A right-aligned disclosure panel shared by product chrome and other surfaces. */
-export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, id: idProp, renderTrigger, onOpenChange }: {
+export function PopoverMenu({ label, children, icon, triggerClassName = '', panelClassName = '', width, shortcut, closeOnSelect = true, id: idProp, align = 'end', renderTrigger, onOpenChange }: {
   /** Accessible name of the trigger and its panel. */
   label: string;
   children: ReactNode;
@@ -25,9 +31,10 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   panelClassName?: string;
   width?: number | string;
   shortcut?: string;
-  /** Close after an ordinary link/button activation unless the target opts out with data-appbar-keep-open or data-menu-keep-open. */
-  closeOnSelect?: boolean;
+  /** Close after link/button activation. `links` (default true behavior) closes on a/link/button clicks unless opting out via data-menu-keep-open/data-appbar-keep-open. */
+  closeOnSelect?: boolean | 'links' | ((el: HTMLElement) => boolean);
   id?: string;
+  align?: 'start' | 'end';
   /** Replace the default icon button trigger (must forward ref/aria externally). */
   renderTrigger?: (args: { open: boolean; toggle: () => void; triggerProps: { ref: React.RefObject<HTMLButtonElement | null>; id: string; 'aria-haspopup': 'dialog'; 'aria-expanded': boolean; 'aria-controls': string; 'aria-keyshortcuts'?: string; className: string; type: 'button'; onClick: () => void } }) => ReactNode;
   onOpenChange?: (open: boolean) => void;
@@ -76,9 +83,12 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
         {icon === undefined || typeof icon === 'string' ? <WidgetIcon name={(icon ?? 'menu') as WidgetIconName} /> : icon}
       </button>
     )}
-    <div ref={panel} id={id} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false); }} onClick={(event) => {
+    <div ref={panel} id={id} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} data-align={align === 'start' ? 'start' : undefined} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false); }} onClick={(event) => {
       const target = event.target as HTMLElement;
-      if (closeOnSelect && target.closest('a,button,[data-appbar-close],[data-menu-close]') && !target.closest('[data-appbar-keep-open],[data-menu-keep-open]')) change(false);
+      if (target.closest('[data-appbar-keep-open],[data-menu-keep-open]')) return;
+      if (closeOnSelect === false) return;
+      if (typeof closeOnSelect === 'function') { if (closeOnSelect(target)) change(false); return; }
+      if (target.closest('a,button,[data-appbar-close],[data-menu-close]')) change(false);
     }}>
       {children}
     </div>
