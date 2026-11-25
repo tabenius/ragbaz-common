@@ -4,15 +4,17 @@ A gift is an owner-signed envelope addressed to a list of recipient public
 keys, around an artifact. A subject/title and text are sufficient for a trivial
 artifact. A request to answer, approve, deny or review can be a gift carrying an
 invitation context. The additive `gift` projection in the collection schema
-describes these fields; it does **not** invent a cryptographic signing format,
-implement delivery, or mean the RBQ gift layer already exists.
+describes these fields; it does not implement delivery, or mean the RBQ gift
+layer already exists.
 
-The owner signing protocol must bind the envelope version, gift ID, sender,
-recipient-key list, artifact bytes/digest or exact inline text, subject,
-invitation context/choices, expiry/replay information and any delivery policy.
-Do not hand-roll canonicalization or signature verification in each consumer:
-use the reviewed owner/Nostoi/keystore mechanisms and preserve exact signed
-bytes. An envelope may be cryptographically valid but come from an untrusted
+The signing format is [`ed25519-jcs-v1`](GIFT-SIGNATURE.md): a detached
+Ed25519 signature over the RFC 8785 canonical JSON of the envelope, binding the
+format version, gift ID, sender, recipient-key list, artifact digest or exact
+inline text, subject, invitation context/choices, `issued_at`/`expires_at` and
+any delivery policy. Do not hand-roll canonicalization or signature
+verification in each consumer: use `@ragbaz/common/gift-signature` or
+`rebsync_core::gift`, which share one set of test vectors, and preserve exact
+signed envelopes. An envelope may be cryptographically valid but come from an untrusted
 or unauthorized sender. Shape validation is not signature verification.
 
 Recipient public keys are not email addresses, account ownership, passkey

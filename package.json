@@ -12,6 +12,8 @@
   "exports": {
     "./schemas/collection-view": "./schemas/collection-view.schema.json",
     "./crypto": "./src/crypto.js",
+    "./gift-signature": "./src/gift-signature.js",
+    "./schemas/gift-signature-vectors": "./schemas/gift-signature.v1.vectors.json",
     "./handles": "./src/handles.js",
     "./http": "./src/request-bounds.js",
     "./webauthn": "./src/webauthn.js",

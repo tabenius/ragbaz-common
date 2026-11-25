@@ -63,7 +63,7 @@
       "properties": { "format": { "type": "string", "minLength": 1, "maxLength": 80 }, "value": { "type": "string", "minLength": 1, "maxLength": 16384 } }
     },
     "gift": {
-      "description": "Projection of an owner-signed gift envelope, not a new signing format or an authorization grant. Signature verification is delegated to the owner protocol.",
+      "description": "Projection of an owner-signed gift envelope, not an authorization grant. The signature format is named by signature.format; ed25519-jcs-v1 (docs/GIFT-SIGNATURE.md) requires issued_at and expires_at. Shape validation is not signature verification.",
       "type": "object", "additionalProperties": false,
       "required": ["id", "subject", "sender_public_key", "recipient_public_keys", "artifact", "signature"],
       "properties": {
@@ -74,6 +74,8 @@
           { "type": "object", "additionalProperties": false, "required": ["ref", "sha256"], "properties": { "ref": { "$ref": "#/$defs/ref" }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } },
           { "type": "object", "additionalProperties": false, "required": ["text"], "properties": { "text": { "type": "string", "maxLength": 65536 } } }
         ] },
+        "issued_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC, whole seconds. Signed." },
+        "expires_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC, whole seconds. Signed; a gift is refused at or after this time." },
         "signature": { "type": "object", "additionalProperties": false, "required": ["format", "value"], "properties": { "format": { "type": "string", "minLength": 1, "maxLength": 80 }, "value": { "type": "string", "minLength": 1, "maxLength": 65536 } } },
         "invitation": {
           "type": "object", "additionalProperties": false, "required": ["kind", "context_ref"],
