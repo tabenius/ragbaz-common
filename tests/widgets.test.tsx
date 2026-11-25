@@ -10,7 +10,7 @@ import { WidgetInspectionProvider } from '../src/widgets/inspection';
 import { safeInspectionHref, snapshotState } from '../src/widgets/presentation';
 import { WidgetExample } from '../src/widgets/example';
 import { StatusPill, ActorLabel } from '../src/widgets/visual-language';
-import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu, PopoverMenu } from '../src/widgets/primitives';
+import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu, PopoverMenu, Tabs, StateNotice } from '../src/widgets/primitives';
 
 test('plain widgets render without a graph store and mark inherited mock data', () => {
   const html = renderToStaticMarkup(<AdminWidget data={MOCK_CONTAINER_NODE} />);
@@ -244,4 +244,28 @@ test('copyText writes the exact value without executing or logging it', async ()
   assert.deepEqual(written, ['frog --json task info FRG-42']);
   assert.deepEqual(await copyText('anything', null), { ok: false, reason: 'unavailable' });
   assert.deepEqual(await copyText('anything', { writeText: async () => { throw new Error('denied'); } }), { ok: false, reason: 'denied' });
+});
+
+test('tabs expose a roving tabindex and native tab order', () => {
+  const html = renderToStaticMarkup(<Tabs label="Audience" value="smb" onChange={() => {}} items={[
+    { id: 'all', label: 'All' }, { id: 'smb', label: 'SMB' }, { id: 'lab', label: 'Lab', disabled: true },
+  ]} />);
+  assert.ok(html.includes('role="tablist"'));
+  assert.ok(html.includes('aria-label="Audience"'));
+  assert.equal((html.match(/role="tab"/g) ?? []).length, 3);
+  assert.ok(html.includes('aria-selected="true"'));
+  assert.equal((html.match(/tabindex="0"/g) ?? []).length, 1);
+  assert.equal((html.match(/tabindex="-1"/g) ?? []).length, 2);
+  assert.ok(html.includes('disabled=""'));
+});
+
+test('state notices map tones to semantic roles without inventing counts', () => {
+  const error = renderToStaticMarkup(<StateNotice tone="error" title="Could not load">Manifest unavailable</StateNotice>);
+  assert.ok(error.includes('data-tone="danger"'));
+  assert.ok(error.includes('role="alert"'));
+  assert.ok(error.includes('Manifest unavailable'));
+  const empty = renderToStaticMarkup(<StateNotice tone="empty">No matching collections</StateNotice>);
+  assert.ok(empty.includes('data-tone="neutral"'));
+  assert.ok(empty.includes('role="status"'));
+  assert.ok(!empty.includes('>0<'));
 });

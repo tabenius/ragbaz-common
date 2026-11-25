@@ -2,7 +2,8 @@
 export * from './visual-language';
 export * from './reference-links';
 export * from './presentation';
-export * from './keyboard';
+export * from './keyboard-contract.js';
+export { KeyboardLegend } from './keyboard';
 export * from './inspection-dialog';
 export * from './evidence-summary';
 export * from './navigation-feedback';
@@ -13,3 +14,5 @@ export * from './terminal-command';
 export * from './app-bar';
 export * from './popover-menu';
 export * from './inspection-shell';
+export * from './tabs.js';
+export * from './state-notice.js';

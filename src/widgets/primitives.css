@@ -115,3 +115,20 @@
   .ragbaz-copy-button:focus-visible { outline-color: Highlight; }
 }
 @media (max-width: 400px) { .ragbaz-keyboard-legend dl { grid-template-columns: minmax(0, 1fr); gap: .25rem; } .ragbaz-keyboard-legend dd { margin-bottom: .75rem; } }
+.ragbaz-tabs { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.ragbaz-tab { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; padding: .5rem .75rem; border: 1px solid var(--ragbaz-edge); border-radius: .5rem; background: var(--ragbaz-surface); color: var(--ragbaz-muted); font: inherit; cursor: pointer; }
+.ragbaz-tab:hover { color: var(--ragbaz-focus); border-color: var(--ragbaz-focus); }
+.ragbaz-tab[aria-selected="true"] { color: var(--ragbaz-active-ink); background: var(--ragbaz-active-bg); border-color: currentColor; font-weight: 650; }
+.ragbaz-tab:focus-visible { outline: 3px solid var(--ragbaz-focus); outline-offset: 2px; }
+.ragbaz-state-notice { display: block; padding: .6rem .75rem; border-left: 3px solid var(--ragbaz-neutral-ink); border-radius: 0 .4rem .4rem 0; background: var(--ragbaz-neutral-bg); color: var(--ragbaz-neutral-ink); font: inherit; overflow-wrap: anywhere; }
+.ragbaz-state-notice + .ragbaz-state-notice { margin-top: .5rem; }
+.ragbaz-state-notice-title { display: block; font-weight: 700; }
+.ragbaz-state-notice--active { border-color: var(--ragbaz-active-ink); background: var(--ragbaz-active-bg); color: var(--ragbaz-active-ink); }
+.ragbaz-state-notice--warning { border-color: var(--ragbaz-warning-ink); background: var(--ragbaz-warning-bg); color: var(--ragbaz-warning-ink); }
+.ragbaz-state-notice--danger { border-color: var(--ragbaz-danger-ink); background: var(--ragbaz-danger-bg); color: var(--ragbaz-danger-ink); }
+.ragbaz-state-notice--success { border-color: var(--ragbaz-success-ink); background: var(--ragbaz-success-bg); color: var(--ragbaz-success-ink); }
+@media (forced-colors: active) {
+  .ragbaz-tab, .ragbaz-state-notice { color: CanvasText; background: Canvas; border-color: CanvasText; }
+  .ragbaz-tab[aria-selected="true"] { border-color: Highlight; }
+  .ragbaz-tab:focus-visible { outline-color: Highlight; }
+}

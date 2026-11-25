@@ -158,3 +158,55 @@ test('framework-neutral popover controller matches the React contract', async t 
     await new Promise(resolve => server.close(resolve));
   }
 });
+
+test('tabs move selection with the shared web key bindings', async t => {
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const chromium = await playwrightChromium();
+  if (!chromium) { t.skip('No Playwright module installed'); return; }
+
+  const bundle = await build({
+    entryPoints: [join(root, 'tests/fixtures/tabs-browser.js')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: ['es2022'],
+    jsx: 'automatic',
+  });
+  const script = bundle.outputFiles[0];
+  const html = '<!doctype html><html><head><meta charset="utf-8"></head><body><div id="app"></div><script src="/app.js"></script></body></html>';
+  const server = createServer((req, res) => {
+    if (new URL(req.url, 'http://localhost').pathname === '/app.js') { res.writeHead(200, { 'Content-Type': 'application/javascript' }); res.end(script.contents); return; }
+    res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+
+  let browser;
+  try {
+    browser = await chromium.launch({ executablePath: executable, headless: true });
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const tabs = page.getByRole('tab');
+    assert.equal(await tabs.count(), 3);
+    assert.equal(await tabs.nth(0).getAttribute('aria-selected'), 'true');
+
+    await tabs.nth(0).press('ArrowRight');
+    await page.waitForFunction(() => window.__tabValue === 'smb');
+    assert.equal(await tabs.nth(1).getAttribute('aria-selected'), 'true');
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'tab');
+
+    await tabs.nth(1).press('End');
+    await page.waitForFunction(() => window.__tabValue === 'lab');
+    assert.equal(await tabs.nth(2).getAttribute('aria-selected'), 'true');
+
+    await tabs.nth(2).press('Home');
+    await page.waitForFunction(() => window.__tabValue === 'all');
+    assert.equal(await tabs.nth(0).getAttribute('aria-selected'), 'true');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser?.close();
+    await new Promise(resolve => server.close(resolve));
+  }
+});
