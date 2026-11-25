@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 export type TabItem = {
   id: string;
   label: ReactNode;
+  domId?: string;
+  panelId?: string;
   className?: string;
   disabled?: boolean;
 };

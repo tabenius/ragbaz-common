@@ -7,7 +7,7 @@ const h = React.createElement;
 /**
  * Roving-tabindex tab strip shared by React and plain-JS hosts. Arrow/Home/End
  * use the documented web bindings; Tab always remains native.
- * @param {{ items: Array<{ id: string, label: React.ReactNode, className?: string, disabled?: boolean }>, value: string, onChange: (id: string) => void, label?: string, className?: string, tabClassName?: string, vim?: boolean }} props
+ * @param {{ items: Array<{ id: string, label: React.ReactNode, domId?: string, panelId?: string, className?: string, disabled?: boolean }>, value: string, onChange: (id: string) => void, label?: string, className?: string, tabClassName?: string, vim?: boolean }} props
  */
 export function Tabs({ items, value, onChange, label, className = '', tabClassName = '', vim = false }) {
   /** @type {React.MutableRefObject<Array<HTMLButtonElement | null>>} */
@@ -28,9 +28,11 @@ export function Tabs({ items, value, onChange, label, className = '', tabClassNa
       const selected = item.id === value;
       return h('button', {
         key: item.id,
+        id: item.domId,
         ref: node => { buttons.current[index] = /** @type {HTMLButtonElement | null} */ (node); },
         type: 'button',
         role: 'tab',
+        'aria-controls': item.panelId,
         'aria-selected': selected,
         tabIndex: index === selectedIndex ? 0 : -1,
         disabled: item.disabled,
