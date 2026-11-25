@@ -2,8 +2,8 @@
   "schema": "ragbaz.common.widget-delivery.v1",
   "files": {
     "package.json": "f63ef389b4bbebe0375a428f93220d9703258ca0ea056dcd0a91e04eec892981",
-    "src/widgets/dom.js": "ad5c277ef443751c9d889d3149e105a271c1a303d74b9ab4f2cef023328cece7",
-    "src/widgets/dom.d.ts": "2da16aeee97e066b53c9c7b6aa07490dadee96fa1e61eda946e52130bf3e07bd",
+    "src/widgets/dom.js": "805f1c812738dab909a8f6fee9383ef74e0ff166c9bd33dcd5910156326fbcb6",
+    "src/widgets/dom.d.ts": "1e14b98abd38dc54fd5b5c8b486f1d58cb0eff69bf816c0b63976df368212409",
     "src/widgets/keyboard-contract.js": "5d29c8e9265030ad36e0ce5e4e901328f3d902f782193973eada9d3a9df29731",
     "src/widgets/keyboard-contract.d.ts": "ee414e0de2fa37aab45265627d30f84f14c7e3c6895068110842fd22fc14c0de",
     "src/widgets/reading-contract.js": "b13d05e9d56674d3b10a33963d075c0c8d0755762f1b049fe5dade68a82bd76c",

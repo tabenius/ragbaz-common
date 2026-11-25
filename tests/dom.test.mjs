@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copyText, stateTone, restoreFocus, focusAndReveal, shouldAutoHideChrome } from '../src/widgets/dom.js';
+import { copyText, stateTone, restoreFocus, focusAndReveal, shouldAutoHideChrome, createTabs } from '../src/widgets/dom.js';
 
 test('framework-neutral copyText keeps the exact value and reports failure', async () => {
   const written = [];
@@ -46,4 +46,44 @@ test('shouldAutoHideChrome ignores jitter and respects pointer, focus and open m
   assert.equal(shouldAutoHideChrome({ current: 140, previous: 100, focusInside: true }), false);
   assert.equal(shouldAutoHideChrome({ current: 140, previous: 100, menusOpen: 1 }), false);
   assert.equal(shouldAutoHideChrome({ current: 50, previous: 40 }), false);
+});
+
+test('createTabs keeps native Tab order and uses the shared web arrow contract', () => {
+  const makeTab = (id) => ({
+    id,
+    attributes: {},
+    listeners: {},
+    focused: [],
+    setAttribute(name, value) { this.attributes[name] = value; },
+    addEventListener(name, handler) { this.listeners[name] = handler; },
+    removeEventListener(name) { delete this.listeners[name]; },
+    focus() { this.focused.push(id); },
+  });
+  const items = ['a', 'b', 'c'].map(id => ({ id, tab: makeTab(id), panel: { hidden: true } }));
+  const selected = [];
+  const tabs = createTabs({ items, initial: 'a', onSelect: id => selected.push(id) });
+  assert.equal(items[0].tab.attributes['aria-selected'], 'true');
+  assert.equal(items[0].tab.tabIndex, 0);
+  assert.equal(items[1].tab.tabIndex, -1);
+  assert.equal(items[1].panel.hidden, true);
+
+  const event = { key: 'ArrowRight', preventDefault() { event.prevented = true; } };
+  items[0].tab.listeners.keydown(event);
+  assert.equal(event.prevented, true);
+  assert.equal(tabs.value, 'b');
+  assert.equal(items[1].tab.focused.length, 1);
+  assert.equal(items[0].tab.attributes['aria-selected'], 'false');
+  assert.equal(items[1].tab.attributes['aria-selected'], 'true');
+
+  const letter = { key: 'l', preventDefault() { letter.prevented = true; } };
+  items[1].tab.listeners.keydown(letter);
+  assert.equal(letter.prevented, undefined);
+  assert.equal(tabs.value, 'b');
+
+  const end = { key: 'End', preventDefault() {} };
+  items[1].tab.listeners.keydown(end);
+  assert.equal(tabs.value, 'c');
+
+  tabs.destroy();
+  assert.equal(items[1].tab.listeners.keydown, undefined);
 });

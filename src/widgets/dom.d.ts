@@ -20,6 +20,26 @@ export function shouldAutoHideChrome(args: {
   menusOpen?: number;
 }): boolean | undefined;
 
+export type TabItem = {
+  id: string;
+  tab: HTMLElement;
+  panel?: HTMLElement | null;
+  disabled?: boolean;
+  hidden?: () => boolean;
+};
+export type TabsController = {
+  readonly value: string | undefined;
+  select(id: string, focus?: boolean): void;
+  destroy(): void;
+};
+export function createTabs(options: {
+  items: TabItem[];
+  initial?: string;
+  onSelect?: (id: string) => void;
+  setPanel?: (item: TabItem, selected: boolean) => void;
+  vim?: boolean;
+}): TabsController;
+
 export type PopoverControllerOptions = {
   trigger: HTMLElement;
   panel: HTMLElement;

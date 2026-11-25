@@ -1,4 +1,6 @@
 // @ts-check
+import { webTabIndex } from './keyboard-contract.js';
+
 /**
  * Framework-neutral widget behaviour for plain HTML/JS surfaces. React widgets
  * and static UIs share these rules so focus, clipboard, tone and chrome auto-hide
@@ -87,6 +89,73 @@ export function focusAndReveal(selector, root = globalThis.document) {
 export function shouldAutoHideChrome({ current, previous, threshold = 8, grace = 60, minScroll = 100, pointerInside = false, focusInside = false, menusOpen = 0 }) {
   if (Math.abs(current - previous) < threshold && current > grace) return undefined;
   return current > previous && current > minScroll && !pointerInside && !focusInside && menusOpen === 0;
+}
+
+/**
+ * Roving-tabindex tabs for plain HTML hosts. Arrow/Home/End follow the shared
+ * web contract; Tab stays native. `vim` opts letter keys in, as in React Tabs.
+ *
+ * @param {{ items: Array<{ id: string, tab: HTMLElement, panel?: HTMLElement | null, disabled?: boolean, hidden?: () => boolean }>, initial?: string, onSelect?: (id: string) => void, setPanel?: (item: any, selected: boolean) => void, vim?: boolean }} options
+ */
+export function createTabs({ items, initial, onSelect, setPanel, vim = false }) {
+  const listeners = new Map();
+  let current = initial ?? items.find(item => !item.disabled && !item.hidden?.())?.id;
+
+  /** @param {any} item @param {boolean} selected */
+  function apply(item, selected) {
+    item.tab.setAttribute('aria-selected', String(selected));
+    item.tab.tabIndex = selected ? 0 : -1;
+    if (item.panel) {
+      if (setPanel) setPanel(item, selected);
+      else item.panel.hidden = !selected;
+    }
+  }
+
+  /** @param {string} id @param {boolean} [focus] */
+  function select(id, focus = false) {
+    const item = items.find(candidate => candidate.id === id);
+    if (!item || item.disabled || item.hidden?.()) return;
+    current = id;
+    for (const candidate of items) apply(candidate, candidate.id === id);
+    onSelect?.(id);
+    if (focus) item.tab.focus();
+  }
+
+  for (const item of items) {
+    const click = () => select(item.id);
+    /** @param {KeyboardEvent} event */
+    const keydown = (event) => {
+      const visible = items.filter(candidate => !candidate.disabled && !candidate.hidden?.());
+      const index = visible.findIndex(candidate => candidate.id === item.id);
+      if (index < 0) return;
+      const nextIndex = webTabIndex(event.key, index, visible.length, vim);
+      if (nextIndex !== null && visible[nextIndex]) {
+        event.preventDefault();
+        select(visible[nextIndex].id, true);
+        return;
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        select(item.id, true);
+      }
+    };
+    item.tab.addEventListener('click', click);
+    item.tab.addEventListener('keydown', keydown);
+    listeners.set(item.id, { click, keydown });
+  }
+  select(current ?? items[0]?.id);
+  return {
+    get value() { return current; },
+    select,
+    destroy() {
+      for (const item of items) {
+        const handlers = listeners.get(item.id);
+        if (!handlers) continue;
+        item.tab.removeEventListener('click', handlers.click);
+        item.tab.removeEventListener('keydown', handlers.keydown);
+      }
+    },
+  };
 }
 
 /**
