@@ -28,6 +28,7 @@
     "./widgets/styles.css": "./src/widgets/widgets.css",
     "./widgets/primitives": "./src/widgets/primitives.ts",
     "./widgets/primitives.css": "./src/widgets/primitives.css",
+    "./widgets/dom": "./src/widgets/dom.js",
     "./schema.sql": "./schema.sql",
     "./prefix-migration": "./scripts/prefix-migration.mjs",
     "./build-llms-txt": "./scripts/build-llms-txt.mjs",

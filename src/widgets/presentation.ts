@@ -18,13 +18,7 @@ export function widgetState(data: AdminNodeData): string {
   return data.type === 'handoff' ? 'continuation recorded' : 'context';
 }
 
-export function stateTone(state: string): 'neutral' | 'active' | 'warning' | 'danger' | 'success' {
-  if (['blocked', 'failed', 'denied', 'not_ready', 'changes_requested'].includes(state)) return 'danger';
-  if (['stale', 'unavailable', 'degraded', 'pending', 'waiting', 'expired', 'unreviewed', 'review_required'].includes(state)) return 'warning';
-  if (['passed', 'ready', 'merged', 'done', 'released', 'approved', 'applied'].includes(state)) return 'success';
-  if (['running', 'starting', 'active', 'in-progress', 'in_progress', 'review', 'evidence', 'queued', 'sent'].includes(state)) return 'active';
-  return 'neutral';
-}
+export { stateTone } from './dom.js';
 
 export function snapshotState(data: AdminNodeData, now: number): 'demo' | 'unknown' | 'stale' | 'captured' {
   const snapshot = data.snapshot;

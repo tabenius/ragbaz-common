@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "noEmit": false,
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
     "baseUrl": ".",
     "paths": {
       "@ragbaz/common/*": ["src/*"]

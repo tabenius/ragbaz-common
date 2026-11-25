@@ -226,11 +226,14 @@ test('app bar keeps product chrome neutral and exposes labelled menu disclosures
 });
 
 test('popover menu renders trigger and hidden dialog panel', () => {
-  const html = renderToStaticMarkup(<PopoverMenu label="Actions"><button type="button">Do it</button></PopoverMenu>);
+  const html = renderToStaticMarkup(<PopoverMenu id="actions" label="Actions"><button type="button">Do it</button></PopoverMenu>);
   assert.ok(html.includes('aria-label="Actions"'));
   assert.ok(html.includes('aria-haspopup="dialog"'));
   assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('id="actions-trigger"'));
+  assert.ok(html.includes('aria-controls="actions"'));
   assert.ok(html.includes('role="dialog"'));
+  assert.ok(html.includes('id="actions"'));
   assert.ok(html.includes('hidden'));
   assert.ok(html.includes('>Do it</button>'));
 });

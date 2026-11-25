@@ -45,13 +45,14 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const generatedId = useId();
-  const id = idProp ?? generatedId;
+  const panelId = idProp ?? generatedId;
+  const triggerId = `${panelId}-trigger`;
   const context = useContext(MenuContext);
   useEffect(() => {
     if (!open) return;
-    context?.openMenu(id);
-    return () => context?.closeMenu(id);
-  }, [open, id, context]);
+    context?.openMenu(panelId);
+    return () => context?.closeMenu(panelId);
+  }, [open, panelId, context]);
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -77,10 +78,10 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
   const panelStyle = width === undefined ? undefined : { '--ragbaz-popover-width': typeof width === 'number' ? `${width}px` : width } as CSSProperties;
   const triggerProps = {
     ref: trigger,
-    id,
+    id: triggerId,
     'aria-haspopup': 'dialog' as const,
     'aria-expanded': open,
-    'aria-controls': id,
+    'aria-controls': panelId,
     'aria-keyshortcuts': shortcut,
     className: triggerClassName,
     type: 'button' as const,
@@ -92,7 +93,7 @@ export function PopoverMenu({ label, children, icon, triggerClassName = '', pane
         {icon === undefined || typeof icon === 'string' ? <WidgetIcon name={(icon ?? 'menu') as WidgetIconName} /> : icon}
       </button>
     )}
-    <div ref={panel} id={id} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} data-align={align === 'start' ? 'start' : undefined} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false, false); }} onClick={(event) => {
+    <div ref={panel} id={panelId} className={`ragbaz-popover-panel ${panelClassName}`} role="dialog" aria-label={label} tabIndex={-1} hidden={!open} style={panelStyle} data-align={align === 'start' ? 'start' : undefined} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) change(false, false); }} onClick={(event) => {
       const target = event.target as HTMLElement;
       if (target.closest('[data-appbar-keep-open],[data-menu-keep-open]')) return;
       if (closeOnSelect === false) return;

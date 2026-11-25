@@ -98,3 +98,63 @@ test('popover menu restores focus on dismissal but respects outside focus and op
     await new Promise(resolve => server.close(resolve));
   }
 });
+
+test('framework-neutral popover controller matches the React contract', async t => {
+  if (!executable) { t.skip('No headless Chromium installed'); return; }
+  const chromium = await playwrightChromium();
+  if (!chromium) { t.skip('No Playwright module installed'); return; }
+
+  const bundle = await build({
+    entryPoints: [join(root, 'tests/fixtures/popover-controller-browser.js')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: ['es2022'],
+  });
+  const script = bundle.outputFiles[0];
+  const html = '<!doctype html><html><head><meta charset="utf-8"></head><body><button data-trigger type="button">Plain actions</button><div data-panel hidden><button id="plain-action" type="button">Run</button></div><button id="after" type="button">After</button><script src="/app.js"></script></body></html>';
+  const server = createServer((req, res) => {
+    if (new URL(req.url, 'http://localhost').pathname === '/app.js') { res.writeHead(200, { 'Content-Type': 'application/javascript' }); res.end(script.contents); return; }
+    res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+
+  let browser;
+  try {
+    browser = await chromium.launch({ executablePath: executable, headless: true });
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const trigger = page.locator('[data-trigger]');
+    const panel = page.locator('[data-panel]');
+    const ids = await page.evaluate(() => {
+      const button = document.querySelector('[data-trigger]');
+      const dialog = document.querySelector('[data-panel]');
+      return { trigger: button.id, panel: dialog.id, controls: button.getAttribute('aria-controls') };
+    });
+    assert.notEqual(ids.trigger, ids.panel, 'trigger and panel must not share an id');
+    assert.equal(ids.controls, ids.panel);
+    assert.equal(await trigger.getAttribute('aria-haspopup'), 'dialog');
+    assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+
+    await trigger.click();
+    await panel.waitFor({ state: 'visible' });
+    assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'plain-action');
+
+    await page.keyboard.press('Escape');
+    await panel.waitFor({ state: 'hidden' });
+    assert.ok(await trigger.evaluate(element => element === document.activeElement), 'Escape restores trigger focus');
+
+    await trigger.click();
+    await page.locator('#after').click();
+    await panel.waitFor({ state: 'hidden' });
+    assert.equal(await page.evaluate(() => document.activeElement?.id), 'after', 'outside clicks keep the user’s focus');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser?.close();
+    await new Promise(resolve => server.close(resolve));
+  }
+});

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { shouldAutoHideChrome } from './dom.js';
 import { MenuGroupContext, type MenuGroupContextValue, PopoverMenu } from './popover-menu';
 import { WidgetIcon, type WidgetIconName } from './visual-language';
 
@@ -29,8 +30,9 @@ export function AppBar({ label = 'Application', brand, children, height, autoHid
     let previous = window.scrollY;
     const onScroll = () => {
       const current = Math.max(0, window.scrollY);
-      if (Math.abs(current - previous) < 8 && current > 60) return;
-      setHidden(current > previous && current > 100 && !pointerInside.current && !focusInside.current && openMenus.size === 0);
+      const decision = shouldAutoHideChrome({ current, previous, pointerInside: pointerInside.current, focusInside: focusInside.current, menusOpen: openMenus.size });
+      if (decision === undefined) return;
+      setHidden(decision);
       previous = current;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
