@@ -1,18 +1,7 @@
 // One binding table supplies both the menu/help text and keyboard dispatch.
-export const READING_BINDINGS = Object.freeze([
-  { keys: ['f'], label: 'Toggle fullscreen', action: 'fullscreen' },
-  { keys: ['Escape'], label: 'Leave fullscreen / dismiss open controls', action: 'escape' },
-  { keys: ['ArrowLeft', 'h'], label: 'Paper view · previous spread', action: 'previous' },
-  { keys: ['ArrowRight', 'L'], label: 'Paper view · next spread', action: 'next' },
-  { keys: ['ArrowUp', 'k'], label: 'Flow view · scroll up', action: 'up' },
-  { keys: ['ArrowDown', 'j'], label: 'Flow view · scroll down', action: 'down' },
-  { keys: ['Home'], label: 'Beginning of document', action: 'home' },
-  { keys: ['End'], label: 'End of document', action: 'end' },
-  { keys: ['PageUp'], label: 'Previous screen / spread', action: 'page-up' },
-  { keys: ['PageDown'], label: 'Next screen / spread', action: 'page-down' },
-  { keys: ['l'], label: 'Toggle shortcut legend', action: 'legend' },
-]);
-const keyLabel = key => ({ ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Escape: 'Esc', L: 'Shift+L', PageUp: 'PgUp', PageDown: 'PgDn' })[key] || key;
+import { READING_BINDINGS, readingKeyLabel } from '../../src/widgets/reading-contract.js';
+const keyLabel = readingKeyLabel;
+export { READING_BINDINGS };
 
 export function setupReadingNavigation({ onModeChange = () => {}, closeOverlays = () => {}, closeMenu = () => {} } = {}) {
   const $ = id => document.getElementById(id);

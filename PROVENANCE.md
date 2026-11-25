@@ -12,6 +12,15 @@ telemetry. No command is executed, validated, logged or granted authority by the
 widget. Dash imports the graph-free primitives entry point and vendors the
 generated package; the source of truth stays here.
 
+### Shared reading contract (2026-11-25)
+
+`READING_BINDINGS` moved from the demo reader into
+`src/widgets/reading-contract.js` and is exported as
+`@ragbaz/common/widgets/reading`. The reader's `l`/`Shift+L` semantics remain
+deliberately different from the Vim-opt-in web widget bindings, so the table is
+scoped rather than merged. Pieces consumes it through its pinned renderer build,
+not by editing generated reading-room bundles.
+
 ## Lineage
 
 ### Additive collection-view contract (2026-11-19)

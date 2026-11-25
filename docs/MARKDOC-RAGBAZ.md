@@ -144,7 +144,10 @@ it. Its introductory beckoning animation lasts six seconds and respects reduced 
 ### Keyboard and reading modes
 
 The document menu exposes Flow, Paper, Fullscreen and Legend actions with keys;
-the same `READING_BINDINGS` table generates menu help and the optional legend.
+the same `READING_BINDINGS` table, exported from
+`@ragbaz/common/widgets/reading`, generates menu help and the optional legend.
+The web widget bindings deliberately use `l` for the next tab only with an
+explicit Vim opt-in, so the reader keeps its own scoped contract.
 `f` toggles the browser Fullscreen API; Escape leaves it before dismissing nested
 controls. If fullscreen is denied/unavailable the reader reports that fact and
 continues normally. This is not a CSS imitation of fullscreen.

@@ -3,6 +3,7 @@ export * from './visual-language';
 export * from './reference-links';
 export * from './presentation';
 export * from './keyboard-contract.js';
+export * from './reading-contract.js';
 export { KeyboardLegend } from './keyboard';
 export * from './inspection-dialog';
 export * from './evidence-summary';

@@ -10,7 +10,7 @@ import { WidgetInspectionProvider } from '../src/widgets/inspection';
 import { safeInspectionHref, snapshotState } from '../src/widgets/presentation';
 import { WidgetExample } from '../src/widgets/example';
 import { StatusPill, ActorLabel } from '../src/widgets/visual-language';
-import { WEB_BINDINGS, webTabIndex, webRecordIndex, spatialRecordIndex, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu, PopoverMenu, Tabs, StateNotice } from '../src/widgets/primitives';
+import { WEB_BINDINGS, resolveWebKey, webTabIndex, webRecordIndex, spatialRecordIndex, READING_BINDINGS, readingKeyLabel, resolveReadingAction, KeyboardLegend, EvidenceSummary, relativeDayLabel, TerminalCommand, copyText, AppBar, AppBarMenu, AppBarAvatarMenu, PopoverMenu, Tabs, StateNotice } from '../src/widgets/primitives';
 
 test('plain widgets render without a graph store and mark inherited mock data', () => {
   const html = renderToStaticMarkup(<AdminWidget data={MOCK_CONTAINER_NODE} />);
@@ -168,6 +168,19 @@ test('keyboard table drives both web navigation and legend, with Vim opt in', ()
   const html = renderToStaticMarkup(<KeyboardLegend />);
   for (const binding of WEB_BINDINGS) for (const key of binding.keys) assert.ok(html.includes(`<kbd>${key}</kbd>`));
   assert.ok(html.includes('opt in using View settings'));
+});
+
+test('reading bindings stay distinct from widget navigation and keep reader labels', () => {
+  assert.equal(READING_BINDINGS.find(binding => binding.action === 'legend')?.keys[0], 'l');
+  assert.equal(resolveReadingAction('l'), 'legend');
+  assert.equal(resolveReadingAction('L'), 'next');
+  assert.equal(resolveReadingAction('ArrowLeft'), 'previous');
+  assert.equal(resolveReadingAction('?'), undefined);
+  assert.equal(readingKeyLabel('ArrowLeft'), '←');
+  assert.equal(readingKeyLabel('Escape'), 'Esc');
+  assert.equal(readingKeyLabel('L'), 'Shift+L');
+  assert.equal(readingKeyLabel('f'), 'f');
+  assert.notEqual(resolveWebKey('l', 'tabs'), 'legend');
 });
 
 test('current evidence is not a pass rate and unknown counts do not become zero', () => {

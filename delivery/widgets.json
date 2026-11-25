@@ -1,0 +1,18 @@
+{
+  "schema": "ragbaz.common.widget-delivery.v1",
+  "files": {
+    "package.json": "f63ef389b4bbebe0375a428f93220d9703258ca0ea056dcd0a91e04eec892981",
+    "src/widgets/dom.js": "ad5c277ef443751c9d889d3149e105a271c1a303d74b9ab4f2cef023328cece7",
+    "src/widgets/dom.d.ts": "2da16aeee97e066b53c9c7b6aa07490dadee96fa1e61eda946e52130bf3e07bd",
+    "src/widgets/keyboard-contract.js": "5d29c8e9265030ad36e0ce5e4e901328f3d902f782193973eada9d3a9df29731",
+    "src/widgets/keyboard-contract.d.ts": "ee414e0de2fa37aab45265627d30f84f14c7e3c6895068110842fd22fc14c0de",
+    "src/widgets/reading-contract.js": "b13d05e9d56674d3b10a33963d075c0c8d0755762f1b049fe5dade68a82bd76c",
+    "src/widgets/reading-contract.d.ts": "6ef2e336f085d77056cb5af9f1a9e9a8883c6a7abf4596b416e37b7a7cda8172",
+    "src/widgets/tabs.js": "a42211093c1bcb07d3737468fb5160462d02d4d5ca73f07547beafb84a37fb78",
+    "src/widgets/tabs.d.ts": "f1a64b2ea656d3022fb4d1a28c5425f5db1f15563af1788ee2263f0f0df7c0b6",
+    "src/widgets/state-notice.js": "e466b76b2529dda3652d0186211cf94d8d4f9207a47e47f01146076cf029e2c2",
+    "src/widgets/state-notice.d.ts": "aef9cd142a85126ca918a4f1e170e5b2114fe7fe9be24c348029955a441067bb",
+    "src/widgets/primitives.ts": "e1eeb965800a97710dbcb22c3eb122fe41549bb5deb81e95028e37b391055b64",
+    "src/widgets/primitives.css": "15963dc8afb0baf6573d1632b463e8e9e10d9d2e563ece666d1967eca91bc5c8"
+  }
+}
