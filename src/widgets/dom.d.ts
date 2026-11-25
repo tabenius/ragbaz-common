@@ -32,6 +32,7 @@ export type TabsController = {
   select(id: string, focus?: boolean): void;
   destroy(): void;
 };
+export function tabIndexForWebKey(key: string, index: number, count: number, vim: boolean): number | null;
 export function createTabs(options: {
   items: TabItem[];
   initial?: string;

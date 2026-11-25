@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copyText, stateTone, restoreFocus, focusAndReveal, shouldAutoHideChrome, createTabs } from '../src/widgets/dom.js';
+import { copyText, stateTone, restoreFocus, focusAndReveal, shouldAutoHideChrome, createTabs, tabIndexForWebKey } from '../src/widgets/dom.js';
+import { webTabIndex } from '../src/widgets/keyboard-contract.js';
 
 test('framework-neutral copyText keeps the exact value and reports failure', async () => {
   const written = [];
@@ -79,6 +80,11 @@ test('createTabs keeps native Tab order and uses the shared web arrow contract',
   items[1].tab.listeners.keydown(letter);
   assert.equal(letter.prevented, undefined);
   assert.equal(tabs.value, 'b');
+
+  for (const key of ['ArrowRight', 'ArrowLeft', 'Home', 'End', 'l', 'h', '0', '$', 'j']) {
+    assert.equal(tabIndexForWebKey(key, 1, 3, false), webTabIndex(key, 1, 3, false));
+    assert.equal(tabIndexForWebKey(key, 1, 3, true), webTabIndex(key, 1, 3, true));
+  }
 
   const end = { key: 'End', preventDefault() {} };
   items[1].tab.listeners.keydown(end);

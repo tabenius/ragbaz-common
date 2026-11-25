@@ -1,6 +1,4 @@
 // @ts-check
-import { webTabIndex } from './keyboard-contract.js';
-
 /**
  * Framework-neutral widget behaviour for plain HTML/JS surfaces. React widgets
  * and static UIs share these rules so focus, clipboard, tone and chrome auto-hide
@@ -16,6 +14,22 @@ const DANGER = ['blocked', 'failed', 'denied', 'not_ready', 'changes_requested']
 const WARNING = ['stale', 'unavailable', 'degraded', 'pending', 'waiting', 'expired', 'unreviewed', 'review_required'];
 const SUCCESS = ['passed', 'ready', 'merged', 'done', 'released', 'approved', 'applied'];
 const ACTIVE = ['running', 'starting', 'active', 'in-progress', 'in_progress', 'review', 'evidence', 'queued', 'sent'];
+
+/**
+ * The tabs branch of the shared web binding contract, kept local so this file
+ * stays a single portable module for static hosts. Tests assert parity with
+ * `webTabIndex` in keyboard-contract.js.
+ * @param {string} key @param {number} index @param {number} count @param {boolean} vim
+ */
+export function tabIndexForWebKey(key, index, count, vim) {
+  if (count < 1) return null;
+  if (key.length === 1 && !vim) return null;
+  if (key === 'ArrowRight' || (vim && key === 'l')) return (index + 1) % count;
+  if (key === 'ArrowLeft' || (vim && key === 'h')) return (index + count - 1) % count;
+  if (key === 'Home' || (vim && key === '0')) return 0;
+  if (key === 'End' || (vim && key === '$')) return count - 1;
+  return null;
+}
 
 /**
  * Copy an exact string. The value is never executed, parsed or logged.
@@ -128,7 +142,7 @@ export function createTabs({ items, initial, onSelect, setPanel, vim = false }) 
       const visible = items.filter(candidate => !candidate.disabled && !candidate.hidden?.());
       const index = visible.findIndex(candidate => candidate.id === item.id);
       if (index < 0) return;
-      const nextIndex = webTabIndex(event.key, index, visible.length, vim);
+      const nextIndex = tabIndexForWebKey(event.key, index, visible.length, vim);
       if (nextIndex !== null && visible[nextIndex]) {
         event.preventDefault();
         select(visible[nextIndex].id, true);
