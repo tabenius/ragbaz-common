@@ -37,3 +37,10 @@ The original 0.1.0 schema lived only in the unversioned workspace
 (`/data/src/docs/schemas/`) and was lost. This file was inferred on 2026-11-14 from
 the 11 surviving 0.1.0 manifests. Field names and nesting are real; its `required`
 lists are inferred and stricter than the original was. Kept for reference only.
+
+## `ragbaz.handoff-index.schema.json` — handoff index, `ragbaz.handoff-index/1`
+
+Shape of each repository's `.handoff/active-tasks.json`, as defined in the
+[fleet handoff standard](../docs/HANDOFF-STANDARD.md). Paths are repository-relative.
+Per-task MVH files follow mneme's `urn:hypomnema:mvh:v1`
+(`tabenius/mneme` `schemas/mvh.schema.json`), which stays authoritative there.

@@ -1,0 +1,23 @@
+{
+  "schema": "ragbaz.handoff-index/1",
+  "updatedOn": "2026-11-18",
+  "tasks": [
+    {
+      "slug": "handoff-standard",
+      "title": "Fleet handoff standard v1",
+      "priority": "p1",
+      "status": "in_progress",
+      "branch": "handoff-standard",
+      "handoff": ".handoff/handoff-standard-20261118.md",
+      "mvh": ".handoff/handoff-standard.mvh.json",
+      "blockers": [
+        "Local search for earlier automation",
+        "Owner acceptance"
+      ],
+      "owner": "human-owner",
+      "related": [
+        "https://github.com/tabenius/rebsync/pull/8"
+      ]
+    }
+  ]
+}
