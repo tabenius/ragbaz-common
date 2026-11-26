@@ -126,6 +126,9 @@ export function bibliographyData(source, label = '') {
     locator: text(b.locator) || (discovered?.provider === 'github' ? p.path : discovered?.provider === 'arxiv' ? p.id : ''),
     url: safeLink(source.url),
     description: text(b.description),
+    // Authored dates only; validated by the renderer, never derived.
+    published: typeof source.published === 'string' ? source.published : '',
+    retrieved: typeof source.retrieved === 'string' ? source.retrieved : '',
     commitURL: discovered?.provider === 'github' ? `https://github.com/${p.owner}/${p.repo}/commit/${p.commit}` : '',
     // Presence is a declaration, not proof of authenticity or currentness.
     coverage: source.sha256 || source.integrity?.digest ? 'Content digest recorded' : p ? 'Revision reference only' : 'Authored reference',
@@ -147,6 +150,7 @@ export function bibliographyHTML(entry) {
     + (b.description ? `<p class="bib-description">${escapeHTML(b.description)}</p>` : '')
     + `<div class="bib-publication">${escapeHTML(b.venue)}${b.version ? ' · ' : ''}${b.commitURL ? `<a href="${escapeHTML(b.commitURL)}" target="_blank" rel="noreferrer noopener">${escapeHTML(b.version)}</a>` : escapeHTML(b.version)}</div>`
     + (b.locator ? `<div class="bib-locator">${escapeHTML(b.locator)}</div>` : '')
+    + (b.published || b.retrieved ? `<div class="bib-dates">${b.published ? `Published ${escapeHTML(b.published)}` : ''}${b.published && b.retrieved ? ' · ' : ''}${b.retrieved ? `retrieved ${escapeHTML(b.retrieved)}` : ''}</div>` : '')
     + `<div class="bib-coverage">${escapeHTML(b.coverage)} · not a freshness or authorship assertion</div>`
     + `<div class="bib-actions">${entry.declared ? `<button type="button" data-source="${escapeHTML(entry.id)}">Read source</button>` : ''}`
     + (b.url ? `<a href="${escapeHTML(b.url)}" target="_blank" rel="noreferrer noopener">Original ↗</a>` : '') + '</div>';

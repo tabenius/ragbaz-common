@@ -59,7 +59,7 @@ export function setupAether(id) {
   const front = document.createElement('header'); front.className = 'aether-front';
   front.innerHTML = `<div class="aether-imprint"><span>AETHER</span><span>STUDIES IN AFFECTION</span><span>FOLIO ${variant.number}</span></div><div class="aether-art">${AETHER_PLATES[id]}</div><p class="aether-study">${variant.note}</p>`;
   layout.prepend(front);
-  const tail = document.createElement('footer'); tail.className = 'aether-tail';
+  const tail = document.createElement('footer'); tail.className = 'aether-footer';
   tail.innerHTML = `<p class="aether-colophon">A contemporary symbolic study. The words are new; the page remains open.</p><nav aria-label="Aether variants">${Object.entries(AETHER_VARIANTS).map(([key,v]) => `<a href="${location.protocol === 'file:' ? `../${v.slug}/index.html` : `/aether/${v.slug}/`}"${key === id ? ' aria-current="page"' : ''}>${v.number} · ${v.title}</a>`).join('')}</nav><p class="aether-loading">Open your own Markdown from Document tools, or use <code>?document=starter.md</code>.</p>`;
   layout.append(tail);
   const chooser = tail.querySelector('nav').cloneNode(true); chooser.className = 'aether-menu-variants';

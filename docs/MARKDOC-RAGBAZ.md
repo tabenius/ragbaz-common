@@ -707,3 +707,47 @@ explicitly unavailable, rather than simulated. Print/small-screen/forced-color
 CSS is provided; automated smoke does not establish aesthetic review or complete
 assistive-technology conformance. The source-intent `weft-task-v0` plan is in
 `review`, not done; actual outcomes and runtime coordination do not belong in it.
+
+### Document language and direction
+
+`document.language` (a BCP 47 tag such as `sv`, `zh-Hans`, `ar`) sets `<html lang>`
+on the standalone page, so screen readers, hyphenation and font fallback follow the
+text. `document.direction` (`ltr` or `rtl`) sets `dir`; when omitted it is `rtl` for
+Arabic, Hebrew, Persian, Urdu and other right-to-left scripts and `ltr` otherwise.
+Both are optional; a document without them renders exactly as before (`lang="en"`).
+Invalid values stop the build.
+
+```yaml
+document:
+  title: 'الخطوة الصغيرة التالية'
+  language: ar        # → <html lang="ar" dir="rtl">
+```
+
+### Report dialect (`report@1`) and reading aids
+
+Declare `dialects: [paper@1, report@1]` to use these tags. Write block tags on
+their own lines with blank lines around them.
+
+- `{% status kind="built" /%}`: inline status tag. Kinds: `measured`, `built`,
+  `early`, `planned`, `coming`, `retired`; optional `title` replaces the text.
+- `{% stats %}` with `{% stat value="8.04%" title="Jan 2024" %}note{% /stat %}`:
+  headline numbers. `value` is required (at most 40 characters).
+- `{% timeline %}` with `{% event when="2027" kind="fact" %}…{% /event %}`:
+  kinds `fact`, `guess`, `planned`; each shows a text label, not colour alone.
+- `{% product name="Sylvae" status="built" ref="source-id" title="RAGBAZ can help" %}…{% /product %}`:
+  a structured product note; `ref` must name a declared source.
+
+Also available in every dialect:
+
+- **Source dates.** `sources[].published` and `sources[].retrieved` accept
+  `YYYY`, `YYYY-MM`, `YYYY-MM-DD` or `n.d.`; anything else is refused. The
+  bibliography shows "Published … · retrieved …".
+- **Stable anchors.** `## Heading {% #anchor %}` (lowercase letters, digits,
+  hyphens) sets the heading id; duplicates are diagnosed. Headings without an
+  anchor keep `section-N`. Every other author annotation stays refused.
+- **Readable tables.** Cells no longer break inside words, and each `td` carries
+  its column header as `data-label`, so on screens narrower than 640px rows
+  stack as labelled cards.
+- **Embedded pages.** Host configuration `linkTarget: "_top"` adds
+  `target="_top"` to external links (not `#` anchors), for pages shown in an
+  iframe, e.g. the Thinktank's `htmlAsset`. No other value is accepted.
